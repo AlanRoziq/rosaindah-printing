@@ -1,0 +1,17 @@
+Options -Indexes
+
+# Block access to configuration, database dumps, logs, archives and hidden files.
+<FilesMatch "^(\.env|\.env\..*|\.user\.ini|composer\.(json|lock)|.*\.(sql|sqlite|db|log|ini|bak|old|orig|swp|zip|tar|gz))$">
+    Require all denied
+</FilesMatch>
+
+# Never expose VCS metadata.
+RedirectMatch 404 /\.git(?:/|$)
+
+# Baseline security headers for Apache 2.4.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>

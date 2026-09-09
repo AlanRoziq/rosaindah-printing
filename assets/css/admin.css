@@ -1,0 +1,94 @@
+
+/* Order management */
+.admin-order-status-form { margin:0; }
+.admin-status-select { border:1px solid #eadde5; border-radius:9px; padding:7px 9px; background:#fff; font:inherit; font-size:11px; color:#555; outline:none; }
+.admin-small-btn { border:0; border-radius:9px; padding:7px 10px; background:#fff0f6; color:#d64a8a; font-weight:800; font-size:10px; cursor:pointer; }
+.admin-order-detail-row td { background:#fff9fc; }
+.admin-order-detail-box { display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:15px; border:1px solid #f0dce6; border-radius:14px; }
+.admin-order-detail-box strong { color:#18243a; font-size:12px; }
+.admin-order-detail-box p { color:#777; font-size:11px; line-height:1.65; margin:8px 0 0; }
+@media (max-width:700px) { .admin-order-detail-box { grid-template-columns:1fr; } }
+
+/* =========================================================
+   ADMIN PESANAN - ROSA INDAH PRINTING
+   ========================================================= */
+.admin-order-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}.admin-order-stat{display:block;text-decoration:none;background:#fff;border:1px solid #f1dfe8;border-radius:15px;padding:14px 15px;color:#6f6870;transition:.2s}.admin-order-stat:hover,.admin-order-stat.active{border-color:#e8b4ca;box-shadow:0 8px 22px rgba(214,74,138,.08);transform:translateY(-1px)}.admin-order-stat span{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}.admin-order-stat strong{display:block;color:#18243a;font-size:24px;margin-top:5px}.admin-order-stat.pending strong{color:#c17a00}.admin-order-stat.confirmed strong{color:#5573c7}.admin-order-stat.processing strong{color:#8a58bd}.admin-order-stat.printed strong{color:#b56c25}.admin-order-stat.completed strong{color:#2d9360}.admin-orders-card{padding:18px}.admin-order-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 180px auto auto;gap:10px;align-items:center}.admin-order-search{position:relative}.admin-order-search i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#a1979f}.admin-order-search input,.admin-order-filter{width:100%;box-sizing:border-box;border:1px solid #eadde3;border-radius:11px;padding:11px 13px;font:inherit;outline:none;background:#fff}.admin-order-search input{padding-left:38px}.admin-order-search input:focus,.admin-order-filter:focus{border-color:#d64a8a;box-shadow:0 0 0 3px #ffe8f1}.admin-order-result{display:flex;justify-content:space-between;gap:10px;color:#938891;font-size:12px;padding:14px 2px}.admin-order-table-wrap{overflow:auto}.admin-orders-table{min-width:900px}.admin-orders-table td small{display:block;color:#958a92;margin-top:4px;font-size:11px}.order-code{color:#18243a}.admin-order-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-small-btn{display:inline-flex;align-items:center;gap:6px;border:0;padding:7px 10px;border-radius:9px;background:#fff1f6;color:#d64a8a;text-decoration:none;font-size:12px;font-weight:700;cursor:pointer}.admin-small-btn.wa{background:#eaf8ef;color:#287a47}.admin-order-detail-row>td{background:#fffafd;padding:0!important;border-bottom:1px solid #f2e1e9}.admin-order-detail-box{margin:0;padding:20px 22px;border-left:3px solid #d64a8a}.order-detail-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}.order-detail-head h3{margin:4px 0 0;color:#18243a}.detail-mini-label{font-size:10px;font-weight:800;letter-spacing:.08em;color:#a0949c}.order-detail-status{padding:7px 11px;border-radius:999px;font-size:12px;font-weight:800}.status-pill-pending{background:#fff4d8;color:#9b6a00}.status-pill-confirmed{background:#eef2ff;color:#4f67ae}.status-pill-processing{background:#f3eaff;color:#7d4ca9}.status-pill-printed{background:#fff0e4;color:#a8611e}.status-pill-completed{background:#eaf8ef;color:#287a47}.status-pill-cancelled{background:#fff0f0;color:#a33b3b}.order-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.order-detail-grid p{margin:6px 0 0;color:#514a52;font-size:13px;line-height:1.7}.order-detail-full{grid-column:1/-1}.order-items-admin-list{margin-top:8px;border:1px solid #f0e1e8;border-radius:12px;overflow:hidden}.order-item-admin{display:flex;justify-content:space-between;gap:15px;padding:12px 14px;background:#fff;border-bottom:1px solid #f2e7ec}.order-item-admin:last-child{border-bottom:0}.order-item-admin strong,.order-item-admin span,.order-item-admin small{display:block}.order-item-admin span{font-size:12px;color:#6d656d;margin-top:3px}.order-item-admin small{font-size:11px;color:#a0949c;margin-top:3px}.order-item-admin b{white-space:nowrap;color:#18243a}.order-note{white-space:pre-line;background:#fff;border:1px solid #f0e1e8;border-radius:12px;padding:12px 14px!important}.order-total-box{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-radius:13px;background:#fff1f6}.order-total-box span{font-weight:700;color:#6c626a}.order-total-box strong{font-size:20px;color:#d64a8a}
+@media(max-width:1100px){.admin-order-stats{grid-template-columns:repeat(3,1fr)}.admin-order-toolbar{grid-template-columns:1fr 180px auto auto}}
+@media(max-width:700px){.admin-order-stats{grid-template-columns:repeat(2,1fr)}.admin-order-toolbar{grid-template-columns:1fr}.admin-order-toolbar .admin-btn{justify-content:center}.admin-order-result{flex-direction:column}.order-detail-grid{grid-template-columns:1fr}.order-detail-full,.order-total-box{grid-column:auto}.order-detail-head{align-items:flex-start;flex-direction:column}.admin-orders-heading{align-items:flex-start}}
+.dashboard-order-pills{display:flex;flex-wrap:wrap;gap:9px}.dashboard-order-pills span{padding:8px 11px;background:#fff7fa;border:1px solid #f2dce7;border-radius:10px;color:#716771;font-size:12px}.dashboard-order-pills b{color:#d64a8a;margin-left:4px}
+@media(max-width:600px){.admin-dashboard-orders>div:first-child{align-items:flex-start!important;flex-direction:column}.dashboard-order-pills{display:grid;grid-template-columns:1fr 1fr;width:100%}}
+
+/* =========================================================
+   ADMIN PELANGGAN & RIWAYAT PESANAN
+   ========================================================= */
+.admin-customer-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}.admin-customer-stat{background:#fff;border:1px solid #f1dfe8;border-radius:18px;padding:19px 20px}.admin-customer-stat i{font-size:23px;color:#d64a8a}.admin-customer-stat span{display:block;color:#817982;font-size:12px;margin-top:7px}.admin-customer-stat strong{display:block;color:#18243a;font-size:25px;margin-top:4px}.admin-customers-card{padding:18px}.admin-customer-toolbar{display:grid;grid-template-columns:minmax(280px,1fr) auto auto;gap:10px;align-items:center}.admin-customer-table-wrap{overflow:auto}.admin-customers-table{min-width:930px}.admin-customers-table td small{display:block}.customer-name{color:#18243a}.customer-meta{color:#958a92;margin-top:4px;font-size:11px}.admin-customer-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-small-btn.wa{background:#eaf8ef;color:#287a47}.admin-customer-detail-row>td{background:#fffafd;padding:0!important;border-bottom:1px solid #f2e1e9}.admin-customer-detail-box{padding:20px 22px;border-left:3px solid #d64a8a}.customer-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:17px}.customer-detail-head h3{margin:4px 0 3px;color:#18243a;font-size:20px}.customer-detail-head p{margin:0;color:#7e747c;font-size:13px}.customer-detail-total{background:#fff1f6;border-radius:13px;padding:12px 15px;min-width:190px}.customer-detail-total span{display:block;color:#786d75;font-size:11px}.customer-detail-total strong{display:block;color:#d64a8a;font-size:18px;margin-top:3px}.customer-history-list{border:1px solid #f0e1e8;border-radius:13px;overflow:hidden}.customer-history-item{display:flex;justify-content:space-between;gap:18px;padding:13px 15px;background:#fff;border-bottom:1px solid #f2e7ec}.customer-history-item:last-child{border-bottom:0}.customer-history-item>div:first-child strong,.customer-history-item>div:first-child span,.customer-history-item>div:first-child small{display:block}.customer-history-item>div:first-child strong{color:#18243a;font-size:13px}.customer-history-item>div:first-child span{color:#777;font-size:11px;margin-top:4px}.customer-history-item>div:first-child small{color:#978d94;font-size:10px;line-height:1.55;margin-top:5px;max-width:650px;white-space:pre-line}.customer-history-right{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.customer-history-right>strong{white-space:nowrap;color:#18243a;font-size:13px}.customer-detail-footer{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.customer-detail-footer span{padding:8px 11px;background:#fff7fa;border:1px solid #f2dce7;border-radius:10px;color:#716771;font-size:11px}.customer-detail-footer b{color:#d64a8a}.admin-customer-empty{padding:55px 20px;text-align:center;color:#968c93}.admin-customer-empty i{font-size:46px}.admin-customer-empty h3{margin:10px 0 5px;color:#514a52}.admin-customer-empty p{margin:0}
+@media(max-width:850px){.admin-customer-stats{grid-template-columns:1fr 1fr}.admin-customer-toolbar{grid-template-columns:1fr auto auto}.customer-detail-head{flex-direction:column}.customer-detail-total{width:100%;box-sizing:border-box}.customer-history-item{flex-direction:column}.customer-history-right{justify-content:flex-start}}
+@media(max-width:600px){.admin-customer-stats{grid-template-columns:1fr}.admin-customer-toolbar{grid-template-columns:1fr}.admin-customer-toolbar .admin-btn{justify-content:center}.admin-customers-table{min-width:930px}.admin-customer-detail-box{padding:16px}.customer-detail-footer{display:grid;grid-template-columns:1fr 1fr}.customer-detail-footer span{font-size:10px}}
+
+
+/* =========================================================
+   ORDER ATTACHMENTS — TAHAP 12
+========================================================= */
+.order-attachments-list{display:grid;gap:9px;margin-top:10px}.order-attachment{display:flex;align-items:center;gap:11px;padding:11px 13px;background:#fff8fb;border:1px solid #f2dce7;border-radius:12px;text-decoration:none;color:#3f3940;transition:.2s}.order-attachment:hover{border-color:#d64a8a;transform:translateY(-1px)}.order-attachment>i:first-child{width:34px;height:34px;border-radius:10px;background:#ffe8f1;color:#d64a8a;display:flex;align-items:center;justify-content:center;font-size:16px;flex:0 0 34px}.order-attachment span{min-width:0;flex:1}.order-attachment strong,.order-attachment small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.order-attachment strong{font-size:12px}.order-attachment small{font-size:10px;color:#958b92;margin-top:3px}.order-attachment>i:last-child{color:#d64a8a}
+@media(max-width:550px){.order-attachment{padding:10px}.order-attachment strong{max-width:190px}}
+
+/* Stage 15 — Payment */
+.payment-stats{margin-top:-6px}.payment-summary{display:flex;flex-direction:column;gap:5px}.payment-summary small{color:#8a7f86}.payment-pill{display:inline-flex;align-items:center;width:max-content;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}.payment-unpaid{background:#f4f1f3;color:#716871}.payment-waiting{background:#fff4df;color:#9a6711}.payment-partial{background:#fff0d8;color:#9a5b00}.payment-paid{background:#e8f8ef;color:#25764a}.payment-rejected{background:#ffecec;color:#a33b3b}.detail-status-stack{display:flex;flex-direction:column;align-items:flex-end;gap:7px}.payment-management{background:#fff9fc;border:1px solid #f0dce6;border-radius:14px;padding:16px}.payment-admin-form{display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr auto;gap:10px;align-items:end;margin-top:10px}.payment-admin-form label{display:block;font-size:11px;font-weight:800;color:#756b72;margin-bottom:5px}.payment-admin-form input,.payment-admin-form select{width:100%;box-sizing:border-box;border:1px solid #eadde3;border-radius:9px;padding:9px;font:inherit;background:#fff}.payment-save{border:0!important;cursor:pointer;white-space:nowrap}.payment-updated{display:block;margin-top:8px;color:#7e737b}.payment-management + .order-total-box{margin-top:0}
+@media(max-width:1000px){.payment-admin-form{grid-template-columns:1fr 1fr}.payment-note-field{grid-column:1/-1}.payment-save{grid-column:1/-1}}
+@media(max-width:650px){.detail-status-stack{align-items:flex-start}.payment-admin-form{grid-template-columns:1fr}.payment-note-field,.payment-save{grid-column:auto}}
+.payment-proof{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px;border:1px dashed #e8cbd9;border-radius:10px;background:#fff}.payment-proof>i{font-size:22px;color:#d64a8a}.payment-proof span{display:flex;flex-direction:column;gap:2px;flex:1}.payment-proof small{color:#8a7f86}
+
+/* =========================================================
+   FINAL ADMIN RESPONSIVE HARDENING
+========================================================= */
+.admin-order-toolbar,
+.admin-customer-toolbar,
+.payment-admin-form,
+.admin-dashboard-orders,
+.order-detail-grid,
+.customer-history-item {
+  min-width: 0;
+}
+
+.admin-order-table-wrap,
+.admin-customer-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-orders-table,
+.admin-customers-table {
+  width: 100%;
+}
+
+.admin-order-actions,
+.admin-customer-actions,
+.customer-detail-footer,
+.actions {
+  min-width: 0;
+}
+
+@media(max-width:850px){
+  .admin-order-stats{gap:10px}
+  .admin-order-stat{padding:12px}
+  .admin-order-stat strong{font-size:21px}
+  .admin-order-toolbar{gap:8px}
+  .admin-customer-stats{gap:10px}
+  .admin-customer-stat{padding:14px}
+  .admin-customer-stat strong{font-size:21px}
+}
+
+@media(max-width:600px){
+  .admin-order-stat span{font-size:10px}
+  .admin-order-stat strong{font-size:19px}
+  .admin-orders-card,.admin-customers-card{padding:13px}
+  .order-detail-box,.admin-order-detail-box,.admin-customer-detail-box{padding:14px}
+  .order-detail-head,.customer-detail-head{gap:10px}
+  .order-detail-head h3,.customer-detail-head h3{font-size:17px}
+  .order-item-admin{align-items:flex-start;flex-direction:column;gap:7px}
+  .order-total-box{gap:10px;align-items:flex-start;flex-direction:column}
+  .payment-management{padding:13px}
+  .admin-small-btn{font-size:11px;padding:7px 9px}
+}
+
