@@ -820,7 +820,7 @@ textarea {
 
   .catalog-card h3,
   .product-catalog-grid .catalog-card h3 {
-    font-size: 15px;
+    font-size: 10px;
   }
 
   .product-catalog-grid .catalog-card p {
@@ -1430,7 +1430,7 @@ textarea {
 
   /* Detail produk */
   .detail-content h1 {
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1.2;
   }
 

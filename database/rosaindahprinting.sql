@@ -312,3 +312,17 @@ CREATE TABLE IF NOT EXISTS member_notifications (
   INDEX idx_member_notifications_type (type, created_at),
   CONSTRAINT fk_member_notifications_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS portfolios (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  image VARCHAR(255) NOT NULL,
+  product_name VARCHAR(180) NOT NULL,
+  price DECIMAL(14,2) NOT NULL DEFAULT 0,
+  quantity INT UNSIGNED NOT NULL DEFAULT 1,
+  customer_name VARCHAR(120) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_portfolios_created (created_at),
+  INDEX idx_portfolios_name (product_name)
+) ENGINE=InnoDB;

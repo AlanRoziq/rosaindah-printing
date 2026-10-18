@@ -1300,7 +1300,7 @@ CTA
 }
 .catalog-rating {
   color: #f2a900;
-  font-size: 11px;
+  font-size: 10px;
 }
 .catalog-rating i {
   font-size: 10px;
@@ -1669,8 +1669,8 @@ CTA
     font-size: 15px;
   }
   .catalog-card p {
-    font-size: 11px;
-    min-height: 48px;
+    font-size: 9px;
+    min-height: 42px;
   }
   .catalog-card-bottom strong {
     font-size: 12px;
@@ -1705,7 +1705,7 @@ CTA
     grid-template-columns: 1fr;
   }
   .catalog-card-image {
-    height: 220px;
+    height: 200px;
   }
 }
 
