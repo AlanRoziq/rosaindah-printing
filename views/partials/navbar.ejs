@@ -1,0 +1,67 @@
+<nav class="navbar navbar-expand-lg custom-navbar">
+    <div class="container">
+        <a class="navbar-brand" href="<%= page_url('') %>">
+            <div class="logo-box">
+                <img src="<%= asset_url('images/logo/logori.png') %>" alt="Rosa Indah Printing">
+                <div class="brand-text">
+                    <h2>ROSA INDAH</h2>
+                    <h3>-PRINTING-</h3>
+                    <p>CETAK IDE JADI KENYATAAN</p>
+                </div>
+            </div>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Buka menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-center" id="menu">
+            <ul class="navbar-nav align-items-lg-center">
+                <li class="nav-item">
+                    <a class="nav-link" href="<%= page_url('') %>">Home</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="<%= page_url('produk') %>" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Produk
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="<%= page_url('produk') %>">Semua Produk</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <% categories.forEach(function(cat) { %>
+                            <li><a class="dropdown-item" href="<%= page_url('produk?kategori=' + encodeURIComponent(cat)) %>"><%= cat %></a></li>
+                        <% }); %>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="<%= page_url('portfolio') %>"><i class="bi bi-images"></i> Portofolio</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%= page_url('promo') %>"><i class="bi bi-ticket-perforated"></i> Promo Member</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%= page_url('tentang') %>">Tentang Kami</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%= page_url('cara-pemesanan') %>">Cara Pemesanan</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%= page_url('kontak') %>">Kontak</a></li>
+                <li class="nav-item"><a class="nav-link" href="<%= page_url('lacak-pesanan') %>"><i class="bi bi-geo-alt"></i> Lacak Pesanan</a></li>
+            </ul>
+        </div>
+
+        <div class="right-menu">
+            <a href="<%= page_url('produk') %>" class="search-btn" aria-label="Cari produk" title="Cari produk">
+                <i class="bi bi-search"></i>
+            </a>
+            <a href="<%= page_url('cart') %>" class="cart-nav-btn" aria-label="Keranjang belanja" title="Keranjang Belanja">
+                <i class="bi bi-bag"></i>
+                <% if (cart_count > 0) { %>
+                    <span class="cart-nav-count"><%= cart_count %></span>
+                <% } %>
+            </a>
+            <% if (currentUser) { %>
+                <a href="<%= page_url('akun') %>" class="login-btn" title="Akun Saya">
+                    <i class="bi bi-person-circle"></i>
+                    <span><%= currentUser.name.split(' ')[0] %></span>
+                </a>
+            <% } else { %>
+                <a href="<%= page_url('login') %>" class="login-btn" title="Login Member">
+                    <i class="bi bi-person"></i>
+                    <span class="login-label-text">Login Member</span>
+                </a>
+            <% } %>
+        </div>
+    </div>
+</nav>

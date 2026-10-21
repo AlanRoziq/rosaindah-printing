@@ -1,0 +1,40 @@
+<%- include('partials/header', { title: 'Portofolio Hasil Cetak' }) %>
+
+<header class="main-header">
+    <%- include('partials/topbar') %>
+    <%- include('partials/navbar') %>
+</header>
+
+<main class="portfolio-page py-4">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb mb-4">
+            <a href="<%= page_url('') %>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Portofolio</span>
+        </div>
+
+        <div class="section-title text-center mb-5">
+            <span>Galeri Karya</span>
+            <h2>Hasil Cetak Rosa Indah Printing</h2>
+            <p class="text-muted">Dokumentasi nyata hasil produksi percetakan mulai dari banner, spanduk, mug souvenir, kartu nama, kalender, hingga kaos DTF.</p>
+        </div>
+
+        <div class="portfolio-grid">
+            <% portfolios.forEach(function(item) { %>
+                <div class="portfolio-card" data-aos="fade-up">
+                    <img src="<%= product_image_url(item.image) %>" alt="<%= item.product_name %>" loading="lazy">
+                    <div class="portfolio-overlay">
+                        <h5><%= item.product_name %></h5>
+                        <span>Dipesan oleh: <%= item.customer_name %></span>
+                        <div class="mt-2">
+                            <a href="<%= page_url('detail-portofolio?id=' + item.id) %>" class="btn btn-sm btn-light rounded-pill px-3">Lihat Detail</a>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

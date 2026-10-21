@@ -1,0 +1,51 @@
+<%- include('_header', { title: 'Data Member' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Data Pelanggan & Member</h2>
+        <p class="text-muted mb-0">Daftar member terdaftar, kontak WhatsApp, dan poin loyalitas percetakan.</p>
+    </div>
+</div>
+
+<div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Nama Pelanggan</th>
+                    <th>Nomor WhatsApp</th>
+                    <th>Email</th>
+                    <th>Alamat Domisili</th>
+                    <th>Poin Loyalty</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% customers.forEach(function(c) { %>
+                    <tr>
+                        <td>
+                            <strong class="text-dark"><%= c.name %></strong>
+                        </td>
+                        <td>
+                            <a href="https://wa.me/<%= c.phone.replace(/\D/g, '') %>" target="_blank" rel="noopener" class="text-decoration-none">
+                                <i class="bi bi-whatsapp text-success me-1"></i> <%= c.phone %>
+                            </a>
+                        </td>
+                        <td class="text-muted"><%= c.email || '-' %></td>
+                        <td class="small text-muted"><%= c.address || '-' %></td>
+                        <td>
+                            <span class="badge bg-light text-primary border fw-bold">
+                                <i class="bi bi-star-fill text-warning"></i> <%= c.points || 0 %> Poin
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">Terverifikasi</span>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('_footer') %>

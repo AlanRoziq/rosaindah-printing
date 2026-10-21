@@ -1,0 +1,92 @@
+<%- include('partials/header', { title: 'Akun Member' }) %>
+
+<header class="main-header">
+    <%- include('partials/topbar') %>
+    <%- include('partials/navbar') %>
+</header>
+
+<main class="py-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb mb-4">
+            <a href="<%= page_url('') %>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Akun Member</span>
+        </div>
+
+        <div class="row g-4">
+            <!-- Sidebar Profile -->
+            <div class="col-lg-4">
+                <div class="card p-4 rounded-4 shadow-sm border-0 bg-white text-center">
+                    <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 36px;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1"><%= user.name %></h4>
+                    <p class="text-muted small mb-3"><%= user.phone %></p>
+                    <span class="badge bg-success px-3 py-2 fs-6 mb-4">Member Terverifikasi</span>
+
+                    <div class="p-3 bg-light rounded-3 text-start mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Poin Loyalty:</span>
+                            <span class="fw-bold text-primary"><i class="bi bi-star-fill text-warning"></i> <%= user.points || 0 %> Poin</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Alamat:</span>
+                            <span class="fw-semibold small"><%= user.address || '-' %></span>
+                        </div>
+                    </div>
+
+                    <a href="<%= page_url('logout') %>" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-box-arrow-right me-1"></i> Keluar (Logout)
+                    </a>
+                </div>
+            </div>
+
+            <!-- Orders History -->
+            <div class="col-lg-8">
+                <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i> Riwayat Pesanan Saya</h4>
+                        <a href="<%= page_url('lacak-pesanan') %>" class="btn btn-sm btn-outline-primary">Lacak Pesanan Lain</a>
+                    </div>
+
+                    <% if (!orders || orders.length === 0) { %>
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                            Belum ada riwayat pesanan.
+                        </div>
+                    <% } else { %>
+                        <div class="list-group list-group-flush">
+                            <% orders.forEach(function(o) { %>
+                                <div class="list-group-item px-0 py-3 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <a href="<%= page_url('lacak-pesanan?code=' + o.order_code + '&phone=' + (o.customer_phone || '')) %>" class="fw-bold text-decoration-none text-dark fs-5">
+                                                <%= o.order_code %>
+                                            </a>
+                                            <small class="text-muted d-block"><%= o.created_at %> WIB</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-<%= o.status === 'completed' ? 'success' : 'primary' %>"><%= o.status.toUpperCase() %></span>
+                                            <div class="fw-bold text-danger mt-1"><%= format_rupiah(o.total_estimate) %></div>
+                                        </div>
+                                    </div>
+                                    <div class="small text-muted mb-2">
+                                        <% o.items.forEach(function(it, i) { %>
+                                            <span><%= it.product_name %> (<%= it.quantity %> <%= it.unit %>)<%= i < o.items.length - 1 ? ', ' : '' %></span>
+                                        <% }); %>
+                                    </div>
+                                    <a href="<%= page_url('lacak-pesanan?code=' + o.order_code + '&phone=' + (o.customer_phone || '')) %>" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i> Lihat Detail & Tracking
+                                    </a>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

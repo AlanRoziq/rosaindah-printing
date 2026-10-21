@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rosa Indah Printing — Solusi Percetakan Online Modern & Cepat</title>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Custom Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        rosa: {
+                            50: '#fff1f5',
+                            100: '#ffe4ed',
+                            200: '#fecddde',
+                            300: '#fda4c2',
+                            400: '#fb71a0',
+                            500: '#f43f7e',
+                            600: '#e11d64',
+                            700: '#be124f',
+                            800: '#9f1244',
+                            900: '#88133d',
+                            950: '#4c051e',
+                        }
+                    },
+                    boxShadow: {
+                        'pink-glow': '0 15px 35px -5px rgba(244, 63, 126, 0.25)',
+                        'pink-sm': '0 6px 20px -3px rgba(244, 63, 126, 0.15)',
+                        'card': '0 10px 30px -5px rgba(31, 41, 55, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Global Typography & Smooth Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #fff9fb;
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fff1f5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fb71a0;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e11d64;
+        }
+
+        /* Keyframe Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(1.5deg); }
+        }
+        @keyframes floatReverse {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(10px) rotate(-1.5deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(1.08); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes printScan {
+            0% { top: 0%; opacity: 0.9; }
+            50% { top: 96%; opacity: 0.9; }
+            100% { top: 0%; opacity: 0.9; }
+        }
+
+        .animate-float {
+            animation: floatSlow 5s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+            animation: floatReverse 6s ease-in-out 1.2s infinite;
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+        .animate-print-scan {
+            animation: printScan 3.5s ease-in-out infinite;
+        }
+
+        /* Scroll Reveal Transitions */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Holographic / Glossy Print Card Finish Effect */
+        .glossy-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .glossy-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 40%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.45) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(25deg);
+            transition: all 0.7s ease;
+            pointer-events: none;
+        }
+        .glossy-card:hover::after {
+            left: 130%;
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 8px;
+            border-radius: 999px;
+            background: #ffe4ed;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: #e11d64;
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(225, 29, 100, 0.4);
+            margin-top: -7px;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        /* Crop Marks for Print Preview */
+        .crop-mark-tl { border-top: 2px solid #f43f7e; border-left: 2px solid #f43f7e; }
+        .crop-mark-tr { border-top: 2px solid #f43f7e; border-right: 2px solid #f43f7e; }
+        .crop-mark-bl { border-bottom: 2px solid #f43f7e; border-left: 2px solid #f43f7e; }
+        .crop-mark-br { border-bottom: 2px solid #f43f7e; border-right: 2px solid #f43f7e; }
+    </style>
+</head>
+<body class="selection:bg-rosa-500 selection:text-white pb-20 md:pb-0">
+
+    <!-- TOP PROMO ANNOUNCEMENT BAR -->
+    <div class="bg-gradient-to-r from-rosa-800 via-rosa-600 to-pink-500 text-white text-xs sm:text-sm py-2.5 px-4 relative z-40">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2 font-medium">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-white text-rosa-700 uppercase tracking-wider animate-pulse">
+                    Promo Oktober
+                </span>
+                <span>Diskon <strong>20%</strong> Cetak Kemasan & Stiker Label UMKM! Kode: <strong class="underline decoration-pink-200 cursor-pointer" onclick="copyPromoCode()">ROSAINDAH20</strong></span>
+            </div>
+            <div class="hidden md:flex items-center gap-4 text-pink-100 text-xs">
+                <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Buka: 08.00 - 21.00 WIB</span>
+                <span>•</span>
+                <span class="flex items-center gap-1"><i data-lucide="truck" class="w-3.5 h-3.5"></i> Pengiriman Seluruh Indonesia</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- STICKY NAVBAR -->
+    <header id="navbar" class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-rosa-100 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Brand Logo -->
+                <a href="#" class="flex items-center gap-3 group focus:outline-none">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-rosa-500 via-rosa-600 to-pink-700 flex items-center justify-center text-white shadow-pink-sm group-hover:scale-105 transition-transform">
+                        <!-- Custom Rose + Printer Layers Icon -->
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 14h12v8H6z"/>
+                            <circle cx="17" cy="11.5" r="1" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-lg sm:text-xl font-extrabold tracking-tight text-gray-900">Rosa Indah</span>
+                            <span class="text-lg sm:text-xl font-extrabold tracking-tight text- transparent bg-clip-text bg-gradient-to-r from-rosa-600 to-pink-500">Printing</span>
+                        </div>
+                        <p class="text-[10px] sm:text-xs text-gray-500 -mt-1 font-medium">Digital & Offset Printing</p>
+                    </div>
+                </a>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden lg:flex items-center gap-1 xl:gap-2">
+                    <a href="#beranda" class="px-3.5 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-rosa-600 hover:bg-rosa-50 transition-colors">Beranda</a>
+                    <a href="#katalog" class="px-3.5 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-rosa-600 hover:bg-rosa-50 transition-colors">Layanan Cetak</a>
+                    <a href="#ai-studio" class="px-3.5 py-2 rounded-xl text-sm font-semibold text-rosa-700 bg-rosa-50/80 hover:bg-rosa-100 transition-colors flex items-center gap-1.5 border border-rosa-200/80">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-rosa-600"></i>
+                        <span>Rosa AI Studio</span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-extrabold bg-gradient-to-r from-rosa-600 to-pink-500 text-white rounded-md">AI</span>
+                    </a>
+                    <a href="#kalkulator" class="px-3.5 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-rosa-600 hover:bg-rosa-50 transition-colors flex items-center gap-1.5">
+                        <span>Simulasi Harga</span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-bold bg-rosa-100 text-rosa-700 rounded-md">LIVE</span>
+                    </a>
+                    <a href="#galeri" class="px-3.5 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-rosa-600 hover:bg-rosa-50 transition-colors">Portofolio</a>
+                    <a href="#testimoni" class="px-3.5 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-rosa-600 hover:bg-rosa-50 transition-colors">Testimoni</a>
+                    <a href="#faq" class="px-3.5 py-2 rounded-xl text-sm font-medium text-gray-700 hover:text-rosa-600 hover:bg-rosa-50 transition-colors">FAQ</a>
+                </nav>
+
+                <!-- Desktop Action Buttons -->
+                <div class="hidden sm:flex items-center gap-3">
+                    <button onclick="openTrackModal()" class="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rosa-700 bg-rosa-50 hover:bg-rosa-100 border border-rosa-200 transition-all flex items-center gap-1.5">
+                        <i data-lucide="package-search" class="w-4 h-4"></i>
+                        <span>Lacak Pesanan</span>
+                    </button>
+                    <button onclick="openOrderModal()" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-rosa-600 to-pink-500 hover:from-rosa-700 hover:to-pink-600 shadow-pink-sm hover:shadow-pink-glow transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                        <span>Upload & Pesan</span>
+                    </button>
+                </div>
+
+                <!-- Mobile Hamburger Button -->
+                <div class="flex items-center gap-2 lg:hidden">
+                    <button onclick="openOrderModal()" class="sm:hidden px-3 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-rosa-600 to-pink-500 shadow-pink-sm flex items-center gap-1">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                        <span>Pesan</span>
+                    </button>
+                    <button id="mobileMenuBtn" onclick="toggleMobileDrawer()" aria-label="Buka Menu" class="p-2.5 rounded-xl text-gray-700 hover:text-rosa-600 hover:bg-rosa-50 border border-rosa-100 transition-colors">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MOBILE SLIDE-OUT DRAWER NAVIGATION -->
+    <div id="mobileDrawerBackdrop" onclick="toggleMobileDrawer()" class="fixed inset-0 bg-gray-900/50 backdrop-blur-xs z-50 hidden opacity-0 transition-opacity duration-300"></div>
+    <aside id="mobileDrawer" class="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col justify-between">
+        <div>
+            <!-- Drawer Header -->
+            <div class="p-5 border-b border-rosa-100 flex items-center justify-between bg-gradient-to-r from-rosa-50 to-white">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-rosa-600 text-white flex items-center justify-center font-bold">R</div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-sm">Rosa Indah Printing</h3>
+                        <p class="text-[11px] text-rosa-600 font-medium">Percetakan Online 24 Jam</p>
+                    </div>
+                </div>
+                <button onclick="toggleMobileDrawer()" class="p-2 rounded-xl text-gray-500 hover:text-rosa-600 hover:bg-rosa-100/60">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Drawer Menu Links -->
+            <div class="p-4 space-y-1.5">
+                <a href="#beranda" onclick="toggleMobileDrawer()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-800 hover:bg-rosa-50 hover:text-rosa-600 transition-colors">
+                    <i data-lucide="home" class="w-4 h-4 text-rosa-500"></i> Beranda
+                </a>
+                <a href="#katalog" onclick="toggleMobileDrawer()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-800 hover:bg-rosa-50 hover:text-rosa-600 transition-colors">
+                    <i data-lucide="layers" class="w-4 h-4 text-rosa-500"></i> Katalog & Layanan Cetak
+                </a>
+                <a href="#ai-studio" onclick="toggleMobileDrawer()" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold text-rosa-700 bg-rosa-50/70 hover:bg-rosa-100 transition-colors border border-rosa-200/60">
+                    <span class="flex items-center gap-3"><i data-lucide="sparkles" class="w-4 h-4 text-rosa-600"></i> Rosa AI Print Studio</span>
+                    <span class="px-2 py-0.5 text-[10px] font-bold bg-rosa-600 text-white rounded-full">Baru ✨</span>
+                </a>
+                <a href="#kalkulator" onclick="toggleMobileDrawer()" class="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold text-gray-800 hover:bg-rosa-50 hover:text-rosa-600 transition-colors">
+                    <span class="flex items-center gap-3"><i data-lucide="calculator" class="w-4 h-4 text-rosa-500"></i> Simulasi Harga Cetak</span>
+                    <span class="px-2 py-0.5 text-[10px] font-bold bg-rosa-100 text-rosa-700 rounded-full">Populer</span>
+                </a>
+                <a href="#galeri" onclick="toggleMobileDrawer()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-800 hover:bg-rosa-50 hover:text-rosa-600 transition-colors">
+                    <i data-lucide="image" class="w-4 h-4 text-rosa-500"></i> Galeri Hasil Cetak
+                </a>
+                <a href="#testimoni" onclick="toggleMobileDrawer()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-800 hover:bg-rosa-50 hover:text-rosa-600 transition-colors">
+                    <i data-lucide="message-Square-heart" class="w-4 h-4 text-rosa-500"></i> Ulasan Pelanggan
+                </a>
+                <a href="#faq" onclick="toggleMobileDrawer()" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-800 hover:bg-rosa-50 hover:text-rosa-600 transition-colors">
+                    <i data-lucide="help-circle" class="w-4 h-4 text-rosa-500"></i> Tanya Jawab (FAQ)
+                </a>
+            </div>
+        </div>
+
+        <!-- Drawer Bottom CTA -->
+        <div class="p-5 border-t border-rosa-100 bg-rosa-50/60 space-y-3">
+            <button onclick="toggleMobileDrawer(); openTrackModal();" class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-rosa-700 bg-white border border-rosa-200 flex items-center justify-center gap-2 shadow-2xs">
+                <i data-lucide="package-search" class="w-4 h-4"></i> Lacak Status Pesanan
+            </button>
+            <button onclick="toggleMobileDrawer(); openOrderModal();" class="w-full py-3 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-rosa-600 to-pink-500 shadow-pink-sm flex items-center justify-center gap-2">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Upload Desain & Pesan
+            </button>
+        </div>
+    </aside>
+
+    <!-- 1. HERO SECTION -->
+    <section id="beranda" class="relative overflow-hidden pt-8 pb-16 sm:pt-14 sm:pb-24 lg:pt-20 lg:pb-28">
+        <!-- Decorative Background Blobs -->
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-rosa-200/45 rounded-full blur-3xl -z-10 animate-pulse-glow"></div>
+        <div class="absolute bottom-10 right-10 w-80 h-80 bg-pink-300/35 rounded-full blur-3xl -z-10 animate-pulse-glow"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                
+                <!-- Left Column: Hero Copy & CTAs -->
+                <div class="lg:col-span-7 text-center lg:text-left space-y-6">
+                    <!-- Live Badge -->
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rosa-100/90 border border-rosa-200 text-rosa-800 text-xs sm:text-sm font-semibold shadow-2xs">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rosa-600 animate-ping"></span>
+                        <span>Percetakan Online #1 Pilihan Brand & UMKM</span>
+                    </div>
+
+                    <!-- Main Headline -->
+                    <h1 class="text-3xl sm:text-5xl lg:text-[54px] font-extrabold text-gray-900 leading-[1.15] tracking-tight">
+                        Cetak Ide Kreatifmu Lebih <span class="text-transparent bg-clip-text bg-gradient-to-r from-rosa-600 via-pink-500 to-rosa-700">Berwarna</span> &amp; Berkelas!
+                    </h1>
+
+                    <!-- Subheadline -->
+                    <p class="text-gray-600 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
+                        Dari stiker label kemasan, *standing pouch*, brosur promosi, hingga undangan eksklusif. <strong>Rosa Indah Printing</strong> menghadirkan kualitas cetak mesin Jepang beresolusi tinggi dengan warna akurat, proses kilat, dan harga bersahabat.
+                    </p>
+
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
+                        <button onclick="openOrderModal()" class="w-full sm:w-auto px-7 py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-rosa-600 via-rosa-500 to-pink-500 hover:from-rosa-700 hover:to-pink-600 shadow-pink-glow transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2.5 text-sm sm:text-base">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                            <span>Pesan Sekarang</span>
+                        </button>
+                        <a href="#kalkulator" class="w-full sm:w-auto px-7 py-4 rounded-2xl font-bold text-rosa-700 bg-white hover:bg-rosa-50 border-2 border-rosa-200 shadow-card transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 text-sm sm:text-base">
+                            <i data-lucide="calculator" class="w-5 h-5 text-rosa-600"></i>
+                            <span>Cek Simulasi Harga</span>
+                        </a>
+                    </div>
+
+                    <!-- Trust Highlights -->
+                    <div class="pt-4 grid grid-cols-3 gap-3 sm:gap-6 max-w-lg mx-auto lg:mx-0 border-t border-rosa-100">
+                        <div class="text-center lg:text-left">
+                            <div class="flex items-center justify-center lg:justify-start gap-1 text-rosa-600 font-extrabold text-xl sm:text-2xl">
+                                <span class="counter" data-target="15400">0</span><span>+</span>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-gray-500 font-medium">Order Selesai</p>
+                        </div>
+                        <div class="text-center lg:text-left">
+                            <div class="flex items-center justify-center lg:justify-start gap-1 text-rosa-600 font-extrabold text-xl sm:text-2xl">
+                                <span>24</span><span class="text-sm sm:text-base font-bold">Jam</span>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-gray-500 font-medium">Layanan Cetak Kilat</p>
+                        </div>
+                        <div class="text-center lg:text-left">
+                            <div class="flex items-center justify-center lg:justify-start gap-1 text-rosa-600 font-extrabold text-xl sm:text-2xl">
+                                <span>4.9</span><i data-lucide="star" class="w-4 h-4 fill-amber-400 text-amber-400"></i>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-gray-500 font-medium">Rating Pelanggan</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Animated Visual Mockup of Printing Products -->
+                <div class="lg:col-span-5 relative">
+                    <div class="relative mx-auto max-w-md lg:max-w-none">
+                        
+                        <!-- Main Interactive Print Studio Showcase Card -->
+                        <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-pink-glow border border-rosa-100 relative z-10 animate-float">
+                            <!-- Laser Print Scanner Bar Animation -->
+                            <div class="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-rosa-500 to-transparent z-20 animate-print-scan pointer-events-none"></div>
+
+                            <!-- Card Header -->
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-rosa-500"></span>
+                                    <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                                    <span class="w-3 h-3 rounded-full bg-sky-400"></span>
+                                    <span class="text-xs font-bold text-gray-700 ml-1">Rosa Print Studio™</span>
+                                </div>
+                                <span id="heroMockupBadge" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-rosa-50 text-rosa-600 border border-rosa-200">
+                                    CMYK Hi-Res 2400 DPI
+                                </span>
+                            </div>
+
+                            <!-- Dynamic Mockup Canvas Area -->
+                            <div id="heroMockupStage" class="rounded-2xl bg-gradient-to-br from-rosa-50 via-pink-50 to-rose-100 p-6 relative overflow-hidden border border-rosa-200/60 min-h-[250px] flex flex-col items-center justify-center text-center transition-all duration-500">
+                                <!-- Crop Marks -->
+                                <div class="w-3 h-3 crop-mark-tl absolute top-3 left-3"></div>
+                                <div class="w-3 h-3 crop-mark-tr absolute top-3 right-3"></div>
+                                <div class="w-3 h-3 crop-mark-bl absolute bottom-3 left-3"></div>
+                                <div class="w-3 h-3 crop-mark-br absolute bottom-3 right-3"></div>
+
+                                <!-- Visual Product Preview Inside Hero -->
+                                <div id="heroMockupVisual" class="transition-all duration-300 transform hover:scale-105">
+                                    <!-- Default: Packaging Box & Sticker Roll SVG Illustration -->
+                                    <div class="w-28 h-28 mx-auto rounded-2xl bg-gradient-to-tr from-rosa-600 to-pink-400 text-white flex flex-col items-center justify-center shadow-lg rotate-3 mb-3 p-3">
+                                        <i data-lucide="package-check" class="w-10 h-10 mb-1"></i>
+                                        <span class="text-[10px] font-bold tracking-wider uppercase">Rosa Box</span>
+                                        <span class="text-[8px] opacity-80">Glossy UV Finish</span>
+                                    </div>
+                                </div>
+                                <h3 id="heroMockupTitle" class="font-bold text-gray-900 text-base sm:text-lg mt-1">Kemasan Box & Stiker Die-Cut</h3>
+                                <p id="heroMockupSub" class="text-xs text-gray-600 mt-0.5">Bahan Ivory 310gr + Laminasi Glossy Tahan Air</p>
+                            </div>
+
+                            <!-- Interactive Mockup Switcher Pills -->
+                            <div class="mt-4">
+                                <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Klik untuk lihat simulasi produk:</p>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="switchHeroMockup(0)" id="heroTab0" class="py-2 px-2.5 rounded-xl text-xs font-semibold bg-rosa-600 text-white shadow-2xs transition-all flex items-center justify-center gap-1">
+                                        <i data-lucide="sticker" class="w-3.5 h-3.5"></i> Kemasan
+                                    </button>
+                                    <button onclick="switchHeroMockup(1)" id="heroTab1" class="py-2 px-2.5 rounded-xl text-xs font-semibold bg-rosa-50 text-gray-700 hover:bg-rosa-100 transition-all flex items-center justify-center gap-1">
+                                        <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Undangan
+                                    </button>
+                                    <button onclick="switchHeroMockup(2)" id="heroTab2" class="py-2 px-2.5 rounded-xl text-xs font-semibold bg-rosa-50 text-gray-700 hover:bg-rosa-100 transition-all flex items-center justify-center gap-1">
+                                        <i data-lucide="cup-soda" class="w-3.5 h-3.5"></i> Souvenir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Floating Badge Top-Left -->
+                        <div class="hidden sm:flex absolute -top-6 -left-8 z-20 bg-white/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-card border border-rosa-100 items-center gap-3 animate-float-delayed">
+                            <div class="w-10 h-10 rounded-xl bg-pink-100 text-rosa-600 flex items-center justify-center font-bold">
+                                <i data-lucide="palette" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-900">Garansi Warna Akurat</p>
+                                <p class="text-[11px] text-gray-500">Kalibrasi Mesin Fujifilm</p>
+                            </div>
+                        </div>
+
+                        <!-- Floating Badge Bottom-Right -->
+                        <div class="hidden sm:flex absolute -bottom-5 -right-6 z-20 bg-white/95 backdrop-blur-md px-4 py-3 rounded-2xl shadow-card border border-rosa-100 items-center gap-3 animate-float">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                <i data-lucide="shield-check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-900">Gratis Cek File Desain</p>
+                                <p class="text-[11px] text-gray-500">Dibantu Tim Desainer</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- KEUNGGULAN / WHY CHOOSE US BAR -->
+    <section class="py-8 bg-white border-y border-rosa-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                <div class="flex items-start sm:items-center gap-3 p-3 rounded-2xl hover:bg-rosa-50/50 transition-colors">
+                    <div class="w-11 h-11 rounded-2xl bg-rosa-100 text-rosa-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="zap" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-xs sm:text-sm">Cetak Sameday</h3>
+                        <p class="text-[11px] sm:text-xs text-gray-500">Bisa ditunggu & kirim instan</p>
+                    </div>
+                </div>
+                <div class="flex items-start sm:items-center gap-3 p-3 rounded-2xl hover:bg-rosa-50/50 transition-colors">
+                    <div class="w-11 h-11 rounded-2xl bg-rosa-100 text-rosa-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="award" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-xs sm:text-sm">Kualitas Premium</h3>
+                        <p class="text-[11px] sm:text-xs text-gray-500">Tinta original tajam & awet</p>
+                    </div>
+                </div>
+                <div class="flex items-start sm:items-center gap-3 p-3 rounded-2xl hover:bg-rosa-50/50 transition-colors">
+                    <div class="w-11 h-11 rounded-2xl bg-rosa-100 text-rosa-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="wallet" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-xs sm:text-sm">Harga Grosir UMKM</h3>
+                        <p class="text-[11px] sm:text-xs text-gray-500">Makin banyak makin hemat</p>
+                    </div>
+                </div>
+                <div class="flex items-start sm:items-center gap-3 p-3 rounded-2xl hover:bg-rosa-50/50 transition-colors">
+                    <div class="w-11 h-11 rounded-2xl bg-rosa-100 text-rosa-600 flex items-center justify-center shrink-0">
+                        <i data-lucide="headphones" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-xs sm:text-sm">Konsultasi Gratis</h3>
+                        <p class="text-[11px] sm:text-xs text-gray-500">Admin ramah siap bantu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. INTERACTIVE PRODUCT CATALOG / LAYANAN KAMI -->
+    <section id="katalog" class="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
+        <!-- Section Header -->
+        <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+            <span class="px-3.5 py-1.5 rounded-full bg-rosa-100 text-rosa-700 font-bold text-xs uppercase tracking-wider">Katalog Layanan Kami</span>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mt-3">Apa yang Ingin Anda Cetak Hari Ini?</h2>
+            <p class="text-gray-600 text-sm sm:text-base mt-2">Pilih produk percetakan sesuai kebutuhan bisnis atau acara spesial Anda. Klik <strong>Hitung Harga</strong> untuk simulasi otomatis.</p>
+        </div>
+
+        <!-- Filter Tabs & Search Bar -->
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+            <!-- Category Filter Pills (Scrollable on Mobile) -->
+            <div class="w-full md:w-auto overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                <div class="inline-flex items-center gap-2 bg-white p-1.5 rounded-2xl border border-rosa-100 shadow-2xs min-w-max">
+                    <button onclick="filterProducts('all')" data-cat="all" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-rosa-600 text-white shadow-2xs">
+                        Semua Produk
+                    </button>
+                    <button onclick="filterProducts('kemasan')" data-cat="kemasan" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all text-gray-600 hover:text-rosa-600 hover:bg-rosa-50">
+                        Kemasan & Stiker
+                    </button>
+                    <button onclick="filterProducts('promosi')" data-cat="promosi" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all text-gray-600 hover:text-rosa-600 hover:bg-rosa-50">
+                        Promosi & Banner
+                    </button>
+                    <button onclick="filterProducts('kartu')" data-cat="kartu" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all text-gray-600 hover:text-rosa-600 hover:bg-rosa-50">
+                        Kartu & Undangan
+                    </button>
+                    <button onclick="filterProducts('merchandise')" data-cat="merchandise" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all text-gray-600 hover:text-rosa-600 hover:bg-rosa-50">
+                        Merchandise
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Input -->
+            <div class="relative w-full md:w-72">
+                <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="productSearchInput" oninput="searchProducts(this.value)" placeholder="Cari stiker, banner, box..." class="w-full pl-10 pr-4 py-2.5 bg-white rounded-2xl border border-rosa-200 text-sm focus:outline-none focus:border-rosa-500 focus:ring-2 focus:ring-rosa-200 transition-all">
+            </div>
+        </div>
+
+        <!-- Product Grid Container (Populated via JS) -->
+        <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Dynamically rendered by JavaScript -->
+        </div>
+    </section>
+
+    <!-- 2.5 ROSA AI PRINT STUDIO (POWERED BY GEMINI API) -->
+    <section id="ai-studio" class="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
+        <div class="rounded-3xl bg-gradient-to-br from-rosa-900 via-rosa-800 to-pink-900 text-white p-6 sm:p-10 lg:p-12 shadow-pink-glow relative overflow-hidden border border-rosa-700">
+            <!-- Decorative Ambient Glows -->
+            <div class="w-80 h-80 rounded-full bg-pink-500/20 blur-3xl absolute -top-20 -right-20 pointer-events-none"></div>
+            <div class="w-72 h-72 rounded-full bg-rosa-400/20 blur-3xl absolute -bottom-24 -left-16 pointer-events-none"></div>
+
+            <div class="relative z-10">
+                <!-- Header & Mode Switcher -->
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 pb-6 border-b border-white/15">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-xs text-pink-200 text-xs font-bold uppercase tracking-wider mb-3">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>Didukung Gemini AI Pintar</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Rosa AI Print Studio ✨</h2>
+                        <p class="text-pink-100 text-sm sm:text-base mt-1.5 max-w-2xl">
+                            Bingung memilih bahan kertas, ukuran kemasan, atau kata-kata promosi di cetakan Anda? Biarkan asisten AI kami merancang rekomendasi terbaik dalam hitungan detik.
+                        </p>
+                    </div>
+
+                    <!-- Studio Feature Tabs -->
+                    <div class="inline-flex p-1.5 rounded-2xl bg-black/25 backdrop-blur-md border border-white/15 self-start">
+                        <button type="button" id="aiTabSpecBtn" onclick="switchAiStudioTab('spec')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-rosa-900 shadow-sm transition-all flex items-center gap-2">
+                            <i data-lucide="wand-2" class="w-4 h-4 text-rosa-600"></i>
+                            <span>Konsultan Spesifikasi</span>
+                        </button>
+                        <button type="button" id="aiTabCopyBtn" onclick="switchAiStudioTab('copy')" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-pink-100 hover:text-white transition-all flex items-center gap-2">
+                            <i data-lucide="pen-tool" class="w-4 h-4"></i>
+                            <span>Generator Slogan & Teks</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 1: AI PRINT SPEC CONSULTANT -->
+                <div id="aiStudioSpecPanel" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Left Input Column -->
+                    <div class="lg:col-span-6 space-y-4">
+                        <label class="block text-xs sm:text-sm font-bold text-pink-100">
+                            Ceritakan kebutuhan bisnis, produk UMKM, atau acara Anda:
+                        </label>
+                        <textarea id="aiSpecPrompt" rows="4" placeholder="Contoh: Saya baru buka usaha kopi susu literan & botol dingin. Butuh stiker label yang tahan air di kulkas dan kelihatan mewah untuk 100 botol..." class="w-full rounded-2xl bg-white/10 border border-white/20 text-white placeholder-pink-200/60 p-4 text-sm focus:outline-none focus:bg-white/15 focus:border-pink-300 transition-all"></textarea>
+
+                        <!-- Quick Prompt Presets -->
+                        <div>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-pink-200 block mb-2">Ide Cepat (Klik untuk coba):</span>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" onclick="fillAiSpecPreset('Saya punya bisnis skincare serum wajah, butuh kotak kemasan mewah dan stiker segel untuk 250 pcs')" class="text-xs bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl px-3 py-1.5 text-pink-100 transition-colors">
+                                    💄 Kemasan Skincare 250 Pcs
+                                </button>
+                                <button type="button" onclick="fillAiSpecPreset('Mau buka booth pameran kuliner akhir pekan ini, butuh media promosi berdiri dan brosur sebar 500 lembar')" class="text-xs bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl px-3 py-1.5 text-pink-100 transition-colors">
+                                    🎪 Paket Booth Pameran
+                                </button>
+                                <button type="button" onclick="fillAiSpecPreset('Butuh kartu ucapan terima kasih olshop dan stiker pengiriman untuk toko baju online sekitar 100 pcs')" class="text-xs bg-white/10 hover:bg-white/20 border border-white/15 rounded-xl px-3 py-1.5 text-pink-100 transition-colors">
+                                    🛍️ Kartu Olshop Fashion
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="button" id="aiSpecSubmitBtn" onclick="runAiSpecConsultant()" class="w-full py-4 px-6 rounded-2xl font-extrabold text-rosa-900 bg-gradient-to-r from-white via-pink-50 to-amber-100 hover:from-pink-50 hover:to-white shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm sm:text-base">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-rosa-600"></i>
+                            <span>Analisis & Rekomendasikan Spesifikasi ✨</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Result Column -->
+                    <div class="lg:col-span-6">
+                        <div id="aiSpecResultBox" class="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-6 min-h-[260px] flex flex-col justify-center">
+                            <div class="text-center space-y-3 py-6">
+                                <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mx-auto text-pink-200">
+                                    <i data-lucide="bot" class="w-7 h-7"></i>
+                                </div>
+                                <h3 class="font-bold text-base sm:text-lg">Rekomendasi AI Akan Muncul di Sini</h3>
+                                <p class="text-xs sm:text-sm text-pink-200 max-w-md mx-auto leading-relaxed">
+                                    AI akan memilihkan jenis produk, bahan kertas/stiker terbaik, laminasi, jumlah hemat grosir, serta tips warna desain yang bisa langsung diterapkan ke kalkulator harga.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: AI COPYWRITING & SLOGAN GENERATOR -->
+                <div id="aiStudioCopyPanel" class="hidden grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <!-- Left Input Column -->
+                    <div class="lg:col-span-6 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-pink-100 mb-1.5">Nama Brand / Acara *</label>
+                                <input type="text" id="aiCopyBrand" placeholder="Contoh: Kopi Senja / Dapur Nabila" class="w-full rounded-xl bg-white/10 border border-white/20 text-white placeholder-pink-200/60 px-4 py-3 text-sm focus:outline-none focus:border-pink-300">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-pink-100 mb-1.5">Media Cetak</label>
+                                <select id="aiCopyTarget" class="w-full rounded-xl bg-rosa-900 border border-white/20 text-white px-4 py-3 text-sm focus:outline-none focus:border-pink-300">
+                                    <option value="Stiker Label & Kemasan Produk">Stiker Label & Kemasan Produk</option>
+                                    <option value="Brosur & X-Banner Promosi">Brosur & X-Banner Promosi</option>
+                                    <option value="Thank You Card Olshop">Thank You Card Olshop</option>
+                                    <option value="Kartu Undangan Eksklusif">Kartu Undangan Eksklusif</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-pink-100 mb-1.5">Keunggulan Produk / Isi Pesan Singkat *</label>
+                            <textarea id="aiCopyDesc" rows="3" placeholder="Contoh: Kopi susu gula aren asli tanpa pengawet, segar diminum dingin, diskon 20% khusus pembelian pertama..." class="w-full rounded-2xl bg-white/10 border border-white/20 text-white placeholder-pink-200/60 p-4 text-sm focus:outline-none focus:border-pink-300"></textarea>
+                        </div>
+
+                        <button type="button" id="aiCopySubmitBtn" onclick="runAiCopywriter()" class="w-full py-4 px-6 rounded-2xl font-extrabold text-rosa-900 bg-gradient-to-r from-white via-pink-50 to-amber-100 hover:from-pink-50 hover:to-white shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm sm:text-base">
+                            <i data-lucide="pen-tool" class="w-5 h-5 text-rosa-600"></i>
+                            <span>Buat Slogan & Teks Siap Cetak ✨</span>
+                        </button>
+                    </div>
+
+                    <!-- Right Result Column -->
+                    <div class="lg:col-span-6">
+                        <div id="aiCopyResultBox" class="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-6 min-h-[260px] flex flex-col justify-center">
+                            <div class="text-center space-y-3 py-6">
+                                <div class="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mx-auto text-pink-200">
+                                    <i data-lucide="sparkles" class="w-7 h-7"></i>
+                                </div>
+                                <h3 class="font-bold text-base sm:text-lg">Teks Promosi & Slogan Otomatis</h3>
+                                <p class="text-xs sm:text-sm text-pink-200 max-w-md mx-auto leading-relaxed">
+                                    Dapatkan ide judul utama (*headline*), slogan memikat, kalimat ajakan (*Call-to-Action*), hingga teks pelengkap kemasan yang siap dimasukkan ke pesanan cetak Anda.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. LIVE PRICE CALCULATOR / SIMULASI HARGA CETAK -->
+    <section id="kalkulator" class="py-16 sm:py-24 bg-gradient-to-b from-rosa-50/80 via-pink-50/50 to-white border-y border-rosa-100 reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="px-3.5 py-1.5 rounded-full bg-rosa-100 text-rosa-700 font-bold text-xs uppercase tracking-wider">Transparan & Real-Time</span>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mt-3">Simulasi Harga Cetak Otomatis</h2>
+                <p class="text-gray-600 text-sm sm:text-base mt-2">Atur spesifikasi cetakan Anda di bawah ini dan dapatkan estimasi biaya secara langsung beserta diskon grosir otomatis.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Column: Calculator Controls (7 cols) -->
+                <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-rosa-100 space-y-6">
+                    
+                    <!-- Step 1: Product Type -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-rosa-700 mb-2">1. Pilih Jenis Produk Cetak</label>
+                        <div class="relative">
+                            <select id="calcProduct" onchange="handleCalcProductChange()" class="w-full appearance-none bg-rosa-50/60 border border-rosa-200 text-gray-900 font-semibold text-sm rounded-2xl px-4 py-3.5 pr-10 focus:outline-none focus:border-rosa-500 focus:ring-2 focus:ring-rosa-200 transition-all cursor-pointer">
+                                <!-- Options populated by JS -->
+                            </select>
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-rosa-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Size & Paper Material -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-rosa-700 mb-2">2. Ukuran Cetak</label>
+                            <div class="relative">
+                                <select id="calcSize" onchange="calculatePrice()" class="w-full appearance-none bg-white border border-rosa-200 text-gray-800 font-medium text-sm rounded-2xl px-4 py-3 pr-10 focus:outline-none focus:border-rosa-500">
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <i data-lucide="scaling" class="w-4 h-4 text-rosa-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-rosa-700 mb-2">3. Bahan / Material</label>
+                            <div class="relative">
+                                <select id="calcMaterial" onchange="calculatePrice()" class="w-full appearance-none bg-white border border-rosa-200 text-gray-800 font-medium text-sm rounded-2xl px-4 py-3 pr-10 focus:outline-none focus:border-rosa-500">
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <i data-lucide="layers" class="w-4 h-4 text-rosa-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Quantity Slider + Quick Input -->
+                    <div class="p-4 sm:p-5 rounded-2xl bg-rosa-50/50 border border-rosa-100">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <label class="text-xs font-bold uppercase tracking-wider text-rosa-700">4. Jumlah Kuantitas (<span id="calcUnitLabel">Lembar/Pcs</span>)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="calcQtyInput" min="1" max="10000" value="50" oninput="syncQtyFromInput(this.value)" class="w-24 text-center font-extrabold text-rosa-700 bg-white border border-rosa-300 rounded-xl py-1.5 px-2 text-sm focus:outline-none focus:border-rosa-600">
+                                <span id="discountBadge" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-700">Hemat 10%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="calcQtyRange" min="1" max="1000" value="50" oninput="syncQtyFromSlider(this.value)" class="w-full my-2">
+                        <!-- Quick Quantity Chips -->
+                        <div class="flex flex-wrap items-center justify-between gap-1.5 mt-2">
+                            <span class="text-[11px] text-gray-500">Pilih Cepat:</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button type="button" onclick="setQuickQty(10)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-rosa-200 text-gray-700 hover:bg-rosa-600 hover:text-white transition-colors">10</button>
+                                <button type="button" onclick="setQuickQty(50)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-rosa-200 text-gray-700 hover:bg-rosa-600 hover:text-white transition-colors">50</button>
+                                <button type="button" onclick="setQuickQty(100)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-rosa-200 text-gray-700 hover:bg-rosa-600 hover:text-white transition-colors">100</button>
+                                <button type="button" onclick="setQuickQty(250)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-rosa-200 text-gray-700 hover:bg-rosa-600 hover:text-white transition-colors">250</button>
+                                <button type="button" onclick="setQuickQty(500)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-rosa-200 text-gray-700 hover:bg-rosa-600 hover:text-white transition-colors">500</button>
+                                <button type="button" onclick="setQuickQty(1000)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-rosa-200 text-gray-700 hover:bg-rosa-600 hover:text-white transition-colors">1.000</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Lamination / Finishing -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-rosa-700 mb-2.5">5. Pilih Laminasi & Finishing</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <button type="button" onclick="selectFinishing('none', 0)" data-fin="none" class="fin-btn p-3 rounded-2xl border-2 border-rosa-600 bg-rosa-50 text-left transition-all">
+                                <p class="font-bold text-xs text-gray-900">Tanpa Laminasi</p>
+                                <p class="text-[11px] text-rosa-600 font-medium">+Rp 0</p>
+                            </button>
+                            <button type="button" onclick="selectFinishing('glossy', 1500)" data-fin="glossy" class="fin-btn p-3 rounded-2xl border border-rosa-200 bg-white hover:bg-rosa-50/40 text-left transition-all">
+                                <p class="font-bold text-xs text-gray-900">Laminasi Glossy</p>
+                                <p class="text-[11px] text-gray-500 font-medium">Mengkilap & Cerah</p>
+                            </button>
+                            <button type="button" onclick="selectFinishing('doff', 1500)" data-fin="doff" class="fin-btn p-3 rounded-2xl border border-rosa-200 bg-white hover:bg-rosa-50/40 text-left transition-all">
+                                <p class="font-bold text-xs text-gray-900">Laminasi Doff</p>
+                                <p class="text-[11px] text-gray-500 font-medium">Lembut & Elegan</p>
+                            </button>
+                            <button type="button" onclick="selectFinishing('spotuv', 3500)" data-fin="spotuv" class="fin-btn p-3 rounded-2xl border border-rosa-200 bg-white hover:bg-rosa-50/40 text-left transition-all">
+                                <p class="font-bold text-xs text-gray-900">Spot UV + Cut</p>
+                                <p class="text-[11px] text-gray-500 font-medium">Eksklusif Timbul</p>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Production Speed -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-rosa-100">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wider text-rosa-700">6. Kecepatan Produksi</p>
+                            <p class="text-xs text-gray-500">Butuh selesai hari ini? Pilih Layanan Kilat Express.</p>
+                        </div>
+                        <div class="inline-flex rounded-2xl p-1 bg-rosa-50 border border-rosa-200 self-start">
+                            <button type="button" id="speedRegBtn" onclick="setSpeed(false)" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-rosa-600 text-white transition-all">
+                                Reguler (1-2 Hari)
+                            </button>
+                            <button type="button" id="speedExpBtn" onclick="setSpeed(true)" class="px-3.5 py-2 rounded-xl text-xs font-bold text-gray-700 hover:text-rosa-600 transition-all flex items-center gap-1">
+                                <i data-lucide="flame" class="w-3.5 h-3.5 text-rosa-500"></i> Kilat 6 Jam (+25%)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Live Price Receipt Summary (5 cols) -->
+                <div class="lg:col-span-5 bg-gradient-to-br from-rosa-900 via-rosa-800 to-pink-900 text-white rounded-3xl p-6 sm:p-8 shadow-pink-glow relative overflow-hidden">
+                    <!-- Decorative Circles -->
+                    <div class="w-48 h-48 rounded-full bg-pink-500/20 blur-2xl absolute -top-12 -right-12 pointer-events-none"></div>
+                    <div class="w-40 h-40 rounded-full bg-rosa-400/20 blur-2xl absolute bottom-0 left-0 pointer-events-none"></div>
+
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between border-b border-white/15 pb-4 mb-5">
+                            <div>
+                                <span class="text-[11px] uppercase tracking-widest text-pink-200 font-semibold">Ringkasan Estimasi</span>
+                                <h3 class="text-xl font-extrabold mt-0.5">Rincian Biaya Cetak</h3>
+                            </div>
+                            <div class="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-xs flex items-center justify-center">
+                                <i data-lucide="receipt" class="w-6 h-6 text-pink-200"></i>
+                            </div>
+                        </div>
+
+                        <!-- Selected Specs Summary -->
+                        <div class="space-y-3 text-sm mb-6">
+                            <div class="flex justify-between items-center">
+                                <span class="text-pink-200">Produk:</span>
+                                <span id="sumProduct" class="font-bold text-right">Stiker Label Kemasan A3+</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-pink-200">Ukuran & Bahan:</span>
+                                <span id="sumSpecs" class="font-medium text-right text-xs sm:text-sm">A3+ • Vinyl Waterproof</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-pink-200">Finishing:</span>
+                                <span id="sumFinishing" class="font-medium">Tanpa Laminasi</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-pink-200">Kuantitas:</span>
+                                <span id="sumQty" class="font-bold">50 Lembar</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-pink-200">Harga Satuan:</span>
+                                <span id="sumUnitPrice" class="font-semibold">Rp 12.000 / lbr</span>
+                            </div>
+                            <div class="flex justify-between items-center text-emerald-300">
+                                <span>Diskon Kuantitas Grosir:</span>
+                                <span id="sumDiscount" class="font-bold">- Rp 60.000 (10%)</span>
+                            </div>
+                        </div>
+
+                        <!-- Total Box -->
+                        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 mb-6">
+                            <div class="flex items-baseline justify-between">
+                                <span class="text-xs uppercase tracking-wider text-pink-200 font-semibold">Total Estimasi</span>
+                                <span id="sumTotalPrice" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Rp 540.000</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-white/10 text-xs text-pink-100">
+                                <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Estimasi Selesai: <strong id="sumEstTime">Besok Sore</strong></span>
+                                <span id="sumWeight">~1.2 kg</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="space-y-3">
+                            <button onclick="transferCalcToOrder()" class="w-full py-4 px-6 rounded-2xl font-bold text-rosa-900 bg-white hover:bg-pink-50 shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm sm:text-base">
+                                <i data-lucide="upload-cloud" class="w-5 h-5 text-rosa-600"></i>
+                                <span>Lanjut Upload Desain & Pesan</span>
+                            </button>
+                            <button onclick="shareQuoteWhatsApp()" class="w-full py-3 px-4 rounded-2xl font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 transition-all flex items-center justify-center gap-2 text-xs sm:text-sm">
+                                <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                <span>Tanya Admin via WhatsApp</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. PORTFOLIO / GALERI HASIL CETAK -->
+    <section id="galeri" class="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-4">
+            <div>
+                <span class="px-3.5 py-1.5 rounded-full bg-rosa-100 text-rosa-700 font-bold text-xs uppercase tracking-wider">Galeri Portofolio</span>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mt-3">Hasil Cetak Nyata & Presisi</h2>
+                <p class="text-gray-600 text-sm sm:text-base mt-1">Ribuan brand lokal, kuliner, kosmetik, dan instansi telah mempercayakan cetakannya kepada kami.</p>
+            </div>
+            <button onclick="openOrderModal()" class="self-start md:self-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-rosa-600 bg-rosa-50 hover:bg-rosa-100 border border-rosa-200 flex items-center gap-2 transition-all">
+                <span>Cetak Brand Kamu Juga</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Bento Portfolio Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Portfolio Item 1 -->
+            <div onclick="openPortfolioPreview(0)" class="glossy-card group cursor-pointer rounded-3xl bg-gradient-to-br from-rosa-100 via-pink-50 to-rose-100 p-6 border border-rosa-200/70 shadow-card flex flex-col justify-between min-h-[280px] relative overflow-hidden">
+                <div class="flex items-center justify-between z-10">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-rosa-700 shadow-2xs">Kemasan Kosmetik</span>
+                    <span class="w-9 h-9 rounded-full bg-white/90 text-gray-800 flex items-center justify-center group-hover:bg-rosa-600 group-hover:text-white transition-colors">
+                        <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                    </span>
+                </div>
+                <!-- Visual Graphic Illustration -->
+                <div class="my-6 flex items-center justify-center">
+                    <div class="w-36 h-36 rounded-3xl bg-gradient-to-tr from-rosa-600 to-pink-400 text-white shadow-pink-glow flex flex-col items-center justify-center p-4 group-hover:scale-105 group-hover:-rotate-3 transition-transform duration-300">
+                        <i data-lucide="sparkles" class="w-10 h-10 mb-1.5"></i>
+                        <span class="font-extrabold text-sm tracking-wide">GLOW SERUM</span>
+                        <span class="text-[10px] opacity-85">Hardbox + Hotprint Emas</span>
+                    </div>
+                </div>
+                <div class="z-10 bg-white/90 backdrop-blur-xs p-4 rounded-2xl border border-white">
+                    <h3 class="font-bold text-gray-900 text-sm sm:text-base">Packaging Skincare RoseGlow</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Kertas Ivory 350gr • Laminasi Doff + Poly Gold</p>
+                </div>
+            </div>
+
+            <!-- Portfolio Item 2 -->
+            <div onclick="openPortfolioPreview(1)" class="glossy-card group cursor-pointer rounded-3xl bg-gradient-to-br from-amber-50 via-rosa-50 to-pink-100 p-6 border border-rosa-200/70 shadow-card flex flex-col justify-between min-h-[280px] relative overflow-hidden">
+                <div class="flex items-center justify-between z-10">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-rosa-700 shadow-2xs">Kuliner & Kopi</span>
+                    <span class="w-9 h-9 rounded-full bg-white/90 text-gray-800 flex items-center justify-center group-hover:bg-rosa-600 group-hover:text-white transition-colors">
+                        <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                    </span>
+                </div>
+                <div class="my-6 flex items-center justify-center">
+                    <div class="w-36 h-36 rounded-full bg-gradient-to-tr from-pink-600 to-amber-500 text-white shadow-pink-glow flex flex-col items-center justify-center p-4 group-hover:scale-105 group-hover:rotate-6 transition-transform duration-300 border-4 border-white">
+                        <i data-lucide="coffee" class="w-10 h-10 mb-1"></i>
+                        <span class="font-extrabold text-xs tracking-wider uppercase">KOPI SENJA</span>
+                        <span class="text-[10px] opacity-90">Vinyl Die-Cut</span>
+                    </div>
+                </div>
+                <div class="z-10 bg-white/90 backdrop-blur-xs p-4 rounded-2xl border border-white">
+                    <h3 class="font-bold text-gray-900 text-sm sm:text-base">Label Cup & Standing Pouch Kopi</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Stiker Vinyl Tahan Air & Es • Mesin Potong Kiss-Cut</p>
+                </div>
+            </div>
+
+            <!-- Portfolio Item 3 -->
+            <div onclick="openPortfolioPreview(2)" class="glossy-card group cursor-pointer rounded-3xl bg-gradient-to-br from-purple-50 via-rosa-50 to-pink-100 p-6 border border-rosa-200/70 shadow-card flex flex-col justify-between min-h-[280px] relative overflow-hidden">
+                <div class="flex items-center justify-between z-10">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-white/90 text-rosa-700 shadow-2xs">Event & Undangan</span>
+                    <span class="w-9 h-9 rounded-full bg-white/90 text-gray-800 flex items-center justify-center group-hover:bg-rosa-600 group-hover:text-white transition-colors">
+                        <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                    </span>
+                </div>
+                <div class="my-6 flex items-center justify-center">
+                    <div class="w-40 h-32 rounded-2xl bg-gradient-to-tr from-rosa-700 to-purple-600 text-white shadow-pink-glow flex flex-col items-center justify-center p-4 group-hover:scale-105 transition-transform duration-300">
+                        <i data-lucide="heart-handshake" class="w-9 h-9 mb-1 text-pink-200"></i>
+                        <span class="font-serif italic text-sm font-bold">Raisa &amp; Hamish</span>
+                        <span class="text-[10px] opacity-85 mt-0.5">Jasmine Pearl Paper</span>
+                    </div>
+                </div>
+                <div class="z-10 bg-white/90 backdrop-blur-xs p-4 rounded-2xl border border-white">
+                    <h3 class="font-bold text-gray-900 text-sm sm:text-base">Undangan Pernikahan Hardcover</h3>
+                    <p class="text-xs text-gray-500 mt-0.5">Kertas Jasmine Glitter • Emboss + Amplop Custom</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. TESTIMONIALS SECTION -->
+    <section id="testimoni" class="py-16 sm:py-24 bg-rosa-50/70 border-t border-rosa-100 reveal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="px-3.5 py-1.5 rounded-full bg-rosa-100 text-rosa-700 font-bold text-xs uppercase tracking-wider">Kata Pelanggan Kami</span>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mt-3">Dipercaya Ribuan UMKM & Perusahaan</h2>
+                <p class="text-gray-600 text-sm sm:text-base mt-2">Kepuasan Anda adalah prioritas utama kami. Berikut pengalaman nyata pelanggan Rosa Indah Printing.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Testimonial 1 -->
+                <div class="bg-white p-6 rounded-3xl shadow-card border border-rosa-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-1 text-amber-400 mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <p class="text-gray-700 text-sm leading-relaxed italic">
+                            "Langganan cetak stiker botol dan box kue di Rosa Indah Printing sejak 2024. Warnanya keluar banget, cutting-nya rapi presisi, dan pagi kirim file sore udah bisa diambil!"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-6 pt-4 border-t border-rosa-50">
+                        <div class="w-10 h-10 rounded-full bg-rosa-100 text-rosa-700 font-bold flex items-center justify-center text-sm">AN</div>
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">Amanda Nabila</h4>
+                            <p class="text-xs text-gray-500">Owner Dapur Manis Bakery</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="bg-white p-6 rounded-3xl shadow-card border border-rosa-200 relative flex flex-col justify-between">
+                    <span class="absolute top-4 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rosa-100 text-rosa-700">Repeat Order 12x</span>
+                    <div>
+                        <div class="flex items-center gap-1 text-amber-400 mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <p class="text-gray-700 text-sm leading-relaxed italic">
+                            "Fitur kalkulator harganya sangat membantu tim pengadaan kantor kami buat estimasi budget seminar kit, lanyard, dan x-banner. Adminnya juga fast-response banget!"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-6 pt-4 border-t border-rosa-50">
+                        <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-700 font-bold flex items-center justify-center text-sm">BP</div>
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">Bagas Pratama</h4>
+                            <p class="text-xs text-gray-500">Event Organizer Jakarta</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="bg-white p-6 rounded-3xl shadow-card border border-rosa-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-1 text-amber-400 mb-4">
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                        </div>
+                        <p class="text-gray-700 text-sm leading-relaxed italic">
+                            "Awalnya bingung ukuran resolusi file agak pecah, ternyata dicek gratis sama tim desainer Rosa Indah dan dibantu rapikan sebelum naik cetak. Hasil undangannya mewah banget!"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 mt-6 pt-4 border-t border-rosa-50">
+                        <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-700 font-bold flex items-center justify-center text-sm">SR</div>
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">Siti Rahmawati</h4>
+                            <p class="text-xs text-gray-500">Bride-to-be, Bandung</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. FAQ ACCORDION SECTION -->
+    <section id="faq" class="py-16 sm:py-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
+        <div class="text-center mb-12">
+            <span class="px-3.5 py-1.5 rounded-full bg-rosa-100 text-rosa-700 font-bold text-xs uppercase tracking-wider">Pusat Bantuan</span>
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 mt-3">Pertanyaan yang Sering Diajukan</h2>
+            <p class="text-gray-600 text-sm sm:text-base mt-2">Temukan panduan cepat seputar format file desain, minimal pemesanan, dan pengiriman.</p>
+        </div>
+
+        <div class="space-y-3.5" id="faqContainer">
+            <!-- FAQ Item 1 -->
+            <div class="bg-white rounded-2xl border border-rosa-100 shadow-2xs overflow-hidden">
+                <button onclick="toggleFaq(0)" class="w-full px-6 py-4 text-left flex items-center justify-between gap-4 font-bold text-gray-900 text-sm sm:text-base hover:text-rosa-600 transition-colors">
+                    <span>Format file desain apa saja yang bisa di-upload untuk dicetak?</span>
+                    <i data-lucide="chevron-down" id="faqIcon0" class="w-5 h-5 text-rosa-500 shrink-0 transition-transform duration-300"></i>
+                </button>
+                <div id="faqContent0" class="px-6 pb-5 text-sm text-gray-600 leading-relaxed hidden">
+                    Kami menerima format <strong>PDF, CDR (CorelDraw), AI (Adobe Illustrator), PSD (Photoshop), PNG, dan JPG</strong> beresolusi tinggi (minimal 300 DPI). Untuk hasil warna paling akurat sesuai layar mesin cetak, sangat disarankan menggunakan mode warna <strong>CMYK</strong>.
+                </div>
+            </div>
+
+            <!-- FAQ Item 2 -->
+            <div class="bg-white rounded-2xl border border-rosa-100 shadow-2xs overflow-hidden">
+                <button onclick="toggleFaq(1)" class="w-full px-6 py-4 text-left flex items-center justify-between gap-4 font-bold text-gray-900 text-sm sm:text-base hover:text-rosa-600 transition-colors">
+                    <span>Apakah ada minimal order (MOQ) di Rosa Indah Printing?</span>
+                    <i data-lucide="chevron-down" id="faqIcon1" class="w-5 h-5 text-rosa-500 shrink-0 transition-transform duration-300"></i>
+                </button>
+                <div id="faqContent1" class="px-6 pb-5 text-sm text-gray-600 leading-relaxed hidden">
+                    Sangat fleksibel! Untuk stiker A3+, poster, banner, dan merchandise mug/tumbler bisa pesan mulai dari <strong>1 lembar atau 1 pcs</strong>. Untuk pemesanan jumlah banyak (di atas 50 - 500 pcs) otomatis mendapatkan potongan harga grosir hingga 25%.
+                </div>
+            </div>
+
+            <!-- FAQ Item 3 -->
+            <div class="bg-white rounded-2xl border border-rosa-100 shadow-2xs overflow-hidden">
+                <button onclick="toggleFaq(2)" class="w-full px-6 py-4 text-left flex items-center justify-between gap-4 font-bold text-gray-900 text-sm sm:text-base hover:text-rosa-600 transition-colors">
+                    <span>Bagaimana jika saya belum punya desain siap cetak?</span>
+                    <i data-lucide="chevron-down" id="faqIcon2" class="w-5 h-5 text-rosa-500 shrink-0 transition-transform duration-300"></i>
+                </button>
+                <div id="faqContent2" class="px-6 pb-5 text-sm text-gray-600 leading-relaxed hidden">
+                    Jangan khawatir! Tim desainer grafis <strong>Rosa Indah Studio</strong> siap membantu membuatkan desain kemasan, logo, atau undangan dari nol. Cukup centang opsi bantuan desain saat melakukan pemesanan atau konsultasikan lewat WhatsApp.
+                </div>
+            </div>
+
+            <!-- FAQ Item 4 -->
+            <div class="bg-white rounded-2xl border border-rosa-100 shadow-2xs overflow-hidden">
+                <button onclick="toggleFaq(3)" class="w-full px-6 py-4 text-left flex items-center justify-between gap-4 font-bold text-gray-900 text-sm sm:text-base hover:text-rosa-600 transition-colors">
+                    <span>Berapa lama proses pengerjaan dan bagaimana pengirimannya?</span>
+                    <i data-lucide="chevron-down" id="faqIcon3" class="w-5 h-5 text-rosa-500 shrink-0 transition-transform duration-300"></i>
+                </button>
+                <div id="faqContent3" class="px-6 pb-5 text-sm text-gray-600 leading-relaxed hidden">
+                    Untuk layanan <strong>Kilat Express</strong> selesai dalam 3–6 jam di hari yang sama. Layanan Reguler berkisar 1–2 hari kerja. Pengiriman tersedia menggunakan Kurir Instan (GoSend/GrabExpress), ekspedisi kargo ke seluruh Indonesia, atau ambil langsung di workshop kami.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-300 pt-16 pb-12 border-t-4 border-rosa-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-gray-800">
+                
+                <!-- Brand Info (4 cols) -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-rosa-500 to-pink-600 flex items-center justify-center text-white font-extrabold text-lg">R</div>
+                        <span class="text-xl font-extrabold text-white">Rosa Indah <span class="text-rosa-400">Printing</span></span>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed">
+                        Partner percetakan digital & offset modern terpercaya di Indonesia. Menghadirkan kualitas warna terbaik untuk kemasan UMKM, promosi korporat, dan momen spesial Anda.
+                    </p>
+                    <div class="flex items-center gap-3 pt-1">
+                        <a href="#beranda" aria-label="Instagram" class="w-9 h-9 rounded-xl bg-gray-800 hover:bg-rosa-600 text-white flex items-center justify-center transition-colors">
+                            <i data-lucide="instagram" class="w-4 h-4"></i>
+                        </a>
+                        <a href="#beranda" aria-label="Facebook" class="w-9 h-9 rounded-xl bg-gray-800 hover:bg-rosa-600 text-white flex items-center justify-center transition-colors">
+                            <i data-lucide="facebook" class="w-4 h-4"></i>
+                        </a>
+                        <a href="#beranda" aria-label="Youtube" class="w-9 h-9 rounded-xl bg-gray-800 hover:bg-rosa-600 text-white flex items-center justify-center transition-colors">
+                            <i data-lucide="youtube" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links (2 cols) -->
+                <div class="lg:col-span-2 space-y-3">
+                    <h4 class="text-white font-bold text-sm uppercase tracking-wider">Layanan</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#katalog" onclick="filterProducts('kemasan')" class="hover:text-rosa-400 transition-colors">Stiker & Label</a></li>
+                        <li><a href="#katalog" onclick="filterProducts('kemasan')" class="hover:text-rosa-400 transition-colors">Box Kemasan</a></li>
+                        <li><a href="#katalog" onclick="filterProducts('promosi')" class="hover:text-rosa-400 transition-colors">Spanduk & Banner</a></li>
+                        <li><a href="#katalog" onclick="filterProducts('kartu')" class="hover:text-rosa-400 transition-colors">Kartu Undangan</a></li>
+                        <li><a href="#katalog" onclick="filterProducts('merchandise')" class="hover:text-rosa-400 transition-colors">Custom Merchandise</a></li>
+                    </ul>
+                </div>
+
+                <!-- Jam Operasional (3 cols) -->
+                <div class="lg:col-span-3 space-y-3">
+                    <h4 class="text-white font-bold text-sm uppercase tracking-wider">Jam Operasional</h4>
+                    <div class="bg-gray-800/70 rounded-2xl p-4 space-y-2 text-xs border border-gray-700/60">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Senin - Jumat:</span>
+                            <span class="text-white font-semibold">08.00 - 21.00 WIB</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Sabtu:</span>
+                            <span class="text-white font-semibold">08.00 - 19.00 WIB</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Minggu / Hari Libur:</span>
+                            <span class="text-rosa-400 font-semibold">Order Online 24 Jam</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Info (3 cols) -->
+                <div class="lg:col-span-3 space-y-3">
+                    <h4 class="text-white font-bold text-sm uppercase tracking-wider">Hubungi Workshop</h4>
+                    <ul class="space-y-2.5 text-sm text-gray-400">
+                        <li class="flex items-start gap-2.5">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-rosa-400 shrink-0 mt-1"></i>
+                            <span>Jl. Mawar Indah Raya No. 88, Kebayoran, Jakarta Selatan</span>
+                        </li>
+                        <li class="flex items-center gap-2.5">
+                            <i data-lucide="phone" class="w-4 h-4 text-rosa-400 shrink-0"></i>
+                            <span>+62 812-8899-7766 (WhatsApp)</span>
+                        </li>
+                        <li class="flex items-center gap-2.5">
+                            <i data-lucide="mail" class="w-4 h-4 text-rosa-400 shrink-0"></i>
+                            <span>order@rosaindahprinting.id</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+                <p>© 2026 Rosa Indah Printing. Hak Cipta Dilindungi.</p>
+                <div class="flex items-center gap-4">
+                    <span>Pembayaran: QRIS • BCA • Mandiri • BNI • COD</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MOBILE FIXED BOTTOM NAVIGATION BAR -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-rosa-200 px-3 py-2 flex items-center justify-around shadow-lg">
+        <a href="#beranda" class="flex flex-col items-center gap-0.5 text-gray-600 hover:text-rosa-600 text-[11px] font-medium">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span>Beranda</span>
+        </a>
+        <a href="#katalog" class="flex flex-col items-center gap-0.5 text-gray-600 hover:text-rosa-600 text-[11px] font-medium">
+            <i data-lucide="grid" class="w-5 h-5"></i>
+            <span>Katalog</span>
+        </a>
+        <button onclick="openOrderModal()" class="flex flex-col items-center justify-center -mt-6 bg-gradient-to-r from-rosa-600 to-pink-500 text-white w-14 h-14 rounded-2xl shadow-pink-glow border-4 border-white">
+            <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+        </button>
+        <a href="#kalkulator" class="flex flex-col items-center gap-0.5 text-gray-600 hover:text-rosa-600 text-[11px] font-medium">
+            <i data-lucide="calculator" class="w-5 h-5"></i>
+            <span>Harga</span>
+        </a>
+        <button onclick="openTrackModal()" class="flex flex-col items-center gap-0.5 text-gray-600 hover:text-rosa-600 text-[11px] font-medium">
+            <i data-lucide="package-search" class="w-5 h-5"></i>
+            <span>Lacak</span>
+        </button>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- INTERACTIVE MODAL 1: ORDER & UPLOAD DESIGN STUDIO                 -->
+    <!-- ================================================================= -->
+    <div id="orderModal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-gray-900/60 backdrop-blur-xs overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-rosa-100 overflow-hidden my-auto animate-fadeIn">
+            
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-rosa-600 via-rosa-500 to-pink-500 px-6 py-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <i data-lucide="printer" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base sm:text-lg">Formulir Order & Upload Desain</h3>
+                        <p class="text-xs text-pink-100">Rosa Indah Printing • Pemeriksaan File Otomatis</p>
+                    </div>
+                </div>
+                <button onclick="closeOrderModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 max-h-[82vh] overflow-y-auto space-y-6">
+                
+                <!-- Pre-filled Specs Banner -->
+                <div class="p-4 rounded-2xl bg-rosa-50 border border-rosa-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-rosa-600">Spesifikasi Pesanan Anda</span>
+                        <h4 id="modalOrderProductTitle" class="font-bold text-gray-900 text-sm sm:text-base">Stiker Label Kemasan A3+ (50 Lembar)</h4>
+                        <p id="modalOrderSpecsSub" class="text-xs text-gray-600">Ukuran A3+ • Bahan Vinyl Waterproof • Tanpa Laminasi</p>
+                    </div>
+                    <div class="sm:text-right">
+                        <span class="text-xs text-gray-500">Estimasi Total:</span>
+                        <p id="modalOrderTotal" class="text-lg font-extrabold text-rosa-700">Rp 540.000</p>
+                    </div>
+                </div>
+
+                <!-- File Upload Dropzone & Preview -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                    <div class="md:col-span-7">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">Upload File Desain Siap Cetak</label>
+                        <div id="dropZone" onclick="document.getElementById('designFileInput').click()" class="border-2 border-dashed border-rosa-300 hover:border-rosa-500 bg-rosa-50/40 hover:bg-rosa-50 rounded-2xl p-6 text-center cursor-pointer transition-all">
+                            <input type="file" id="designFileInput" class="hidden" accept=".png,.jpg,.jpeg,.pdf,.cdr,.ai,.psd" onchange="handleFileUpload(this)">
+                            <div class="w-12 h-12 rounded-2xl bg-rosa-100 text-rosa-600 flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                            </div>
+                            <p id="uploadFileName" class="font-bold text-gray-800 text-sm">Klik untuk pilih file desain Anda</p>
+                            <p class="text-xs text-gray-500 mt-1">Mendukung PDF, CDR, AI, PSD, PNG, JPG (Maks. 50MB)</p>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <button type="button" onclick="loadSampleDesign()" class="text-xs font-semibold text-rosa-600 hover:underline flex items-center gap-1">
+                                <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> Gunakan Contoh Desain Demo
+                            </button>
+                            <span id="fileDpiStatus" class="text-[11px] font-semibold text-emerald-600 hidden">✓ Resolusi Siap Cetak (300 DPI)</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Print Mockup Box -->
+                    <div class="md:col-span-5 bg-gray-50 rounded-2xl p-4 border border-gray-200 flex flex-col items-center justify-center min-h-[175px] relative">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Pratinjau Area Cetak (Bleed 2mm)</span>
+                        <div id="designPreviewBox" class="w-full h-32 rounded-xl border border-dashed border-rosa-400 bg-white flex flex-col items-center justify-center p-3 overflow-hidden relative">
+                            <i data-lucide="file-image" class="w-8 h-8 text-rosa-300 mb-1"></i>
+                            <span class="text-xs text-gray-400 text-center">Belum ada file dipilih</span>
+                        </div>
+                        <button type="button" id="aiPrepressBtn" onclick="analyzeDesignWithAI()" class="mt-3 w-full py-2 px-3 rounded-xl text-xs font-bold text-rosa-700 bg-rosa-100/90 hover:bg-rosa-200/80 border border-rosa-300 transition-all flex items-center justify-center gap-1.5">
+                            <i data-lucide="scan-eye" class="w-3.5 h-3.5 text-rosa-600"></i>
+                            <span>Analisis Kelayakan Desain (AI) ✨</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Pre-Press Analysis Report Card (Hidden until triggered) -->
+                <div id="aiPrepressReport" class="hidden p-4 rounded-2xl bg-gradient-to-r from-rosa-50 via-pink-50 to-white border border-rosa-200 space-y-2">
+                    <!-- Populated dynamically via Gemini Multimodal/Text API -->
+                </div>
+
+                <!-- Customer Contact Information Form -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">Nama Lengkap / Brand *</label>
+                        <input type="text" id="custName" placeholder="Contoh: Rina Sari (Kopi Senja)" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-rosa-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">Nomor WhatsApp Aktif *</label>
+                        <input type="tel" id="custPhone" placeholder="Contoh: 081234567890" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-rosa-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">Metode Pengambilan / Pengiriman</label>
+                        <select id="custDelivery" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-rosa-500">
+                            <option value="Kurir Instan (GoSend / GrabExpress)">Kurir Instan (GoSend / GrabExpress)</option>
+                            <option value="Ambil Sendiri di Store Rosa Indah">Ambil Sendiri di Workshop Rosa Indah</option>
+                            <option value="Ekspedisi Reguler / Kargo (JNE / J&T)">Ekspedisi Reguler / Kargo (JNE / J&T)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1.5">Catatan Tambahan (Opsional)</label>
+                        <input type="text" id="custNotes" placeholder="Contoh: Potong bulat diameter 5cm" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-rosa-500">
+                    </div>
+                </div>
+
+                <!-- Submit & Checkout Actions -->
+                <div class="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-end gap-3">
+                    <button type="button" onclick="closeOrderModal()" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-100">
+                        Batal
+                    </button>
+                    <button type="button" onclick="submitOrderCheckout()" class="w-full sm:w-auto px-7 py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-rosa-600 to-pink-500 hover:from-rosa-700 hover:to-pink-600 shadow-pink-sm flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>Buat Pesanan & Kirim ke WhatsApp</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- INTERACTIVE MODAL 2: ORDER TRACKING / LACAK PESANAN               -->
+    <!-- ================================================================= -->
+    <div id="trackModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-rosa-100">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-2xl bg-rosa-100 text-rosa-600 flex items-center justify-center">
+                        <i data-lucide="package-search" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-gray-900 text-base sm:text-lg">Lacak Status Cetak</h3>
+                        <p class="text-xs text-gray-500">Pantau progres produksi cetakan Anda</p>
+                    </div>
+                </div>
+                <button onclick="closeTrackModal()" class="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="flex gap-2 mb-5">
+                <input type="text" id="trackInputCode" value="ROSA-8829" placeholder="Masukkan Nomor Invoice (Contoh: ROSA-8829)" class="flex-1 px-4 py-3 rounded-xl border border-rosa-200 text-sm font-semibold focus:outline-none focus:border-rosa-500">
+                <button onclick="checkTrackingStatus()" class="px-5 py-3 rounded-xl bg-rosa-600 hover:bg-rosa-700 text-white font-bold text-sm transition-colors">
+                    Cek
+                </button>
+            </div>
+
+            <div id="trackResultCard" class="p-4 rounded-2xl bg-rosa-50/70 border border-rosa-200 space-y-4">
+                <div class="flex items-center justify-between border-b border-rosa-200/70 pb-3">
+                    <div>
+                        <span class="text-[11px] font-bold text-rosa-600 uppercase">Invoice #ROSA-8829</span>
+                        <h4 class="font-bold text-gray-900 text-sm">Stiker Vinyl A3+ & Kemasan Box</h4>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Proses Cutting</span>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div class="flex items-center gap-3 text-emerald-700 font-semibold">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
+                        <span>File Desain Terverifikasi (CMYK 300 DPI) — 09:15 WIB</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-emerald-700 font-semibold">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 shrink-0"></i>
+                        <span>Selesai Cetak Mesin Digital Press — 11:30 WIB</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-rosa-600 font-bold">
+                        <i data-lucide="loader" class="w-4 h-4 shrink-0 animate-spin"></i>
+                        <span>Tahap Laminasi & Die-Cutting Presisi — Sedang Berlangsung</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-gray-400">
+                        <i data-lucide="circle" class="w-4 h-4 shrink-0"></i>
+                        <span>Quality Control & Siap Dikirim</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM TOAST NOTIFICATION -->
+    <div id="toastNotification" class="fixed bottom-20 md:bottom-6 right-4 z-50 max-w-sm bg-gray-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-rosa-500/40 flex items-center gap-3 transform translate-y-24 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="w-8 h-8 rounded-xl bg-rosa-600 text-white flex items-center justify-center shrink-0">
+            <i data-lucide="check" class="w-4 h-4"></i>
+        </div>
+        <div>
+            <p id="toastTitle" class="font-bold text-xs sm:text-sm">Berhasil!</p>
+            <p id="toastMessage" class="text-[11px] text-gray-300">Spesifikasi telah diperbarui.</p>
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT -->
+    <script>
+        // =========================================================================
+        // 1. PRODUCT CATALOG DATA (Indonesian Online Printing Products)
+        // =========================================================================
+        const printingProducts = [
+            {
+                id: 'stiker-a3',
+                name: 'Stiker Label Kemasan A3+',
+                category: 'kemasan',
+                badge: 'Terlaris',
+                unit: 'Lembar A3+',
+                basePrice: 12000,
+                desc: 'Stiker label produk anti air, sudah termasuk potong sesuai pola (Kiss-Cut / Die-Cut).',
+                icon: 'sticker',
+                gradient: 'from-rosa-500 to-pink-500',
+                sizes: ['A3+ (32 x 48 cm)', 'A4 (21 x 29.7 cm)', 'Custom Roll Meteran'],
+                materials: ['Stiker Vinyl Waterproof', 'Stiker Chromo Glossy', 'Stiker Transparan Bening', 'Stiker Gold Foil']
+            },
+            {
+                id: 'box-kemasan',
+                name: 'Custom Box Kemasan Produk',
+                category: 'kemasan',
+                badge: 'UMKM Favorit',
+                unit: 'Pcs Box',
+                basePrice: 3500,
+                desc: 'Kotak kemasan kosmetik, parfum, dan kuliner dengan bahan kokoh & cetak full color.',
+                icon: 'package',
+                gradient: 'from-pink-600 to-rose-500',
+                sizes: ['Kecil (10 x 10 x 5 cm)', 'Sedang (15 x 12 x 7 cm)', 'Besar (22 x 15 x 8 cm)'],
+                materials: ['Ivory 310gr Foodgrade', 'Ivory 350gr Tebal', 'Duplex 310gr Ekonomis', 'Kraft Coklat Estetik']
+            },
+            {
+                id: 'standing-pouch',
+                name: 'Standing Pouch Full Print',
+                category: 'kemasan',
+                badge: 'Food Grade',
+                unit: 'Pcs Pouch',
+                basePrice: 2800,
+                desc: 'Kemasan kopi, snack, & bubuk dilengkapi ziplock kedap udara dengan desain suka-suka.',
+                icon: 'shopping-bag',
+                gradient: 'from-rose-500 to-amber-500',
+                sizes: ['100 gram (10 x 17 cm)', '250 gram (14 x 22 cm)', '500 gram (16 x 24 cm)'],
+                materials: ['Alufo Matte Premium', 'Metalize Paper', 'Nylon Transparan Kombinasi']
+            },
+            {
+                id: 'x-banner',
+                name: 'X-Banner & Roll Up Banner',
+                category: 'promosi',
+                badge: 'Siap 3 Jam',
+                unit: 'Set Lengkap',
+                basePrice: 85000,
+                desc: 'Media promosi toko, pameran, dan event lengkap dengan tiang penyangga kokoh.',
+                icon: 'flag',
+                gradient: 'from-rosa-600 to-purple-600',
+                sizes: ['X-Banner (60 x 160 cm)', 'Roll Up Banner (60 x 160 cm)', 'Roll Up Besar (85 x 200 cm)'],
+                materials: ['Albatros Halus Indoor', 'Flexi Korea 440gr Outdoor', 'Luster Photo Paper']
+            },
+            {
+                id: 'brosur-flyer',
+                name: 'Brosur & Flyer Promosi',
+                category: 'promosi',
+                badge: 'Hemat',
+                unit: 'Lembar',
+                basePrice: 1200,
+                desc: 'Cetak brosur lipat 2/3 atau flyer promosi dengan warna cerah tajam bolak-balik.',
+                icon: 'book-open',
+                gradient: 'from-pink-500 to-indigo-500',
+                sizes: ['A5 (14.8 x 21 cm)', 'A4 (21 x 29.7 cm)', 'DL Lipat Tiga'],
+                materials: ['Art Paper 120gr', 'Art Paper 150gr Mengkilap', 'Art Carton 210gr']
+            },
+            {
+                id: 'kartu-nama',
+                name: 'Kartu Nama & Thank You Card',
+                category: 'kartu',
+                badge: '100 Pcs/Box',
+                unit: 'Box (100 Pcs)',
+                basePrice: 35000,
+                desc: 'Kartu nama bisnis profesional atau kartu ucapan olshop untuk mempercantik paket.',
+                icon: 'credit-card',
+                gradient: 'from-rosa-700 to-pink-500',
+                sizes: ['Standar (9 x 5.5 cm)', 'Square (7 x 7 cm)', 'A6 Postcard (10.5 x 14.8 cm)'],
+                materials: ['Art Carton 260gr', 'Blueswhite 250gr Bisa Ditulis', 'Kertas Tekstur Linen', 'PVC ID Card Tebal']
+            },
+            {
+                id: 'undangan',
+                name: 'Undangan Pernikahan Eksklusif',
+                category: 'kartu',
+                badge: 'Custom',
+                unit: 'Pcs Undangan',
+                basePrice: 4500,
+                desc: 'Undangan pernikahan estetik dengan pilihan kertas bertekstur mutiara dan hotprint emas.',
+                icon: 'mail-heart',
+                gradient: 'from-rose-600 to-pink-400',
+                sizes: ['Softcover Lipat 2 (15 x 21 cm)', 'Hardcover Eksklusif + Amplop', 'Boarding Pass Vintage'],
+                materials: ['Jasmine Glitter Pearl', 'Art Carton 310gr Tebal', 'Aster Ivory Import']
+            },
+            {
+                id: 'merch-mug',
+                name: 'Custom Mug, Tumbler & Totebag',
+                category: 'merchandise',
+                badge: 'Souvenir',
+                unit: 'Pcs',
+                basePrice: 25000,
+                desc: 'Cetak souvenir perusahaan, hadiah ulang tahun, atau seminar kit dengan logo brand Anda.',
+                icon: 'gift',
+                gradient: 'from-rosa-500 to-amber-500',
+                sizes: ['Mug Keramik SNI 11oz', 'Tumbler Stainless LED Suhu', 'Totebag Kanvas Tebal (30x40cm)'],
+                materials: ['Sublimasi Full Color', 'Print UV Timbul Permanen', 'Grafir Laser Elegan']
+            }
+        ];
+
+        // Current Calculator State
+        let currentFinishing = { type: 'none', name: 'Tanpa Laminasi', extraCost: 0 };
+        let isExpressSpeed = false;
+        let currentCategoryFilter = 'all';
+        let uploadedImageBase64 = null;
+        let uploadedImageMimeType = null;
+        let lastAiRecommendation = null;
+
+        // =========================================================================
+        // GEMINI API HELPER WITH EXPONENTIAL BACKOFF
+        // =========================================================================
+        const apiKey = "";
+
+        async function callGeminiAPI(payload) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const delays = [1000, 2000, 4000, 8000, 16000];
+
+            for (let attempt = 0; attempt <= delays.length; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) {
+                        throw new Error("Empty response from model");
+                    }
+                    return text;
+                } catch (err) {
+                    if (attempt === delays.length) {
+                        throw err;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+                }
+            }
+        }
+
+        // =========================================================================
+        // 2. RENDER CATALOG & FILTERING
+        // =========================================================================
+        function renderProducts(list) {
+            const grid = document.getElementById('productGrid');
+            if (!list.length) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-white rounded-3xl border border-rosa-100 p-6">
+                        <p class="font-bold text-gray-800 text-base">Produk tidak ditemukan</p>
+                        <p class="text-xs text-gray-500 mt-1">Coba kata kunci lain atau tampilkan semua kategori.</p>
+                        <button onclick="filterProducts('all')" class="mt-4 px-4 py-2 rounded-xl bg-rosa-600 text-white text-xs font-bold">Lihat Semua Produk</button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = list.map(prod => `
+                <div class="glossy-card bg-white rounded-3xl p-5 border border-rosa-100 shadow-card hover:shadow-pink-glow transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                    <div>
+                        <!-- Visual Top Header -->
+                        <div class="h-36 rounded-2xl bg-gradient-to-br ${prod.gradient} p-4 flex flex-col justify-between text-white relative overflow-hidden mb-4">
+                            <div class="flex items-center justify-between z-10">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-xs uppercase tracking-wider">${prod.badge}</span>
+                                <span class="text-[11px] font-medium opacity-90">${prod.unit}</span>
+                            </div>
+                            <div class="my-auto flex items-center justify-center z-10">
+                                <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i data-lucide="${prod.icon}" class="w-7 h-7 text-white"></i>
+                                </div>
+                            </div>
+                            <div class="w-24 h-24 rounded-full bg-white/10 absolute -bottom-8 -right-8"></div>
+                        </div>
+
+                        <!-- Product Title & Desc -->
+                        <h3 class="font-bold text-gray-900 text-base group-hover:text-rosa-600 transition-colors">${prod.name}</h3>
+                        <p class="text-xs text-gray-500 mt-1.5 leading-relaxed line-clamp-2">${prod.desc}</p>
+                    </div>
+
+                    <div class="mt-5 pt-4 border-t border-rosa-50">
+                        <div class="flex items-baseline justify-between mb-3">
+                            <span class="text-[11px] text-gray-400 font-medium">Mulai dari</span>
+                            <div>
+                                <span class="text-base font-extrabold text-rosa-600">${formatRupiah(prod.basePrice)}</span>
+                                <span class="text-[11px] text-gray-400">/${prod.unit.split(' ')[0]}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="selectProductInCalculator('${prod.id}')" class="py-2.5 px-3 rounded-xl text-xs font-bold text-rosa-700 bg-rosa-50 hover:bg-rosa-100 border border-rosa-200 transition-colors flex items-center justify-center gap-1">
+                                <i data-lucide="calculator" class="w-3.5 h-3.5"></i> Hitung
+                            </button>
+                            <button onclick="quickOrderProduct('${prod.id}')" class="py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-rosa-600 to-pink-500 hover:from-rosa-700 hover:to-pink-600 shadow-2xs transition-all flex items-center justify-center gap-1">
+                                <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i> Pesan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function filterProducts(category) {
+            currentCategoryFilter = category;
+            document.querySelectorAll('.cat-tab').forEach(btn => {
+                if (btn.dataset.cat === category) {
+                    btn.className = 'cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-rosa-600 text-white shadow-2xs';
+                } else {
+                    btn.className = 'cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all text-gray-600 hover:text-rosa-600 hover:bg-rosa-50';
+                }
+            });
+
+            const filtered = category === 'all'
+                ? printingProducts
+                : printingProducts.filter(p => p.category === category);
+            renderProducts(filtered);
+        }
+
+        function searchProducts(query) {
+            const q = query.toLowerCase().trim();
+            const filtered = printingProducts.filter(p =>
+                p.name.toLowerCase().includes(q) ||
+                p.desc.toLowerCase().includes(q)
+            );
+            renderProducts(filtered);
+        }
+
+        // =========================================================================
+        // 3. LIVE PRICE CALCULATOR LOGIC
+        // =========================================================================
+        function initCalculator() {
+            const select = document.getElementById('calcProduct');
+            select.innerHTML = printingProducts.map(p =>
+                `<option value="${p.id}">${p.name} — Mulai ${formatRupiah(p.basePrice)}/${p.unit}</option>`
+            ).join('');
+            handleCalcProductChange();
+        }
+
+        function handleCalcProductChange() {
+            const prodId = document.getElementById('calcProduct').value;
+            const prod = printingProducts.find(p => p.id === prodId) || printingProducts[0];
+
+            // Populate Sizes
+            const sizeSelect = document.getElementById('calcSize');
+            sizeSelect.innerHTML = prod.sizes.map((s, idx) =>
+                `<option value="${idx}">${s}</option>`
+            ).join('');
+
+            // Populate Materials
+            const matSelect = document.getElementById('calcMaterial');
+            matSelect.innerHTML = prod.materials.map((m, idx) =>
+                `<option value="${idx}">${m}</option>`
+            ).join('');
+
+            document.getElementById('calcUnitLabel').textContent = prod.unit;
+            calculatePrice();
+        }
+
+        function syncQtyFromSlider(val) {
+            document.getElementById('calcQtyInput').value = val;
+            calculatePrice();
+        }
+
+        function syncQtyFromInput(val) {
+            let num = parseInt(val, 10);
+            if (isNaN(num) || num < 1) num = 1;
+            if (num > 10000) num = 10000;
+            document.getElementById('calcQtyRange').value = Math.min(num, 1000);
+            calculatePrice();
+        }
+
+        function setQuickQty(num) {
+            document.getElementById('calcQtyInput').value = num;
+            document.getElementById('calcQtyRange').value = Math.min(num, 1000);
+            calculatePrice();
+        }
+
+        function selectFinishing(type, extraCost) {
+            const names = {
+                none: 'Tanpa Laminasi',
+                glossy: 'Laminasi Glossy',
+                doff: 'Laminasi Doff',
+                spotuv: 'Spot UV + Die-Cut'
+            };
+            currentFinishing = { type, name: names[type], extraCost };
+
+            document.querySelectorAll('.fin-btn').forEach(btn => {
+                if (btn.dataset.fin === type) {
+                    btn.className = 'fin-btn p-3 rounded-2xl border-2 border-rosa-600 bg-rosa-50 text-left transition-all';
+                } else {
+                    btn.className = 'fin-btn p-3 rounded-2xl border border-rosa-200 bg-white hover:bg-rosa-50/40 text-left transition-all';
+                }
+            });
+            calculatePrice();
+        }
+
+        function setSpeed(express) {
+            isExpressSpeed = express;
+            const regBtn = document.getElementById('speedRegBtn');
+            const expBtn = document.getElementById('speedExpBtn');
+
+            if (express) {
+                expBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold bg-rosa-600 text-white transition-all flex items-center gap-1';
+                regBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold text-gray-700 hover:text-rosa-600 transition-all';
+            } else {
+                regBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold bg-rosa-600 text-white transition-all';
+                expBtn.className = 'px-3.5 py-2 rounded-xl text-xs font-bold text-gray-700 hover:text-rosa-600 transition-all flex items-center gap-1';
+            }
+            lucide.createIcons();
+            calculatePrice();
+        }
+
+        function calculatePrice() {
+            const prodId = document.getElementById('calcProduct').value;
+            const prod = printingProducts.find(p => p.id === prodId) || printingProducts[0];
+
+            const sizeIdx = parseInt(document.getElementById('calcSize').value || '0', 10);
+            const matIdx = parseInt(document.getElementById('calcMaterial').value || '0', 10);
+            const qty = Math.max(1, parseInt(document.getElementById('calcQtyInput').value || '1', 10));
+
+            // Multipliers for size & material tier
+            const sizeMultiplier = 1 + (sizeIdx * 0.22);
+            const matMultiplier = 1 + (matIdx * 0.15);
+
+            const rawUnitPrice = Math.round((prod.basePrice * sizeMultiplier * matMultiplier) / 100) * 100 + currentFinishing.extraCost;
+
+            // Bulk Discount Rate
+            let discountRate = 0;
+            if (qty >= 500) discountRate = 0.25;
+            else if (qty >= 250) discountRate = 0.20;
+            else if (qty >= 100) discountRate = 0.15;
+            else if (qty >= 50) discountRate = 0.10;
+
+            const subtotal = rawUnitPrice * qty;
+            const discountAmount = Math.round(subtotal * discountRate);
+            let finalTotal = subtotal - discountAmount;
+
+            if (isExpressSpeed) {
+                finalTotal = Math.round(finalTotal * 1.25);
+            }
+
+            // Update Discount Badge
+            const discBadge = document.getElementById('discountBadge');
+            if (discountRate > 0) {
+                discBadge.textContent = `Grosir Hemat ${Math.round(discountRate * 100)}%`;
+                discBadge.className = 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 text-emerald-700';
+            } else {
+                discBadge.textContent = 'Harga Satuan Normal';
+                discBadge.className = 'px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-gray-100 text-gray-600';
+            }
+
+            // Update Summary Receipt DOM
+            const sizeText = prod.sizes[sizeIdx] || prod.sizes[0];
+            const matText = prod.materials[matIdx] || prod.materials[0];
+
+            document.getElementById('sumProduct').textContent = prod.name;
+            document.getElementById('sumSpecs').textContent = `${sizeText} • ${matText}`;
+            document.getElementById('sumFinishing').textContent = currentFinishing.name + (isExpressSpeed ? ' (Kilat 6 Jam)' : '');
+            document.getElementById('sumQty').textContent = `${qty.toLocaleString('id-ID')} ${prod.unit}`;
+            document.getElementById('sumUnitPrice').textContent = `${formatRupiah(rawUnitPrice)} / pcs`;
+            document.getElementById('sumDiscount').textContent = `- ${formatRupiah(discountAmount)} (${Math.round(discountRate * 100)}%)`;
+            document.getElementById('sumTotalPrice').textContent = formatRupiah(finalTotal);
+            document.getElementById('sumEstTime').textContent = isExpressSpeed ? 'Hari Ini (6 Jam)' : '1 - 2 Hari Kerja';
+            document.getElementById('sumWeight').textContent = `~${Math.max(0.2, (qty * 0.025)).toFixed(1)} kg`;
+        }
+
+        function selectProductInCalculator(prodId) {
+            const select = document.getElementById('calcProduct');
+            select.value = prodId;
+            handleCalcProductChange();
+            document.getElementById('kalkulator').scrollIntoView({ behavior: 'smooth' });
+            showToast('Produk Dipilih!', 'Silakan sesuaikan ukuran & jumlah di kalkulator.');
+        }
+
+        // =========================================================================
+        // 4. HERO INTERACTIVE MOCKUP SWITCHER
+        // =========================================================================
+        const heroMockups = [
+            {
+                title: 'Kemasan Box & Stiker Die-Cut',
+                sub: 'Bahan Ivory 310gr + Laminasi Glossy Tahan Air',
+                badge: 'CMYK Hi-Res 2400 DPI',
+                html: `
+                    <div class="w-28 h-28 mx-auto rounded-2xl bg-gradient-to-tr from-rosa-600 to-pink-400 text-white flex flex-col items-center justify-center shadow-lg rotate-3 mb-3 p-3">
+                        <i data-lucide="package-check" class="w-10 h-10 mb-1"></i>
+                        <span class="text-[10px] font-bold tracking-wider uppercase">Rosa Box</span>
+                        <span class="text-[8px] opacity-80">Glossy UV Finish</span>
+                    </div>
+                `
+            },
+            {
+                title: 'Undangan Hardcover & Kartu Ucapan',
+                sub: 'Kertas Jasmine Pearl Glitter + Hotprint Gold Foil',
+                badge: 'Hotprint Gold Emboss',
+                html: `
+                    <div class="w-32 h-28 mx-auto rounded-2xl bg-gradient-to-tr from-rose-700 to-amber-500 text-white flex flex-col items-center justify-center shadow-lg -rotate-2 mb-3 p-3 border-2 border-amber-200">
+                        <i data-lucide="mail-heart" class="w-10 h-10 mb-1"></i>
+                        <span class="text-[10px] font-serif italic font-bold">Royal Wedding</span>
+                        <span class="text-[8px] opacity-90">Gold Foil Press</span>
+                    </div>
+                `
+            },
+            {
+                title: 'Custom Tumbler LED & Mug Keramik',
+                sub: 'Cetakan UV Full Color Timbul & Tahan Gores',
+                badge: 'UV Laser Print 360°',
+                html: `
+                    <div class="w-28 h-28 mx-auto rounded-full bg-gradient-to-tr from-pink-600 to-purple-600 text-white flex flex-col items-center justify-center shadow-lg rotate-2 mb-3 p-3">
+                        <i data-lucide="cup-soda" class="w-10 h-10 mb-1"></i>
+                        <span class="text-[10px] font-bold uppercase">Souvenir Kit</span>
+                        <span class="text-[8px] opacity-85">Custom Brand Logo</span>
+                    </div>
+                `
+            }
+        ];
+
+        function switchHeroMockup(idx) {
+            const item = heroMockups[idx];
+            document.getElementById('heroMockupVisual').innerHTML = item.html;
+            document.getElementById('heroMockupTitle').textContent = item.title;
+            document.getElementById('heroMockupSub').textContent = item.sub;
+            document.getElementById('heroMockupBadge').textContent = item.badge;
+
+            [0, 1, 2].forEach(i => {
+                const btn = document.getElementById('heroTab' + i);
+                if (i === idx) {
+                    btn.className = 'py-2 px-2.5 rounded-xl text-xs font-semibold bg-rosa-600 text-white shadow-2xs transition-all flex items-center justify-center gap-1';
+                } else {
+                    btn.className = 'py-2 px-2.5 rounded-xl text-xs font-semibold bg-rosa-50 text-gray-700 hover:bg-rosa-100 transition-all flex items-center justify-center gap-1';
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // =========================================================================
+        // 5. ORDER & UPLOAD DESIGN MODAL WORKFLOW
+        // =========================================================================
+        function openOrderModal() {
+            syncModalWithCalculator();
+            const modal = document.getElementById('orderModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeOrderModal() {
+            const modal = document.getElementById('orderModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function quickOrderProduct(prodId) {
+            document.getElementById('calcProduct').value = prodId;
+            handleCalcProductChange();
+            openOrderModal();
+        }
+
+        function transferCalcToOrder() {
+            openOrderModal();
+        }
+
+        function syncModalWithCalculator() {
+            const prodTitle = document.getElementById('sumProduct').textContent;
+            const qty = document.getElementById('sumQty').textContent;
+            const specs = document.getElementById('sumSpecs').textContent;
+            const fin = document.getElementById('sumFinishing').textContent;
+            const total = document.getElementById('sumTotalPrice').textContent;
+
+            document.getElementById('modalOrderProductTitle').textContent = `${prodTitle} (${qty})`;
+            document.getElementById('modalOrderSpecsSub').textContent = `${specs} • ${fin}`;
+            document.getElementById('modalOrderTotal').textContent = total;
+        }
+
+        function handleFileUpload(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            document.getElementById('uploadFileName').textContent = file.name;
+            document.getElementById('fileDpiStatus').classList.remove('hidden');
+            document.getElementById('aiPrepressReport').classList.add('hidden');
+
+            const previewBox = document.getElementById('designPreviewBox');
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    uploadedImageBase64 = dataUrl.split(',')[1];
+                    uploadedImageMimeType = file.type || 'image/png';
+                    previewBox.innerHTML = `
+                        <img src="${dataUrl}" alt="Preview Desain" class="max-h-28 object-contain rounded-lg shadow-xs">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                uploadedImageBase64 = null;
+                uploadedImageMimeType = null;
+                previewBox.innerHTML = `
+                    <div class="text-center p-2">
+                        <div class="w-10 h-10 rounded-xl bg-rosa-100 text-rosa-600 flex items-center justify-center mx-auto mb-1 font-bold text-xs uppercase">
+                            ${file.name.split('.').pop()}
+                        </div>
+                        <p class="text-xs font-bold text-gray-800 truncate max-w-[180px]">${file.name}</p>
+                        <p class="text-[10px] text-emerald-600 font-semibold">Siap Masuk Mesin Cetak</p>
+                    </div>
+                `;
+            }
+            showToast('Desain Terunggah!', `File "${file.name}" berhasil diverifikasi.`);
+        }
+
+        function loadSampleDesign() {
+            uploadedImageBase64 = null;
+            uploadedImageMimeType = null;
+            document.getElementById('uploadFileName').textContent = 'Desain_Kemasan_RosaGlow_CMYK.pdf';
+            document.getElementById('fileDpiStatus').classList.remove('hidden');
+            document.getElementById('aiPrepressReport').classList.add('hidden');
+            const previewBox = document.getElementById('designPreviewBox');
+            previewBox.innerHTML = `
+                <div class="w-full h-full rounded-lg bg-gradient-to-r from-rosa-500 via-pink-500 to-amber-400 text-white flex flex-col items-center justify-center p-2 shadow-inner">
+                    <span class="text-[10px] uppercase tracking-widest font-bold bg-white/20 px-2 py-0.5 rounded-full mb-1">CMYK PROOF</span>
+                    <p class="font-extrabold text-sm">ROSA GLOW BEAUTY</p>
+                    <p class="text-[10px] opacity-90">Bleed Area Aman ✓</p>
+                </div>
+            `;
+            showToast('Contoh Desain Dimuat!', 'Pratinjau desain demo siap dicetak.');
+        }
+
+        // =========================================================================
+        // 5.5 GEMINI AI FEATURES (SPEC CONSULTANT, COPYWRITER & PRE-PRESS CHECK)
+        // =========================================================================
+        function switchAiStudioTab(tab) {
+            const specPanel = document.getElementById('aiStudioSpecPanel');
+            const copyPanel = document.getElementById('aiStudioCopyPanel');
+            const specBtn = document.getElementById('aiTabSpecBtn');
+            const copyBtn = document.getElementById('aiTabCopyBtn');
+
+            if (tab === 'spec') {
+                specPanel.classList.remove('hidden');
+                specPanel.classList.add('grid');
+                copyPanel.classList.add('hidden');
+                copyPanel.classList.remove('grid');
+
+                specBtn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-rosa-900 shadow-sm transition-all flex items-center gap-2';
+                copyBtn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-pink-100 hover:text-white transition-all flex items-center gap-2';
+            } else {
+                copyPanel.classList.remove('hidden');
+                copyPanel.classList.add('grid');
+                specPanel.classList.add('hidden');
+                specPanel.classList.remove('grid');
+
+                copyBtn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white text-rosa-900 shadow-sm transition-all flex items-center gap-2';
+                specBtn.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-pink-100 hover:text-white transition-all flex items-center gap-2';
+            }
+            lucide.createIcons();
+        }
+
+        function fillAiSpecPreset(text) {
+            document.getElementById('aiSpecPrompt').value = text;
+        }
+
+        async function runAiSpecConsultant() {
+            const promptEl = document.getElementById('aiSpecPrompt');
+            const userNeed = promptEl.value.trim();
+            if (!userNeed) {
+                showToast('Input Kosong', 'Ceritakan dulu kebutuhan cetak Anda pada kolom yang tersedia.');
+                promptEl.focus();
+                return;
+            }
+
+            const btn = document.getElementById('aiSpecSubmitBtn');
+            const resultBox = document.getElementById('aiSpecResultBox');
+            const originalBtnHtml = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin text-rosa-600"></i><span>Menganalisis Spesifikasi Terbaik...</span>`;
+            resultBox.innerHTML = `
+                <div class="text-center py-10 space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto animate-pulse">
+                        <i data-lucide="sparkles" class="w-6 h-6 text-amber-300"></i>
+                    </div>
+                    <p class="font-bold text-sm text-white">Rosa AI sedang meracik spesifikasi cetak...</p>
+                    <p class="text-xs text-pink-200">Menyesuaikan bahan kertas, laminasi, dan efisiensi harga grosir.</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            const catalogContext = printingProducts.map(p =>
+                `ID: "${p.id}" (${p.name}) | Ukuran: [${p.sizes.map((s, i) => `${i}:${s}`).join(', ')}] | Bahan: [${p.materials.map((m, i) => `${i}:${m}`).join(', ')}]`
+            ).join('\n');
+
+            const systemInstruction = `Anda adalah Konsultan Ahli Percetakan di "Rosa Indah Printing". Berdasarkan kebutuhan pengguna, pilih tepat SATU produk paling relevan dari daftar katalog berikut:\n${catalogContext}\n\nPilih juga index ukuran (sizeIndex: 0, 1, atau 2), index bahan (materialIndex: 0, 1, atau 2), jenis finishing ("none", "glossy", "doff", atau "spotuv"), jumlah rekomendasi (recommendedQty antara 10 hingga 1000), alasan pemilihan bahan dalam Bahasa Indonesia yang ramah & meyakinkan, serta tips warna/desain pracetak.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userNeed }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            productId: { type: "STRING" },
+                            sizeIndex: { type: "INTEGER" },
+                            materialIndex: { type: "INTEGER" },
+                            finishingType: { type: "STRING" },
+                            recommendedQty: { type: "INTEGER" },
+                            reasoning: { type: "STRING" },
+                            designTip: { type: "STRING" }
+                        },
+                        propertyOrdering: ["productId", "sizeIndex", "materialIndex", "finishingType", "recommendedQty", "reasoning", "designTip"]
+                    }
+                }
+            };
+
+            try {
+                const jsonText = await callGeminiAPI(payload);
+                const data = JSON.parse(jsonText);
+                const matchedProd = printingProducts.find(p => p.id === data.productId) || printingProducts[0];
+                const safeSizeIdx = Math.min(Math.max(0, data.sizeIndex || 0), matchedProd.sizes.length - 1);
+                const safeMatIdx = Math.min(Math.max(0, data.materialIndex || 0), matchedProd.materials.length - 1);
+                const validFin = ['none', 'glossy', 'doff', 'spotuv'].includes(data.finishingType) ? data.finishingType : 'glossy';
+                const safeQty = Math.min(Math.max(1, data.recommendedQty || 50), 2000);
+
+                lastAiRecommendation = {
+                    productId: matchedProd.id,
+                    sizeIndex: safeSizeIdx,
+                    materialIndex: safeMatIdx,
+                    finishingType: validFin,
+                    qty: safeQty
+                };
+
+                const finLabels = { none: 'Tanpa Laminasi', glossy: 'Laminasi Glossy', doff: 'Laminasi Doff', spotuv: 'Spot UV + Cut' };
+
+                resultBox.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-start justify-between gap-3 border-b border-white/15 pb-3">
+                            <div>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 uppercase">Rekomendasi Terbaik AI</span>
+                                <h4 class="text-lg font-extrabold text-white mt-1">${matchedProd.name}</h4>
+                            </div>
+                            <span class="px-3 py-1 rounded-xl bg-white/15 text-xs font-bold text-amber-200 shrink-0">${safeQty} ${matchedProd.unit}</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                            <div class="bg-black/20 rounded-xl p-3 border border-white/10">
+                                <span class="text-pink-200 block text-[10px] uppercase">Ukuran Ideal</span>
+                                <strong class="text-white">${matchedProd.sizes[safeSizeIdx]}</strong>
+                            </div>
+                            <div class="bg-black/20 rounded-xl p-3 border border-white/10">
+                                <span class="text-pink-200 block text-[10px] uppercase">Material Pilihan</span>
+                                <strong class="text-white">${matchedProd.materials[safeMatIdx]}</strong>
+                            </div>
+                            <div class="bg-black/20 rounded-xl p-3 border border-white/10">
+                                <span class="text-pink-200 block text-[10px] uppercase">Finishing</span>
+                                <strong class="text-white">${finLabels[validFin]}</strong>
+                            </div>
+                        </div>
+
+                        <p class="text-xs sm:text-sm text-pink-100 leading-relaxed bg-white/5 p-3.5 rounded-xl border border-white/10">
+                            <strong class="text-white">💡 Alasan Ahli:</strong> ${data.reasoning}
+                        </p>
+                        <p class="text-xs text-amber-200/95 leading-relaxed">
+                            <strong>🎨 Tips Desain CMYK:</strong> ${data.designTip}
+                        </p>
+
+                        <div class="pt-2 flex flex-col sm:flex-row gap-2.5">
+                            <button type="button" onclick="applyAiRecommendationToCalculator()" class="flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm bg-white text-rosa-900 hover:bg-pink-50 shadow-md transition-all flex items-center justify-center gap-1.5">
+                                <i data-lucide="calculator" class="w-4 h-4 text-rosa-600"></i>
+                                <span>Terapkan ke Kalkulator Harga</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                showToast('Rekomendasi Siap!', 'Spesifikasi terbaik telah dianalisis oleh Rosa AI.');
+            } catch (error) {
+                resultBox.innerHTML = `
+                    <div class="text-center py-8 space-y-2">
+                        <p class="font-bold text-sm text-pink-200">Maaf, koneksi asisten AI sedang sibuk.</p>
+                        <p class="text-xs text-pink-100/80">Silakan klik tombol analisis sekali lagi.</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+                lucide.createIcons();
+            }
+        }
+
+        function applyAiRecommendationToCalculator() {
+            if (!lastAiRecommendation) return;
+            const finCosts = { none: 0, glossy: 1500, doff: 1500, spotuv: 3500 };
+
+            document.getElementById('calcProduct').value = lastAiRecommendation.productId;
+            handleCalcProductChange();
+
+            document.getElementById('calcSize').value = String(lastAiRecommendation.sizeIndex);
+            document.getElementById('calcMaterial').value = String(lastAiRecommendation.materialIndex);
+            setQuickQty(lastAiRecommendation.qty);
+            selectFinishing(lastAiRecommendation.finishingType, finCosts[lastAiRecommendation.finishingType] || 0);
+
+            document.getElementById('kalkulator').scrollIntoView({ behavior: 'smooth' });
+            showToast('Diterapkan ke Kalkulator!', 'Spesifikasi rekomendasi AI sudah masuk ke simulasi harga.');
+        }
+
+        async function runAiCopywriter() {
+            const brand = document.getElementById('aiCopyBrand').value.trim();
+            const target = document.getElementById('aiCopyTarget').value;
+            const desc = document.getElementById('aiCopyDesc').value.trim();
+
+            if (!brand || !desc) {
+                showToast('Lengkapi Data', 'Mohon isi Nama Brand dan Keunggulan Produk terlebih dahulu.');
+                return;
+            }
+
+            const btn = document.getElementById('aiCopySubmitBtn');
+            const resultBox = document.getElementById('aiCopyResultBox');
+            const originalBtnHtml = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin text-rosa-600"></i><span>Merangkai Slogan & Copywriting...</span>`;
+            resultBox.innerHTML = `
+                <div class="text-center py-10 space-y-3">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mx-auto animate-pulse">
+                        <i data-lucide="pen-tool" class="w-6 h-6 text-amber-300"></i>
+                    </div>
+                    <p class="font-bold text-sm text-white">Copywriter AI sedang menulis naskah cetak...</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            const payload = {
+                contents: [{
+                    parts: [{
+                        text: `Buatkan copywriting siap cetak untuk:\nNama Brand/Acara: ${brand}\nMedia Cetak: ${target}\nKeunggulan/Detail: ${desc}`
+                    }]
+                }],
+                systemInstruction: {
+                    parts: [{
+                        text: "Anda adalah Copywriter Branding Kemasan & Percetakan terbaik di Indonesia. Buat teks singkat, memikat, persuasif, dan siap dicetak pada kemasan, brosur, atau kartu ucapan."
+                    }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            headline: { type: "STRING" },
+                            tagline: { type: "STRING" },
+                            bodyCopy: { type: "STRING" },
+                            callToAction: { type: "STRING" },
+                            visualSuggestion: { type: "STRING" }
+                        },
+                        propertyOrdering: ["headline", "tagline", "bodyCopy", "callToAction", "visualSuggestion"]
+                    }
+                }
+            };
+
+            try {
+                const jsonText = await callGeminiAPI(payload);
+                const copy = JSON.parse(jsonText);
+                const combinedCopy = `Headline: ${copy.headline} | Slogan: ${copy.tagline} | CTA: ${copy.callToAction}`;
+
+                resultBox.innerHTML = `
+                    <div class="space-y-3.5">
+                        <div class="flex items-center justify-between border-b border-white/15 pb-2.5">
+                            <span class="text-xs font-bold uppercase tracking-wider text-amber-200">Naskah Siap Cetak — ${target}</span>
+                            <span class="text-[11px] text-pink-200 font-medium">${brand}</span>
+                        </div>
+
+                        <div class="bg-black/20 rounded-xl p-3.5 border border-white/10 space-y-1">
+                            <span class="text-[10px] uppercase tracking-wider text-pink-200">Judul Utama (Headline)</span>
+                            <p class="font-extrabold text-base sm:text-lg text-white">"${copy.headline}"</p>
+                            <p class="text-xs text-amber-200 italic font-medium">${copy.tagline}</p>
+                        </div>
+
+                        <div class="bg-white/5 rounded-xl p-3.5 border border-white/10 space-y-1.5 text-xs">
+                            <p class="text-pink-100 leading-relaxed"><strong class="text-white">Teks Utama:</strong> ${copy.bodyCopy}</p>
+                            <p class="text-emerald-200 font-semibold">👉 Ajakan (CTA): "${copy.callToAction}"</p>
+                        </div>
+
+                        <p class="text-[11px] text-pink-200">
+                            <strong>✨ Saran Tata Letak & Font:</strong> ${copy.visualSuggestion}
+                        </p>
+
+                        <div class="pt-1 flex flex-wrap gap-2">
+                            <button type="button" onclick="useCopyInOrderModal('${ combinedCopy.replace(/'/g, "\\'") }')" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs bg-white text-rosa-900 hover:bg-pink-50 transition-all flex items-center justify-center gap-1.5">
+                                <i data-lucide="file-check" class="w-4 h-4 text-rosa-600"></i>
+                                <span>Gunakan di Catatan Order</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                showToast('Copywriting Selesai!', 'Teks promosi siap disalin atau dimasukkan ke pesanan.');
+            } catch (error) {
+                resultBox.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="font-bold text-sm text-pink-200">Gagal memuat copywriting AI. Silakan coba lagi.</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+                lucide.createIcons();
+            }
+        }
+
+        function useCopyInOrderModal(copyText) {
+            document.getElementById('custNotes').value = copyText;
+            openOrderModal();
+            showToast('Teks Dimasukkan!', 'Slogan AI telah ditambahkan ke kolom Catatan Pesanan.');
+        }
+
+        async function analyzeDesignWithAI() {
+            const reportEl = document.getElementById('aiPrepressReport');
+            const btn = document.getElementById('aiPrepressBtn');
+            const fileName = document.getElementById('uploadFileName').textContent;
+            const prodTitle = document.getElementById('modalOrderProductTitle').textContent;
+
+            const originalBtnHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Menganalisis Desain...</span>`;
+
+            reportEl.classList.remove('hidden');
+            reportEl.innerHTML = `
+                <div class="flex items-center gap-2.5 text-xs text-rosa-700 font-semibold">
+                    <i data-lucide="sparkles" class="w-4 h-4 animate-spin"></i>
+                    <span>Gemini Vision AI sedang memeriksa komposisi warna, kontras teks, dan area potong (bleed)...</span>
+                </div>
+            `;
+            lucide.createIcons();
+
+            const userParts = [];
+            if (uploadedImageBase64 && uploadedImageMimeType) {
+                userParts.push({
+                    text: `Analisis gambar desain ini untuk dicetak pada produk "${prodTitle}". Berikan evaluasi singkat (maksimal 3 poin padat) mengenai: 1) Kejelasan & kontras keterbacaan teks/elemen, 2) Keamanan batas tepi potong (safe zone/bleed 2mm), dan 3) Saran peningkatan agar hasil cetak tampak lebih tajam & mewah.`
+                });
+                userParts.push({
+                    inlineData: {
+                        mimeType: uploadedImageMimeType,
+                        data: uploadedImageBase64
+                    }
+                });
+            } else {
+                userParts.push({
+                    text: `Pengguna menyiapkan file desain "${fileName}" untuk produk cetak "${prodTitle}". Berikan 3 checklist pracetak (Pre-Press Check) singkat dan praktis agar hasil cetak di mesin digital/offset Rosa Indah Printing maksimal dan tidak terpotong.`
+                });
+            }
+
+            const payload = {
+                contents: [{ role: "user", parts: userParts }],
+                systemInstruction: {
+                    parts: [{
+                        text: "Anda adalah Spesialis Pre-Press & Quality Control di Rosa Indah Printing. Berikan ulasan ramah, ringkas, dan terstruktur dalam Bahasa Indonesia."
+                    }]
+                }
+            };
+
+            try {
+                const analysisText = await callGeminiAPI(payload);
+                const formattedHtml = analysisText
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>');
+
+                reportEl.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-rosa-200/70 pb-2">
+                        <span class="text-xs font-extrabold text-rosa-700 flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                            Hasil Pemeriksaan Pracetak AI (Pre-Press Report)
+                        </span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Terverifikasi AI</span>
+                    </div>
+                    <div class="text-xs text-gray-700 leading-relaxed pt-1">
+                        ${formattedHtml}
+                    </div>
+                `;
+                showToast('Analisis Desain Selesai!', 'Laporan pracetak AI telah ditampilkan.');
+            } catch (err) {
+                reportEl.innerHTML = `
+                    <p class="text-xs text-rosa-700 font-medium">Tidak dapat menganalisis file saat ini. Pastikan koneksi stabil dan coba lagi.</p>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHtml;
+                lucide.createIcons();
+            }
+        }
+
+        function submitOrderCheckout() {
+            const name = document.getElementById('custName').value.trim() || 'Pelanggan Rosa Indah';
+            const phone = document.getElementById('custPhone').value.trim() || '-';
+            const delivery = document.getElementById('custDelivery').value;
+            const notes = document.getElementById('custNotes').value.trim() || 'Sesuai standar cetak';
+            const fileName = document.getElementById('uploadFileName').textContent;
+
+            const prodTitle = document.getElementById('modalOrderProductTitle').textContent;
+            const specs = document.getElementById('modalOrderSpecsSub').textContent;
+            const total = document.getElementById('modalOrderTotal').textContent;
+
+            const orderCode = 'ROSA-' + Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('trackInputCode').value = orderCode;
+
+            closeOrderModal();
+            showToast(`Pesanan #${orderCode} Dibuat!`, 'Membuka ringkasan pesanan WhatsApp...');
+
+            const waText = encodeURIComponent(
+                `Halo Admin *Rosa Indah Printing*! 🌸\n` +
+                `Saya ingin memesan cetakan dengan detail berikut:\n\n` +
+                `• *Kode Order:* #${orderCode}\n` +
+                `• *Nama:* ${name} (${phone})\n` +
+                `• *Produk:* ${prodTitle}\n` +
+                `• *Spesifikasi:* ${specs}\n` +
+                `• *File Desain:* ${fileName}\n` +
+                `• *Pengiriman:* ${delivery}\n` +
+                `• *Catatan:* ${notes}\n` +
+                `• *Total Estimasi:* ${total}\n\n` +
+                `Mohon info pembayaran selengkapnya. Terima kasih!`
+            );
+            window.open(`https://wa.me/6281288997766?text=${waText}`, '_blank');
+        }
+
+        function shareQuoteWhatsApp() {
+            const prodTitle = document.getElementById('sumProduct').textContent;
+            const qty = document.getElementById('sumQty').textContent;
+            const specs = document.getElementById('sumSpecs').textContent;
+            const total = document.getElementById('sumTotalPrice').textContent;
+
+            const waText = encodeURIComponent(
+                `Halo *Rosa Indah Printing*, saya sudah cek simulasi harga di website:\n` +
+                `- Produk: ${prodTitle} (${qty})\n` +
+                `- Spesifikasi: ${specs}\n` +
+                `- Estimasi Harga: ${total}\n\n` +
+                `Apakah slot cetak hari ini tersedia?`
+            );
+            window.open(`https://wa.me/6281288997766?text=${waText}`, '_blank');
+        }
+
+        // =========================================================================
+        // 6. UI UTILITIES (Drawer, Tracking, FAQ, Copy Promo, Toast, Scroll Reveal)
+        // =========================================================================
+        function toggleMobileDrawer() {
+            const drawer = document.getElementById('mobileDrawer');
+            const backdrop = document.getElementById('mobileDrawerBackdrop');
+            const isClosed = drawer.classList.contains('translate-x-full');
+
+            if (isClosed) {
+                backdrop.classList.remove('hidden');
+                setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+                drawer.classList.remove('translate-x-full');
+            } else {
+                backdrop.classList.add('opacity-0');
+                drawer.classList.add('translate-x-full');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        function openTrackModal() {
+            const modal = document.getElementById('trackModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTrackModal() {
+            const modal = document.getElementById('trackModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function checkTrackingStatus() {
+            const code = document.getElementById('trackInputCode').value.trim().toUpperCase() || 'ROSA-8829';
+            document.querySelector('#trackResultCard span').textContent = `Invoice #${code}`;
+            showToast('Status Diperbarui!', `Menampilkan progres cetak untuk #${code}.`);
+        }
+
+        function openPortfolioPreview(index) {
+            const titles = [
+                'Packaging Skincare RoseGlow (Hardbox + Poly Gold)',
+                'Label Cup & Standing Pouch Kopi Senja (Vinyl Waterproof)',
+                'Undangan Pernikahan Hardcover Jasmine Glitter'
+            ];
+            showToast('Portofolio Rosa Indah', titles[index] + ' — Siap dipesan custom!');
+        }
+
+        function toggleFaq(index) {
+            const content = document.getElementById('faqContent' + index);
+            const icon = document.getElementById('faqIcon' + index);
+            const isHidden = content.classList.contains('hidden');
+
+            if (isHidden) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        function copyPromoCode() {
+            const tempInput = document.createElement('input');
+            tempInput.value = 'ROSAINDAH20';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Kode Promo Disalin!', 'Kode ROSAINDAH20 berhasil disalin ke clipboard.');
+        }
+
+        function showToast(title, message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3400);
+        }
+
+        function formatRupiah(num) {
+            return 'Rp ' + Math.round(num).toLocaleString('id-ID');
+        }
+
+        // Animated Number Counter & Scroll Reveal Observer
+        function initAnimations() {
+            // Counter animation
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const duration = 1500;
+                const step = Math.ceil(target / (duration / 20));
+                let current = 0;
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        counter.textContent = target.toLocaleString('id-ID');
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = current.toLocaleString('id-ID');
+                    }
+                }, 20);
+            });
+
+            // Scroll reveal observer
+            const reveals = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            reveals.forEach(el => observer.observe(el));
+        }
+
+        // Initialize everything on DOM load
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderProducts(printingProducts);
+            initCalculator();
+            initAnimations();
+        });
+    </script>
+</body>
+</html>

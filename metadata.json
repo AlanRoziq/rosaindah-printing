@@ -1,0 +1,8 @@
+{
+  "name": "Rosa Indah Printing",
+  "description": "Aplikasi web percetakan dan digital printing online Rosa Indah Printing dengan katalog produk, keranjang, pelacakan pesanan, dan panel admin.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,94 @@
+<%- include('partials/header', { title: 'Katalog Produk & Layanan Cetak' }) %>
+
+<header class="main-header">
+    <%- include('partials/topbar') %>
+    <%- include('partials/navbar') %>
+</header>
+
+<main class="catalog-page">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb">
+            <a href="<%= page_url('') %>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Produk</span>
+            <% if (selectedCategory) { %>
+                <i class="bi bi-chevron-right"></i>
+                <span class="active"><%= selectedCategory %></span>
+            <% } %>
+        </div>
+
+        <!-- Header Filter / Search -->
+        <div class="catalog-header">
+            <div>
+                <h1>Katalog Produk Cetak</h1>
+                <p>Pilihan produk percetakan berkualitas tinggi dengan harga transparan.</p>
+            </div>
+
+            <!-- Search Form -->
+            <form action="<%= page_url('produk') %>" method="GET" class="catalog-search-form">
+                <% if (selectedCategory) { %>
+                    <input type="hidden" name="kategori" value="<%= selectedCategory %>">
+                <% } %>
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Cari nama produk, spanduk, mug..." value="<%= searchQuery || '' %>">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Cari</button>
+                    <% if (searchQuery || selectedCategory) { %>
+                        <a href="<%= page_url('produk') %>" class="btn btn-outline-secondary" title="Reset filter">Reset</a>
+                    <% } %>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filter Categories Tabs -->
+        <div class="category-filter-bar mb-4">
+            <a href="<%= page_url('produk' + (searchQuery ? '?q=' + encodeURIComponent(searchQuery) : '')) %>" 
+               class="btn <%= !selectedCategory ? 'btn-primary' : 'btn-outline-secondary' %> btn-sm me-2 mb-2 rounded-pill">
+                Semua Kategori (<%= totalCount %>)
+            </a>
+            <% categories.forEach(function(cat) { %>
+                <a href="<%= page_url('produk?kategori=' + encodeURIComponent(cat) + (searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '')) %>" 
+                   class="btn <%= selectedCategory === cat ? 'btn-primary' : 'btn-outline-secondary' %> btn-sm me-2 mb-2 rounded-pill">
+                    <%= cat %>
+                </a>
+            <% }); %>
+        </div>
+
+        <!-- Products Grid -->
+        <% if (products.length === 0) { %>
+            <div class="empty-products p-5 text-center bg-white rounded-3 shadow-sm my-4">
+                <i class="bi bi-search display-3 text-muted"></i>
+                <h3 class="mt-3">Produk Tidak Ditemukan</h3>
+                <p class="text-muted">Tidak ada produk yang sesuai dengan pencarian atau filter kategori yang dipilih.</p>
+                <a href="<%= page_url('produk') %>" class="btn btn-primary mt-2">Tampilkan Semua Produk</a>
+            </div>
+        <% } else { %>
+            <div class="product-grid">
+                <% products.forEach(function(item) { %>
+                    <article class="catalog-card">
+                        <a href="<%= page_url('detail-produk?id=' + encodeURIComponent(item.id)) %>" class="catalog-card-image">
+                            <img src="<%= product_image_url(item.image) %>" alt="<%= item.name %>" loading="lazy">
+                            <span class="catalog-badge"><%= item.category %></span>
+                        </a>
+                        <div class="catalog-card-body">
+                            <div class="catalog-rating"><i class="bi bi-star-fill"></i> 5.0 <span>•</span> Kualitas Terjamin</div>
+                            <h3><%= item.name %></h3>
+                            <p><%= item.description %></p>
+                            <div class="catalog-card-bottom">
+                                <div>
+                                    <small>Mulai dari</small>
+                                    <strong><%= format_rupiah(item.price) %> <em>/ <%= item.unit %></em></strong>
+                                </div>
+                                <a href="<%= page_url('detail-produk?id=' + encodeURIComponent(item.id)) %>" class="catalog-arrow" aria-label="Detail <%= item.name %>">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                <% }); %>
+            </div>
+        <% } %>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

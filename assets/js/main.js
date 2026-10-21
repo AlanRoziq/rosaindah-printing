@@ -450,3 +450,19 @@ faqItems.forEach(item=>{
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPriceFilter);
     else initPriceFilter();
 })();
+
+
+/* =========================================================
+   AUTO-SLIDE TESTIMONIAL CAROUSEL (MOBILE)
+========================================================= */
+document.addEventListener("DOMContentLoaded", function () {
+    const testimonialCarousel = document.getElementById("testimonialMobileCarousel");
+    if (testimonialCarousel && typeof bootstrap !== "undefined" && bootstrap.Carousel) {
+        new bootstrap.Carousel(testimonialCarousel, {
+            interval: 3000,
+            ride: "carousel",
+            touch: true,
+            wrap: true
+        });
+    }
+});

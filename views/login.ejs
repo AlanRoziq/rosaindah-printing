@@ -1,0 +1,51 @@
+<%- include('partials/header', { title: 'Login Member' }) %>
+
+<header class="main-header">
+    <%- include('partials/topbar') %>
+    <%- include('partials/navbar') %>
+</header>
+
+<main class="py-5">
+    <div class="container">
+        <div class="card p-4 p-md-5 rounded-4 shadow-sm border-0 max-w-500 mx-auto bg-white">
+            <div class="text-center mb-4">
+                <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 28px;">
+                    <i class="bi bi-person-lock"></i>
+                </div>
+                <h2 class="fw-bold">Login Member</h2>
+                <p class="text-muted small">Masuk untuk melihat riwayat pesanan, voucher khusus, dan mengumpulkan poin loyalty.</p>
+            </div>
+
+            <% if (error) { %>
+                <div class="alert alert-danger" role="alert"><%= error %></div>
+            <% } %>
+
+            <form action="<%= page_url('login') %>" method="POST">
+                <div class="mb-3">
+                    <label for="login_phone" class="form-label fw-semibold">Nomor WhatsApp Terdaftar</label>
+                    <input type="tel" class="form-control" id="login_phone" name="phone" required placeholder="082331035371">
+                </div>
+                <div class="mb-3">
+                    <label for="login_password" class="form-label fw-semibold">Password</label>
+                    <input type="password" class="form-control" id="login_password" name="password" placeholder="Masukkan password Anda">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3">Masuk ke Akun</button>
+            </form>
+
+            <div class="text-center small text-muted">
+                Belum punya akun member? <a href="<%= page_url('daftar') %>" class="text-primary fw-semibold">Daftar sekarang</a>
+            </div>
+            <div class="text-center mt-3 pt-3 border-top small">
+                <a href="<%= page_url('admin/login') %>" class="text-muted text-decoration-none">
+                    <i class="bi bi-shield-lock"></i> Login sebagai Admin Percetakan
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+.max-w-500 { max-width: 500px; }
+</style>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,143 @@
+<%- include('partials/header', { title: 'Checkout Pesanan' }) %>
+
+<header class="main-header">
+    <%- include('partials/topbar') %>
+    <%- include('partials/navbar') %>
+</header>
+
+<main class="checkout-page py-4">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb mb-4">
+            <a href="<%= page_url('') %>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="<%= page_url('cart') %>">Keranjang</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Checkout</span>
+        </div>
+
+        <div class="checkout-header mb-4">
+            <h1 class="h2 fw-bold">Konfirmasi & Checkout Pesanan</h1>
+            <p class="text-muted">Isi data pemesan dan alamat pengiriman dengan lengkap untuk memudahkan proses konfirmasi cetak.</p>
+        </div>
+
+        <% if (error) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <%= error %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <form action="<%= page_url('checkout') %>" method="POST">
+            <div class="row g-4">
+                <!-- Customer Details Form -->
+                <div class="col-lg-7">
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+                        <h4 class="fw-bold mb-3"><i class="bi bi-person-lines-fill text-primary me-2"></i> Data Pemesan</h4>
+                        
+                        <div class="mb-3">
+                            <label for="customer_name" class="form-label fw-semibold">Nama Lengkap <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customer_name" name="customer_name" required placeholder="Contoh: Budi Santoso" value="<%= currentUser ? currentUser.name : '' %>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="customer_phone" class="form-label fw-semibold">Nomor WhatsApp Aktif <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control" id="customer_phone" name="customer_phone" required placeholder="Contoh: 082331035371" value="<%= currentUser ? currentUser.phone : '' %>">
+                            <small class="text-muted">Penting: Pembaruan status cetak & file acc desain akan dikirim via nomor WhatsApp ini.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="customer_address" class="form-label fw-semibold">Alamat Lengkap Pengiriman</label>
+                            <textarea class="form-control" id="customer_address" name="customer_address" rows="3" placeholder="Nama Jalan, RT/RW, Dusun/Kelurahan, Kecamatan, Kota/Kabupaten"><%= currentUser && currentUser.address ? currentUser.address : '' %></textarea>
+                            <small class="text-muted">Bisa dikosongkan jika Anda ingin mengambil langsung di workshop kami.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="customer_note" class="form-label fw-semibold">Catatan Pesanan / Spesifikasi Custom</label>
+                            <textarea class="form-control" id="customer_note" name="customer_note" rows="3" placeholder="Contoh: Finishing mata ayam 4 sudut, teks acara diganti tanggal 25 Mei, atau file desain menyusul via WA."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-4 shadow-sm">
+                        <h4 class="fw-bold mb-3"><i class="bi bi-wallet2 text-primary me-2"></i> Metode Pembayaran</h4>
+                        <div class="form-check p-3 border rounded-3 mb-2">
+                            <input class="form-check-input ms-0 me-3" type="radio" name="payment_method" id="payTransfer" value="transfer" checked>
+                            <label class="form-check-label fw-semibold d-block" for="payTransfer">
+                                Transfer Bank (BCA / BRI / Mandiri)
+                                <small class="text-muted d-block fw-normal">Nomor rekening akan ditampilkan pada halaman tracking pesanan.</small>
+                            </label>
+                        </div>
+                        <div class="form-check p-3 border rounded-3 mb-2">
+                            <input class="form-check-input ms-0 me-3" type="radio" name="payment_method" id="payQris" value="qris">
+                            <label class="form-check-label fw-semibold d-block" for="payQris">
+                                QRIS (Semua E-Wallet & Mobile Banking)
+                                <small class="text-muted d-block fw-normal">Scan instan via GoPay, OVO, Dana, ShopeePay, BCA Mobile.</small>
+                            </label>
+                        </div>
+                        <div class="form-check p-3 border rounded-3">
+                            <input class="form-check-input ms-0 me-3" type="radio" name="payment_method" id="payCash" value="cash">
+                            <label class="form-check-label fw-semibold d-block" for="payCash">
+                                Bayar di Tempat / Workshop (Cash)
+                                <small class="text-muted d-block fw-normal">Bayar langsung saat pengambilan pesanan di workshop Rosa Indah Printing.</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Review & Voucher -->
+                <div class="col-lg-5">
+                    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+                        <h4 class="fw-bold mb-3"><i class="bi bi-receipt text-primary me-2"></i> Rincian Pesanan</h4>
+                        
+                        <div class="order-items-list mb-3">
+                            <% items.forEach(function(item) { %>
+                                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <div>
+                                        <div class="fw-semibold text-dark"><%= item.product.name %></div>
+                                        <small class="text-muted"><%= item.quantity %> <%= item.product.unit %> × <%= format_rupiah(item.unitPrice) %></small>
+                                    </div>
+                                    <div class="fw-bold text-dark"><%= format_rupiah(item.subtotal) %></div>
+                                </div>
+                            <% }); %>
+                        </div>
+
+                        <!-- Voucher Input -->
+                        <div class="mb-3">
+                            <label for="voucher_code" class="form-label small fw-bold text-secondary">Kode Promo / Voucher Member:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control text-uppercase" id="voucher_code" name="voucher_code" placeholder="Misal: ROSAHEMAT10">
+                                <span class="input-group-text bg-light"><i class="bi bi-tag"></i></span>
+                            </div>
+                            <small class="text-muted">Coba kode voucher: <code>ROSAHEMAT10</code> atau <code>MEMBERBARU</code></small>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal Produk</span>
+                            <span class="fw-bold"><%= format_rupiah(total) %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Biaya Pengiriman</span>
+                            <span class="text-success fw-semibold">Dikonfirmasi via WA</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="fs-5 fw-bold">Total Pembayaran</span>
+                            <span class="fs-4 fw-bold text-danger"><%= format_rupiah(total) %></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> Buat Pesanan Sekarang
+                        </button>
+                        <small class="text-muted d-block text-center mt-3">
+                            Dengan mengklik tombol di atas, nomor order resmi akan diterbitkan.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

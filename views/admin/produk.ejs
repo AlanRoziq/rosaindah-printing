@@ -1,0 +1,126 @@
+<%- include('_header', { title: 'Kelola Produk' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Manajemen Produk & Layanan Cetak</h2>
+        <p class="text-muted mb-0">Kelola katalog percetakan, harga dasar, satuan, dan spesifikasi produk.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahProduk" style="background: #d64a8a; border-color: #d64a8a;">
+        <i class="bi bi-plus-lg me-1"></i> Tambah Produk Baru
+    </button>
+</div>
+
+<% if (notice) { %>
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> <%= notice %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<% } %>
+
+<!-- Products Table -->
+<div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Gambar</th>
+                    <th>Nama Produk</th>
+                    <th>Kategori</th>
+                    <th>Harga Satuan</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% products.forEach(function(p) { %>
+                    <tr>
+                        <td style="width: 70px;">
+                            <img src="<%= product_image_url(p.image) %>" alt="<%= p.name %>" style="width: 50px; height: 50px; object-fit: cover;" class="rounded border">
+                        </td>
+                        <td>
+                            <strong class="d-block text-dark"><%= p.name %></strong>
+                            <small class="text-muted text-truncate d-inline-block" style="max-width: 280px;"><%= p.description %></small>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-secondary border"><%= p.category %></span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-danger"><%= format_rupiah(p.price) %></span>
+                            <small class="text-muted">/ <%= p.unit %></small>
+                        </td>
+                        <td>
+                            <span class="badge bg-<%= p.status === 'active' ? 'success' : 'secondary' %>">
+                                <%= p.status === 'active' ? 'Aktif' : 'Non-Aktif' %>
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="<%= page_url('detail-produk?id=' + p.id) %>" target="_blank" class="btn btn-sm btn-outline-secondary" title="Lihat di web">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form action="<%= page_url('admin/produk/delete') %>" method="POST" onsubmit="return confirm('Hapus produk ini dari katalog?');">
+                                    <input type="hidden" name="id" value="<%= p.id %>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Tambah Produk -->
+<div class="modal fade" id="modalTambahProduk" tabindex="-1" aria-labelledby="modalTambahProdukLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0">
+            <form action="<%= page_url('admin/produk') %>" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="modalTambahProdukLabel">Tambah Produk Cetak Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Nama Produk</label>
+                            <input type="text" class="form-control" name="name" required placeholder="Contoh: Brosur Promosi Full Color">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Kategori</label>
+                            <select class="form-select" name="category">
+                                <% categories.forEach(function(c) { %>
+                                    <option value="<%= c %>"><%= c %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Harga Dasar (Rp)</label>
+                            <input type="number" class="form-control" name="price" required placeholder="Contoh: 15000">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Satuan</label>
+                            <input type="text" class="form-control" name="unit" required placeholder="Contoh: pcs, meter, lembar, box">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Deskripsi Singkat</label>
+                            <textarea class="form-control" name="description" rows="3" placeholder="Jelaskan kegunaan dan bahan cetak..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Fitur / Keunggulan (pisahkan dengan koma)</label>
+                            <input type="text" class="form-control" name="features" placeholder="Full Color, Bahan Pilihan, Desain Custom, Siap Pasang">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="background: #d64a8a; border-color: #d64a8a;">Simpan Produk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<%- include('_footer') %>

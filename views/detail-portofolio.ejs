@@ -1,0 +1,58 @@
+<%- include('partials/header', { title: item ? item.product_name : 'Detail Portofolio' }) %>
+
+<header class="main-header">
+    <%- include('partials/topbar') %>
+    <%- include('partials/navbar') %>
+</header>
+
+<main class="py-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb mb-4">
+            <a href="<%= page_url('') %>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="<%= page_url('portfolio') %>">Portofolio</a>
+            <i class="bi bi-chevron-right"></i>
+            <span><%= item.product_name %></span>
+        </div>
+
+        <div class="card p-4 p-md-5 rounded-4 shadow-sm border-0">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-6 text-center">
+                    <img src="<%= product_image_url(item.image) %>" alt="<%= item.product_name %>" class="img-fluid rounded-4 shadow-sm" style="max-height: 450px; object-fit: contain;">
+                </div>
+                <div class="col-md-6">
+                    <span class="badge bg-primary mb-2 px-3 py-2">Hasil Produksi Nyata</span>
+                    <h1 class="h2 fw-bold text-dark mb-3"><%= item.product_name %></h1>
+                    <p class="text-muted mb-4">
+                        Dokumentasi cetak asli pesanan pelanggan kami dengan standar kualitas tinggi, warna cerah, dan pemotongan rapi.
+                    </p>
+
+                    <div class="bg-light p-3 rounded-3 mb-4">
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Pelanggan / Klien:</span>
+                            <span class="fw-bold"><%= item.customer_name %></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Jumlah Cetak:</span>
+                            <span class="fw-bold"><%= item.quantity || 1 %> item</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Nilai Pesanan:</span>
+                            <span class="fw-bold text-danger"><%= format_rupiah(item.price) %></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="<%= page_url('produk') %>" class="btn btn-primary btn-lg">Pesan Produk Serupa</a>
+                        <a href="https://wa.me/<%= whatsapp_number %>?text=Halo%20Rosa%20Indah%20Printing,%20saya%20tertarik%20dengan%20hasil%20cetak%20<%= encodeURIComponent(item.product_name) %>" target="_blank" rel="noopener" class="btn btn-success btn-lg">
+                            <i class="bi bi-whatsapp"></i> Tanya Desain Ini
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

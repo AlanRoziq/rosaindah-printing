@@ -1,0 +1,72 @@
+<%- include('_header', { title: 'Laporan Penjualan' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Laporan Penjualan & Transaksi</h2>
+        <p class="text-muted mb-0">Rekapitulasi keuangan omset penjualan percetakan dan pembayaran masuk.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+            <span class="text-muted small">Total Estimasi Nilai Pesanan:</span>
+            <h3 class="fw-bold text-dark mt-1 mb-0"><%= format_rupiah(stats.month_sales) %></h3>
+            <small class="text-muted"><%= orders.length %> transaksi tercatat</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+            <span class="text-muted small">Total Dana Telah Diterima (Lunas):</span>
+            <h3 class="fw-bold text-success mt-1 mb-0"><%= format_rupiah(stats.month_paid) %></h3>
+            <small class="text-muted"><%= stats.paid %> pesanan terverifikasi</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+            <span class="text-muted small">Pesanan Menunggu Verifikasi:</span>
+            <h3 class="fw-bold text-warning mt-1 mb-0"><%= stats.waiting_payment %></h3>
+            <small class="text-muted">Perlu konfirmasi mutasi</small>
+        </div>
+    </div>
+</div>
+
+<div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+    <h4 class="fw-bold mb-3">Detail Rekapitulasi Transaksi</h4>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Waktu</th>
+                    <th>Nomor Pesanan</th>
+                    <th>Nama Pelanggan</th>
+                    <th>Metode</th>
+                    <th>Subtotal</th>
+                    <th>Diskon</th>
+                    <th>Total Akhir</th>
+                    <th>Status Bayar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% orders.forEach(function(o) { %>
+                    <tr>
+                        <td class="small text-muted"><%= o.created_at %></td>
+                        <td class="fw-bold"><%= o.order_code %></td>
+                        <td><%= o.customer_name %></td>
+                        <td class="text-uppercase small"><%= o.payment_method %></td>
+                        <td><%= format_rupiah(o.subtotal) %></td>
+                        <td class="text-success"><%= o.discount_amount > 0 ? '-' + format_rupiah(o.discount_amount) : '-' %></td>
+                        <td class="fw-bold text-danger"><%= format_rupiah(o.total_estimate) %></td>
+                        <td>
+                            <span class="badge bg-<%= o.payment_status === 'paid' ? 'success' : 'warning text-dark' %>">
+                                <%= o.payment_status.toUpperCase() %>
+                            </span>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('_footer') %>

@@ -1,0 +1,54 @@
+<%- include('partials/header', { title: 'Daftar Member' }) %>
+
+<header class="main-header">
+    <%- include('partials/topbar') %>
+    <%- include('partials/navbar') %>
+</header>
+
+<main class="py-5">
+    <div class="container">
+        <div class="card p-4 p-md-5 rounded-4 shadow-sm border-0 max-w-500 mx-auto bg-white">
+            <div class="text-center mb-4">
+                <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 28px;">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <h2 class="fw-bold">Pendaftaran Member</h2>
+                <p class="text-muted small">Dapatkan keuntungan promo eksklusif, cashback poin, dan tracking pesanan cepat.</p>
+            </div>
+
+            <% if (error) { %>
+                <div class="alert alert-danger" role="alert"><%= error %></div>
+            <% } %>
+
+            <form action="<%= page_url('daftar') %>" method="POST">
+                <div class="mb-3">
+                    <label for="name" class="form-label fw-semibold">Nama Lengkap</label>
+                    <input type="text" class="form-control" id="name" name="name" required placeholder="Contoh: Budi Santoso">
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label fw-semibold">Nomor WhatsApp</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" required placeholder="082331035371">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">Email (Opsional)</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="email@contoh.com">
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label fw-semibold">Alamat Lengkap</label>
+                    <textarea class="form-control" id="address" name="address" rows="2" placeholder="Alamat domisili"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3">Daftar Akun Member</button>
+            </form>
+
+            <div class="text-center small text-muted">
+                Sudah punya akun? <a href="<%= page_url('login') %>" class="text-primary fw-semibold">Masuk di sini</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+.max-w-500 { max-width: 500px; }
+</style>
+
+<%- include('partials/footer') %>
