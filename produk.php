@@ -1,77 +1,147 @@
 <?php
 session_start();
 
-// Inisialisasi Keranjang Belanja dalam Session jika belum ada
+// Inisialisasi keranjang jika belum ada
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Data Produk Percetakan ROSA INDAH PRINTING
-$products = [
+// Data Produk Percetakan (Bisa dikoneksikan ke Database MySQL)
+$daftar_produk = [
     [
         'id' => 1,
-        'name' => 'Cetak Brosur & Flyer',
-        'category' => 'Promosi',
-        'price' => 125000,
-        'unit' => '/ rim (500 lbr)',
-        'image' => 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80',
-        'desc' => 'Cetak flyer & brosur full color kertas Art Paper 120/150 gsm berkualitas tinggi, hasil tajam dan tidak luntur.',
-        'options' => ['Art Paper 120gr', 'Art Paper 150gr', 'Matte Paper 150gr']
+        'nama' => 'Spanduk / Banner Outdoor Flexi',
+        'kategori' => 'banner',
+        'kategori_label' => 'Spanduk & Banner',
+        'harga' => 18000,
+        'satuan' => 'm²',
+        'harga_coret' => 25000,
+        'rating' => 4.9,
+        'terjual' => '2.4k',
+        'badge' => 'Terlaris',
+        'gambar' => 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Cetak banner & spanduk outdoor tahan cuaca, warna tajam, bahan Flexi standar hingga tebal (Korchin/Korea). Cocok untuk promosi toko, event, dan warung.',
+        'pilihan_bahan' => ['Flexi Standar 280gr', 'Flexi Medium 340gr', 'Flexi Korchin 440gr (High Res)'],
+        'finishing' => ['Mata Ayam (Plong Sudut)', 'Lipat Lem Saja', 'Lebihan Putih', 'Slongsong Bambu']
     ],
     [
         'id' => 2,
-        'name' => 'Spanduk Banner Flexi',
-        'category' => 'Outdoor',
-        'price' => 20000,
-        'unit' => '/ meter',
-        'image' => 'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=600&auto=format&fit=crop&q=80',
-        'desc' => 'Spanduk Flexi 280gr / 340gr / Korcin 440gr. Sudah termasuk finishing mata ayam / selongsong.',
-        'options' => ['Flexi Standar 280gr', 'Flexi Tebal 340gr', 'Flexi Korea 440gr']
+        'nama' => 'Stiker Vinyl Custom (Kiss Cut / Die Cut)',
+        'kategori' => 'stiker',
+        'kategori_label' => 'Stiker & Label',
+        'harga' => 12000,
+        'satuan' => 'lembar A3+',
+        'harga_coret' => 15000,
+        'rating' => 4.9,
+        'terjual' => '5.8k',
+        'badge' => 'Diskon 20%',
+        'gambar' => 'https://images.unsplash.com/photo-1572375992501-4b0892d50c69?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Stiker label kemasan botol, toples, makanan, & merchandise. Tahan air, anti sobek, sudah dipotong sesuai pola (Kiss cut tinggal lepas).',
+        'pilihan_bahan' => ['Vinyl Glossy Anti Air', 'Vinyl Doff / Matte', 'Stiker Transparan', 'Chromo Ekonomis'],
+        'finishing' => ['Kiss Cut (Potong Setengah)', 'Die Cut (Potong Putus)', 'Laminasi Dingin Glossy', 'Laminasi Doff']
     ],
     [
         'id' => 3,
-        'name' => 'Kartu Nama Eksklusif',
-        'category' => 'Stationery',
-        'price' => 35000,
-        'unit' => '/ box (100 pcs)',
-        'image' => 'https://images.unsplash.com/photo-1589330694653-dad6d3240a2b?w=600&auto=format&fit=crop&q=80',
-        'desc' => 'Kertas Art Carton 260gr full color 2 sisi. Dilengkapi laminasi Doff atau Glossy yang elegan.',
-        'options' => ['Tanpa Laminasi', 'Laminasi Doff', 'Laminasi Glossy']
+        'nama' => 'Brosur & Flyer Promosi Full Color',
+        'kategori' => 'brosur',
+        'kategori_label' => 'Brosur & Flyer',
+        'harga' => 175000,
+        'satuan' => 'rim (500 lbr)',
+        'harga_coret' => 220000,
+        'rating' => 4.8,
+        'terjual' => '1.1k',
+        'badge' => 'Promo Rim',
+        'gambar' => 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Cetak brosur full colour 1 sisi atau 2 sisi. Menggunakan kertas Art Paper berkualitas tinggi, cetakan tajam tidak luntur.',
+        'pilihan_bahan' => ['Art Paper 120gr', 'Art Paper 150gr', 'HVS 80gr (Hemat)'],
+        'finishing' => ['Tanpa Lipat', 'Lipat 2 (Bifold)', 'Lipat 3 (Trifold)']
     ],
     [
         'id' => 4,
-        'name' => 'Stiker & Label Kemasan (A3+)',
-        'category' => 'Label',
-        'price' => 12000,
-        'unit' => '/ lembar A3+',
-        'image' => 'https://images.unsplash.com/photo-1572375992501-4b0892d50c69?w=600&auto=format&fit=crop&q=80',
-        'desc' => 'Stiker Bontax / Vinyl anti air, sudah termasuk cutting pola (kiss cut / die cut). Siap tempel.',
-        'options' => ['Stiker Kromo/Bontax', 'Stiker Vinyl Putih', 'Stiker Vinyl Transparan']
+        'nama' => 'Kartu Nama Premium (1 Box isi 100)',
+        'kategori' => 'kartu_nama',
+        'kategori_label' => 'Kartu Nama',
+        'harga' => 35000,
+        'satuan' => 'box',
+        'harga_coret' => 45000,
+        'rating' => 5.0,
+        'terjual' => '3.2k',
+        'badge' => 'Premium',
+        'gambar' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Kartu nama profesional dengan bahan Art Carton tebal 260gr lengkap dengan laminasi doff/glossy dan gratis box mika eksklusif.',
+        'pilihan_bahan' => ['Art Carton 260gr', 'Art Carton 310gr (Ekstra Tebal)', 'BW Linen Bertekstur'],
+        'finishing' => ['Laminasi Doff 2 Sisi', 'Laminasi Glossy 2 Sisi', 'Sudut Bulat (Rounded)', 'Tanpa Laminasi']
     ],
     [
         'id' => 5,
-        'name' => 'Nota & Kwitansi NCR',
-        'category' => 'Kantor',
-        'price' => 85000,
-        'unit' => '/ buku (min. 10 buku)',
-        'image' => 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80',
-        'desc' => 'Cetak nota rangkap 2, 3, atau 4 ply tembus tanpa karbon. Dilengkapi nomorator dan perforasi rapi.',
-        'options' => ['2 Rangkap (Ply)', '3 Rangkap (Ply)', '4 Rangkap (Ply)']
+        'nama' => 'X-Banner & Y-Banner Portable (1 Set)',
+        'kategori' => 'banner',
+        'kategori_label' => 'Spanduk & Banner',
+        'harga' => 65000,
+        'satuan' => 'set',
+        'harga_coret' => 85000,
+        'rating' => 4.8,
+        'terjual' => '940',
+        'badge' => 'Siap Pasang',
+        'gambar' => 'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Stand banner promosi ukuran 60x160 cm, sudah termasuk rangka tiang fiber kokoh dan cetak bahan albatros/fleksi beresolusi tinggi.',
+        'pilihan_bahan' => ['Bahan Albatros + Laminasi Doff (Indoor Halus)', 'Bahan Flexi 340gr (Outdoor)'],
+        'finishing' => ['Rangka X-Banner Standar', 'Rangka Y-Banner Besi', 'Roll Up Banner Aluminium']
     ],
     [
         'id' => 6,
-        'name' => 'Sablon Kaos & Poloshirt',
-        'category' => 'Merchandise',
-        'price' => 65000,
-        'unit' => '/ pcs (Cotton Combed 30s)',
-        'image' => 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
-        'desc' => 'Kaos bahan Cotton Combed 30s adem dengan sablon DTF cetak detail tinggi full colour.',
-        'options' => ['Combed 30s (DTF A4)', 'Combed 30s (DTF A3)', 'Combed 24s Tebal']
+        'nama' => 'Kaos Custom DTF Sablon Satuan & Lusinan',
+        'kategori' => 'kaos',
+        'kategori_label' => 'Kaos & Sablon',
+        'harga' => 55000,
+        'satuan' => 'pcs',
+        'harga_coret' => 70000,
+        'rating' => 4.9,
+        'terjual' => '1.7k',
+        'badge' => 'Tanpa Min. Order',
+        'gambar' => 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Sablon kaos katun combed 30s premium dengan teknologi cetak DTF full color. Lembut, warna cerah, awet dicuci berkali-kali.',
+        'pilihan_bahan' => ['Cotton Combed 30s Premium', 'Cotton Combed 24s (Lebih Tebal)'],
+        'finishing' => ['Ukuran Desain A4', 'Ukuran Desain A3', 'Sablon Depan Saja', 'Sablon Depan + Belakang']
+    ],
+    [
+        'id' => 7,
+        'nama' => 'Mug Keramik Custom Cetak Sublim',
+        'kategori' => 'merchandise',
+        'kategori_label' => 'Merchandise',
+        'harga' => 20000,
+        'satuan' => 'pcs',
+        'harga_coret' => 28000,
+        'rating' => 4.7,
+        'terjual' => '810',
+        'badge' => 'Souvenir',
+        'gambar' => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Mug keramik putih SNI berkualitas tinggi. Cocok untuk hadiah ulang tahun, souvenir kantor, pernikahan, dan promosi bisnis.',
+        'pilihan_bahan' => ['Mug SNI Putih Polos', 'Mug Bunglon (Berubah Warna saat Panas)'],
+        'finishing' => ['Kemasan Box Putih', 'Box + Pita Souvenir']
+    ],
+    [
+        'id' => 8,
+        'nama' => 'Nota / Surat Jalan / Kwitansi NCR (2 Ply)',
+        'kategori' => 'stationery',
+        'kategori_label' => 'Buku & Nota',
+        'harga' => 135000,
+        'satuan' => 'paket (10 buku)',
+        'harga_coret' => 160000,
+        'rating' => 4.9,
+        'terjual' => '2.1k',
+        'badge' => 'Usaha',
+        'gambar' => 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&auto=format&fit=crop&q=80',
+        'deskripsi' => 'Cetak nota rangkap 2 atau 3 otomatis tembus tanpa karbon. Sudah termasuk porporasi (garis putus) dan nomor urut (numerator).',
+        'pilihan_bahan' => ['NCR 2 Rangkap (Putih - Merah/Kuning)', 'NCR 3 Rangkap (Putih - Merah - Kuning)'],
+        'finishing' => ['Nomor Urut (Numerator)', 'Jilid Lem Porporasi']
     ]
 ];
 
-function formatRupiah($angka) {
-    return 'Rp ' . number_format($angka, 0, ',', '.');
+// Hitung total item keranjang
+$total_keranjang = 0;
+foreach ($_SESSION['cart'] as $item) {
+    $total_keranjang += (int)($item['qty'] ?? 1);
 }
 ?>
 <!DOCTYPE html>
@@ -79,335 +149,550 @@ function formatRupiah($angka) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog Produk - ROSA INDAH PRINTING</title>
+    <title>Katalog Produk Percetakan & Digital Printing</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .brand-text {
-            color: #1d4ed8;
-            font-weight: 900;
-            letter-spacing: -0.02em;
+        /* Sembunyikan scrollbar untuk kategori pills */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 pb-24 md:pb-8">
+<body class="bg-slate-50 text-slate-800 antialiased pb-24 md:pb-12 min-h-screen flex flex-col">
 
-    <!-- HEADER NAVIGATION -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white shadow-md">
-                    <i class="fa-solid fa-print text-lg"></i>
-                </div>
-                <div>
-                    <h1 class="brand-text text-base md:text-xl uppercase leading-tight">ROSA INDAH PRINTING</h1>
-                    <p class="text-[10px] md:text-xs text-gray-500 font-medium tracking-wide">Digital & Offset Printing Berkualitas</p>
-                </div>
-            </div>
-
-            <div class="flex items-center space-x-3">
-                <a href="#member" class="flex items-center space-x-1.5 text-xs md:text-sm font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                    <i class="fa-regular fa-user"></i>
-                    <span>Member</span>
+    <!-- ============================================================== -->
+    <!-- HEADER ATAS (NAVBAR)                                           -->
+    <!-- Catatan: Ikon keranjang hanya muncul di Desktop (md:flex)      -->
+    <!-- Pada Mobile disembunyikan karena sudah ada di Bottom Tab!      -->
+    <!-- ============================================================== -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-3">
+                
+                <!-- Logo & Brand -->
+                <a href="index.php" class="flex items-center gap-2 flex-shrink-0">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+                        <i data-lucide="printer" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="font-black text-lg tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                            Rosa Indah
+                        </span>
+                        <span class="hidden sm:block text-[10px] tracking-widest text-slate-400 font-semibold uppercase">Digital Printing</span>
+                    </div>
                 </a>
 
-                <!-- ICON KERANJANG HEADER: DISEMBUNYIKAN DI MOBILE (hidden md:flex) -->
-                <button onclick="openCartModal()" class="hidden md:flex items-center space-x-2 bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium text-sm transition relative">
-                    <i class="fa-solid fa-basket-shopping text-base"></i>
-                    <span>Keranjang</span>
-                    <span id="cartCountHeader" class="bg-blue-600 text-white text-[11px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-lg mx-2">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Cari banner, stiker, brosur, nota..." 
+                            class="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 hover:bg-slate-50 focus:bg-white border border-transparent focus:border-indigo-500 rounded-full transition-all outline-none"
+                            onkeyup="filterProdukLive()"
+                        >
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    </div>
+                </div>
+
+                <!-- Nav Action Buttons -->
+                <div class="flex items-center gap-2">
+                    <!-- Nav Link Desktop -->
+                    <nav class="hidden md:flex items-center gap-6 mr-3 text-sm font-medium text-slate-600">
+                        <a href="index.php" class="hover:text-indigo-600 transition">Beranda</a>
+                        <a href="produk.php" class="text-indigo-600 font-semibold">Produk</a>
+                        <a href="cek-ongkir.php" class="hover:text-indigo-600 transition">Cek Ongkir</a>
+                        <a href="kontak.php" class="hover:text-indigo-600 transition">Bantuan</a>
+                    </nav>
+
+                    <!-- IKON KERANJANG DESKTOP: Disembunyikan di Mobile (hidden md:flex) -->
+                    <a href="keranjang.php" class="hidden md:flex relative p-2.5 rounded-full hover:bg-slate-100 text-slate-600 transition items-center justify-center" title="Keranjang Belanja">
+                        <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                        <span id="cart-counter-header" class="absolute -top-1 -right-1 bg-indigo-600 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+                            <?= $total_keranjang ?>
+                        </span>
+                    </a>
+
+                    <!-- Login / Akun Button -->
+                    <a href="login.php" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900 hover:bg-indigo-600 text-white text-xs sm:text-sm font-semibold transition-all shadow-sm">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Member</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horizontal Category Pills -->
+        <div class="border-t border-slate-100 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                <button onclick="setKategori('semua')" class="filter-btn active whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-indigo-600 text-white shadow-sm transition" data-category="semua">
+                    Semua Produk
+                </button>
+                <button onclick="setKategori('banner')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="banner">
+                    Spanduk & Banner
+                </button>
+                <button onclick="setKategori('stiker')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="stiker">
+                    Stiker & Label
+                </button>
+                <button onclick="setKategori('brosur')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="brosur">
+                    Brosur & Flyer
+                </button>
+                <button onclick="setKategori('kartu_nama')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="kartu_nama">
+                    Kartu Nama
+                </button>
+                <button onclick="setKategori('kaos')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="kaos">
+                    Kaos & Sablon
+                </button>
+                <button onclick="setKategori('merchandise')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="merchandise">
+                    Merchandise
+                </button>
+                <button onclick="setKategori('stationery')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="stationery">
+                    Buku & Nota
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- PROMO BANNER -->
-    <section class="max-w-6xl mx-auto px-4 mt-4">
-        <div class="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 rounded-2xl p-4 md:p-6 text-white shadow-md">
-            <span class="bg-white/20 text-white text-[10px] md:text-xs px-2.5 py-1 rounded-full uppercase font-bold tracking-wider">Layanan Cepat & Bergaransi</span>
-            <h2 class="text-lg md:text-2xl font-bold mt-2">Pilih Produk & Cetak Kebutuhan Anda</h2>
-            <p class="text-xs md:text-sm text-blue-100 mt-1 max-w-xl">Klik salah satu produk percetakan di bawah ini untuk melihat detail bahan, ukuran, dan simulasi biaya pesanan.</p>
+    <!-- ============================================================== -->
+    <!-- CONTENT SECTION: DAFTAR PRODUK                                 -->
+    <!-- ============================================================== -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+        
+        <!-- Header Info & Sorting -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Katalog Cetak & Percetakan</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Pilih produk, tentukan ukuran & bahan, lalu pesan kilat online</p>
+            </div>
+            
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+                <span class="text-xs text-slate-400 font-medium">Urutkan:</span>
+                <select id="sort-select" onchange="sortProduk()" class="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 outline-none focus:border-indigo-500 shadow-sm cursor-pointer">
+                    <option value="terpopuler">Paling Populer</option>
+                    <option value="harga_terendah">Harga Terendah</option>
+                    <option value="harga_tertinggi">Harga Tertinggi</option>
+                </select>
+            </div>
         </div>
-    </section>
 
-    <!-- KATALOG PRODUK -->
-    <main class="max-w-6xl mx-auto px-4 mt-6">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-base md:text-lg font-bold text-gray-800">Daftar Produk Percetakan</h3>
-            <span class="text-xs text-gray-500 font-medium">Klik produk untuk detail</span>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-5">
-            <?php foreach ($products as $p): ?>
-                <div onclick="openProductModal(<?= htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8') ?>)"
-                     class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+        <!-- Grid Produk -->
+        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            <?php foreach ($daftar_produk as $item): ?>
+                <div class="product-card group bg-white rounded-2xl border border-slate-200 hover:border-indigo-400 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+                     data-id="<?= $item['id'] ?>"
+                     data-kategori="<?= $item['kategori'] ?>"
+                     data-nama="<?= strtolower($item['nama']) ?>"
+                     data-harga="<?= $item['harga'] ?>">
+                    
                     <div>
-                        <div class="relative overflow-hidden aspect-video bg-gray-100">
-                            <img src="<?= $p['image'] ?>" alt="<?= htmlspecialchars($p['name']) ?>" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <span class="absolute top-2 left-2 bg-blue-600/90 text-white text-[9px] md:text-[11px] font-semibold px-2 py-0.5 rounded-md shadow-sm">
-                                <?= $p['category'] ?>
+                        <!-- Image Container -->
+                        <div class="relative aspect-square w-full overflow-hidden bg-slate-100 cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
+                            <img 
+                                src="<?= htmlspecialchars($item['gambar']) ?>" 
+                                alt="<?= htmlspecialchars($item['nama']) ?>" 
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                            >
+                            <!-- Badge -->
+                            <span class="absolute top-2 left-2 bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                <?= $item['badge'] ?>
                             </span>
+
+                            <!-- Rating badge -->
+                            <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[11px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
+                                <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
+                                <span><?= $item['rating'] ?></span>
+                            </div>
                         </div>
-                        <div class="p-3">
-                            <h4 class="font-bold text-xs md:text-sm text-gray-900 group-hover:text-blue-600 line-clamp-1 transition">
-                                <?= htmlspecialchars($p['name']) ?>
-                            </h4>
-                            <p class="text-[11px] md:text-xs text-gray-500 line-clamp-2 mt-1">
-                                <?= htmlspecialchars($p['desc']) ?>
-                            </p>
+
+                        <!-- Card Body -->
+                        <div class="p-3.5 sm:p-4">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                                <?= $item['kategori_label'] ?>
+                            </span>
+                            
+                            <h3 class="font-bold text-slate-800 text-xs sm:text-sm line-clamp-2 mt-1 leading-snug group-hover:text-indigo-600 transition cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
+                                <?= htmlspecialchars($item['nama']) ?>
+                            </h3>
+
+                            <div class="mt-2.5 flex items-baseline gap-1.5 flex-wrap">
+                                <span class="text-sm sm:text-base font-extrabold text-slate-900">
+                                    Rp <?= number_format($item['harga'], 0, ',', '.') ?>
+                                </span>
+                                <span class="text-[11px] text-slate-400">/ <?= $item['satuan'] ?></span>
+                            </div>
+
+                            <?php if ($item['harga_coret']): ?>
+                                <div class="text-[10px] text-slate-400 line-through">
+                                    Rp <?= number_format($item['harga_coret'], 0, ',', '.') ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                                <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i>
+                                <span>Terjual <?= $item['terjual'] ?>+</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="p-3 pt-0 border-t border-gray-100 mt-2 flex items-center justify-between">
-                        <div>
-                            <div class="text-[9px] md:text-[10px] text-gray-400">Mulai dari</div>
-                            <div class="text-xs md:text-sm font-bold text-blue-700"><?= formatRupiah($p['price']) ?></div>
-                        </div>
-                        <button class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition">
-                            <i class="fa-solid fa-plus text-xs"></i>
+
+                    <!-- Card Action Button -->
+                    <div class="p-3.5 sm:p-4 pt-0">
+                        <button 
+                            onclick="openDetailModal(<?= $item['id'] ?>)"
+                            class="w-full py-2 px-3 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95"
+                        >
+                            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                            <span>Pilih Spesifikasi</span>
                         </button>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <!-- State Kosong jika Pencarian Nihil -->
+        <div id="empty-state" class="hidden text-center py-16">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+                <i data-lucide="search-x" class="w-8 h-8"></i>
+            </div>
+            <h3 class="font-bold text-slate-700">Produk Tidak Ditemukan</h3>
+            <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci lain atau pilih kategori 'Semua'</p>
+        </div>
     </main>
 
-    <!-- MODAL DETAIL PRODUK -->
-    <div id="productModal" class="fixed inset-0 z-50 bg-black/60 hidden items-center justify-center p-3">
-        <div class="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
-            <div class="relative">
-                <img id="modalImg" src="" alt="Detail Produk" class="w-full h-44 object-cover">
-                <button onclick="closeProductModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/80 transition">
-                    <i class="fa-solid fa-xmark text-sm"></i>
+    <!-- ============================================================== -->
+    <!-- MODAL POPUP DETAIL & SPESIFIKASI PRODUK                        -->
+    <!-- ============================================================== -->
+    <div id="detail-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <!-- Modal Header -->
+            <div class="relative bg-slate-100 aspect-video w-full">
+                <img id="modal-img" src="" alt="Detail Produk" class="w-full h-full object-cover">
+                <button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white hover:bg-black flex items-center justify-center transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
-                <span id="modalCategory" class="absolute bottom-3 left-3 bg-blue-600 text-white text-[10px] px-2.5 py-0.5 rounded-md font-bold"></span>
+                <div class="absolute bottom-3 left-3">
+                    <span id="modal-badge" class="bg-indigo-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow"></span>
+                </div>
             </div>
 
-            <div class="p-4 overflow-y-auto space-y-4">
+            <!-- Modal Content -->
+            <div class="p-5 sm:p-6 space-y-4 max-h-[60vh] overflow-y-auto">
                 <div>
-                    <h3 id="modalName" class="text-base md:text-lg font-bold text-gray-900"></h3>
-                    <div class="flex items-baseline space-x-1 mt-1">
-                        <span id="modalPrice" class="text-lg md:text-xl font-extrabold text-blue-700"></span>
-                        <span id="modalUnit" class="text-xs text-gray-500"></span>
-                    </div>
-                    <p id="modalDesc" class="text-xs md:text-sm text-gray-600 mt-2 leading-relaxed"></p>
+                    <span id="modal-kategori" class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider"></span>
+                    <h2 id="modal-nama" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5"></h2>
+                    <p id="modal-deskripsi" class="text-xs text-slate-500 mt-1.5 leading-relaxed"></p>
                 </div>
 
-                <div class="border-t border-gray-100 pt-3">
-                    <label class="block text-xs font-bold text-gray-700 mb-1.5">Pilihan Bahan / Varian:</label>
-                    <select id="modalOption" class="w-full border border-gray-300 rounded-lg p-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </select>
+                <!-- Pilihan Bahan -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Pilihan Bahan</label>
+                    <div id="modal-bahan-container" class="grid grid-cols-1 gap-2"></div>
                 </div>
 
-                <div class="border-t border-gray-100 pt-3 flex items-center justify-between">
+                <!-- Pilihan Finishing -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Finishing / Opsi</label>
+                    <div id="modal-finishing-container" class="grid grid-cols-1 gap-2"></div>
+                </div>
+
+                <!-- Input Jumlah / Qty -->
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700">Jumlah Pesanan:</label>
-                        <span class="text-[10px] text-gray-400">Minimal 1 pesanan</span>
+                        <span class="text-xs font-bold text-slate-700">Jumlah / Kuantitas</span>
+                        <p class="text-[10px] text-slate-400" id="modal-satuan-label">Per satuan</p>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="changeQty(-1)" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 font-bold hover:bg-gray-200">-</button>
-                        <input id="modalQty" type="number" value="1" min="1" class="w-14 text-center border border-gray-300 rounded-lg py-1 text-sm font-bold" readonly>
-                        <button onclick="changeQty(1)" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 font-bold hover:bg-gray-200">+</button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="updateQty(-1)" class="w-8 h-8 rounded-lg bg-white border border-slate-300 font-bold text-slate-700 flex items-center justify-center active:scale-95 shadow-sm">-</button>
+                        <span id="modal-qty" class="text-sm font-extrabold text-slate-900 w-6 text-center">1</span>
+                        <button onclick="updateQty(1)" class="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center active:scale-95 shadow-sm">+</button>
                     </div>
+                </div>
+
+                <!-- Total Estimasi -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <span class="text-xs text-slate-500 font-medium">Total Estimasi:</span>
+                    <span id="modal-total-harga" class="text-lg font-black text-indigo-600">Rp 0</span>
                 </div>
             </div>
 
-            <div class="p-4 border-t border-gray-200 bg-gray-50 flex items-center space-x-2">
-                <button onclick="addToCartFromModal()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs md:text-sm shadow-md transition flex items-center justify-center space-x-1.5">
-                    <i class="fa-solid fa-cart-plus"></i>
-                    <span>Tambah ke Keranjang</span>
+            <!-- Modal Footer Buttons -->
+            <div class="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex gap-2">
+                <button onclick="tambahKeKeranjangModal()" class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95">
+                    <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                    <span>+ Keranjang</span>
+                </button>
+                <button onclick="pesanWhatsAppModal()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95 shadow-sm">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                    <span>Pesan via WA</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL KERANJANG -->
-    <div id="cartModal" class="fixed inset-0 z-50 bg-black/60 hidden items-end md:items-center justify-center p-0 md:p-3">
-        <div class="bg-white w-full md:max-w-md rounded-t-2xl md:rounded-2xl max-h-[85vh] flex flex-col shadow-2xl">
-            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-basket-shopping text-blue-600"></i>
-                    <h3 class="font-bold text-sm md:text-base text-gray-800">Keranjang Belanja</h3>
-                </div>
-                <button onclick="closeCartModal()" class="text-gray-400 hover:text-gray-600 text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+    <!-- ============================================================== -->
+    <!-- BOTTOM TAB NAVIGATION UNTUK TAMPILAN MOBILE                    -->
+    <!-- Tetap tampil di bawah dengan keranjang belanja aktif           -->
+    <!-- ============================================================== -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 px-3 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <div class="flex items-center justify-around">
+            <!-- Beranda -->
+            <a href="index.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-indigo-600 transition">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">Beranda</span>
+            </a>
 
-            <div id="cartItemsList" class="p-4 overflow-y-auto space-y-3 flex-1 text-xs md:text-sm"></div>
-
-            <div class="p-4 border-t border-gray-200 bg-gray-50 space-y-2">
-                <div class="flex items-center justify-between text-xs md:text-sm">
-                    <span class="text-gray-500 font-medium">Total Perkiraan:</span>
-                    <span id="cartTotalText" class="font-bold text-blue-700 text-base">Rp 0</span>
+            <!-- Produk (Aktif) -->
+            <a href="produk.php" class="flex flex-col items-center gap-1 py-1 px-3 text-indigo-600 font-bold">
+                <div class="relative">
+                    <i data-lucide="grid" class="w-5 h-5"></i>
+                    <span class="absolute -top-1 -right-1 w-2 h-2 bg-indigo-600 rounded-full"></span>
                 </div>
-                <button onclick="checkoutWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs md:text-sm shadow transition flex items-center justify-center space-x-2">
-                    <i class="fa-brands fa-whatsapp text-base"></i>
-                    <span>Checkout via WhatsApp</span>
-                </button>
-            </div>
+                <span class="text-[10px]">Produk</span>
+            </a>
+
+            <!-- KERANJANG DI BOTTOM TAB (Dengan Badge Counter) -->
+            <a href="keranjang.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-500 hover:text-indigo-600 transition relative">
+                <div class="relative">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    <span id="cart-counter-bottom" class="absolute -top-1.5 -right-2.5 bg-indigo-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                        <?= $total_keranjang ?>
+                    </span>
+                </div>
+                <span class="text-[10px] font-medium">Keranjang</span>
+            </a>
+
+            <!-- Pesanan / Riwayat -->
+            <a href="pesanan.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-indigo-600 transition">
+                <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">Pesanan</span>
+            </a>
+
+            <!-- Akun / Profil -->
+            <a href="login.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-indigo-600 transition">
+                <i data-lucide="user" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium">Akun</span>
+            </a>
         </div>
-    </div>
-
-    <!-- BOTTOM TAB NAVIGATION (MOBILE) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-2 flex items-center justify-around shadow-lg">
-        <a href="produk.php" class="flex flex-col items-center text-blue-700">
-            <i class="fa-solid fa-house text-lg"></i>
-            <span class="text-[10px] font-bold mt-0.5">Beranda</span>
-        </a>
-
-        <a href="produk.php" class="flex flex-col items-center text-blue-700">
-            <i class="fa-solid fa-layer-group text-lg"></i>
-            <span class="text-[10px] font-bold mt-0.5">Produk</span>
-        </a>
-
-        <button onclick="openCartModal()" class="flex flex-col items-center text-gray-500 hover:text-blue-600 relative">
-            <div class="relative">
-                <i class="fa-solid fa-basket-shopping text-lg"></i>
-                <span id="cartCountMobile" class="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
-            </div>
-            <span class="text-[10px] font-medium mt-0.5">Keranjang</span>
-        </button>
-
-        <button onclick="alert('Fitur Profil Member & Biodata Diri')" class="flex flex-col items-center text-gray-500 hover:text-blue-600">
-            <i class="fa-solid fa-circle-user text-lg"></i>
-            <span class="text-[10px] font-medium mt-0.5">Profil</span>
-        </button>
     </nav>
 
+    <!-- ============================================================== -->
+    <!-- JAVASCRIPT LOGIC                                               -->
+    <!-- ============================================================== -->
     <script>
-        let currentProduct = null;
-        let cart = JSON.parse(localStorage.getItem('rosa_cart') || '[]');
+        // Data Produk dari PHP ke JavaScript
+        const produkData = <?= json_encode($daftar_produk) ?>;
+        let selectedProduct = null;
+        let currentQty = 1;
+        let selectedBahan = '';
+        let selectedFinishing = '';
 
-        function updateCartUI() {
-            const count = cart.reduce((acc, item) => acc + item.qty, 0);
-            document.getElementById('cartCountMobile').innerText = count;
-            const headerCount = document.getElementById('cartCountHeader');
-            if (headerCount) headerCount.innerText = count;
+        // Inisialisasi ikon Lucide
+        lucide.createIcons();
 
-            const listEl = document.getElementById('cartItemsList');
-            if (cart.length === 0) {
-                listEl.innerHTML = `
-                    <div class="text-center py-8 text-gray-400">
-                        <i class="fa-solid fa-bag-shopping text-3xl mb-2"></i>
-                        <p>Keranjang Anda masih kosong.</p>
-                        <p class="text-[11px] mt-1">Pilih produk percetakan untuk mulai memesan.</p>
-                    </div>`;
-                document.getElementById('cartTotalText').innerText = 'Rp 0';
-                return;
-            }
+        // Filter Kategori
+        function setKategori(kat) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.category === kat) {
+                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+                    btn.classList.remove('bg-slate-100', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                    btn.classList.add('bg-slate-100', 'text-slate-600');
+                }
+            });
 
-            let total = 0;
-            listEl.innerHTML = cart.map((item, index) => {
-                const subtotal = item.price * item.qty;
-                total += subtotal;
-                return `
-                    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-                        <div class="flex-1 pr-2">
-                            <h5 class="font-bold text-gray-800 text-xs">${item.name}</h5>
-                            <span class="text-[10px] text-gray-500 block">Varian: ${item.option}</span>
-                            <span class="text-xs text-blue-700 font-bold">Rp ${subtotal.toLocaleString('id-ID')}</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-xs font-semibold px-2 py-0.5 bg-gray-100 rounded">${item.qty}x</span>
-                            <button onclick="removeCartItem(${index})" class="text-red-500 hover:text-red-700 text-xs p-1">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </div>`;
-            }).join('');
+            const cards = document.querySelectorAll('.product-card');
+            let visibleCount = 0;
 
-            document.getElementById('cartTotalText').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            cards.forEach(card => {
+                if (kat === 'semua' || card.dataset.kategori === kat) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
         }
 
-        function openProductModal(product) {
-            currentProduct = product;
-            document.getElementById('modalName').innerText = product.name;
-            document.getElementById('modalCategory').innerText = product.category;
-            document.getElementById('modalPrice').innerText = 'Rp ' + product.price.toLocaleString('id-ID');
-            document.getElementById('modalUnit').innerText = product.unit;
-            document.getElementById('modalDesc').innerText = product.desc;
-            document.getElementById('modalImg').src = product.image;
-            document.getElementById('modalQty').value = 1;
+        // Live Search Filter
+        function filterProdukLive() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.product-card');
+            let visibleCount = 0;
 
-            const optionSelect = document.getElementById('modalOption');
-            optionSelect.innerHTML = product.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+            cards.forEach(card => {
+                const nama = card.dataset.nama;
+                if (nama.includes(query)) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
 
-            const modal = document.getElementById('productModal');
+            document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
+        }
+
+        // Urutkan Produk
+        function sortProduk() {
+            const container = document.getElementById('product-grid');
+            const cards = Array.from(document.querySelectorAll('.product-card'));
+            const sortBy = document.getElementById('sort-select').value;
+
+            cards.sort((a, b) => {
+                if (sortBy === 'harga_terendah') {
+                    return parseInt(a.dataset.harga) - parseInt(b.dataset.harga);
+                } else if (sortBy === 'harga_tertinggi') {
+                    return parseInt(b.dataset.harga) - parseInt(a.dataset.harga);
+                }
+                return parseInt(a.dataset.id) - parseInt(b.dataset.id);
+            });
+
+            cards.forEach(card => container.appendChild(card));
+        }
+
+        // Buka Modal Detail
+        function openDetailModal(id) {
+            selectedProduct = produkData.find(p => p.id === id);
+            if (!selectedProduct) return;
+
+            currentQty = 1;
+            selectedBahan = selectedProduct.pilihan_bahan[0];
+            selectedFinishing = selectedProduct.finishing[0];
+
+            document.getElementById('modal-img').src = selectedProduct.gambar;
+            document.getElementById('modal-badge').innerText = selectedProduct.badge;
+            document.getElementById('modal-kategori').innerText = selectedProduct.kategori_label;
+            document.getElementById('modal-nama').innerText = selectedProduct.nama;
+            document.getElementById('modal-deskripsi').innerText = selectedProduct.deskripsi;
+            document.getElementById('modal-satuan-label').innerText = 'Per ' + selectedProduct.satuan;
+            document.getElementById('modal-qty').innerText = currentQty;
+
+            // Render opsi bahan
+            const bahanContainer = document.getElementById('modal-bahan-container');
+            bahanContainer.innerHTML = selectedProduct.pilihan_bahan.map((b, i) => `
+                <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer text-xs font-medium bg-white">
+                    <input type="radio" name="pilihan_bahan" value="${b}" ${i === 0 ? 'checked' : ''} onchange="selectedBahan='${b}'; updateModalTotal();" class="text-indigo-600 focus:ring-indigo-500">
+                    <span>${b}</span>
+                </label>
+            `).join('');
+
+            // Render opsi finishing
+            const finishingContainer = document.getElementById('modal-finishing-container');
+            finishingContainer.innerHTML = selectedProduct.finishing.map((f, i) => `
+                <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer text-xs font-medium bg-white">
+                    <input type="radio" name="pilihan_finishing" value="${f}" ${i === 0 ? 'checked' : ''} onchange="selectedFinishing='${f}';" class="text-indigo-600 focus:ring-indigo-500">
+                    <span>${f}</span>
+                </label>
+            `).join('');
+
+            updateModalTotal();
+
+            const modal = document.getElementById('detail-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            lucide.createIcons();
         }
 
-        function closeProductModal() {
-            const modal = document.getElementById('productModal');
+        // Update Kuantitas
+        function updateQty(delta) {
+            currentQty = Math.max(1, currentQty + delta);
+            document.getElementById('modal-qty').innerText = currentQty;
+            updateModalTotal();
+        }
+
+        // Hitung Total Modal
+        function updateModalTotal() {
+            if (!selectedProduct) return;
+            const total = selectedProduct.harga * currentQty;
+            document.getElementById('modal-total-harga').innerText = 'Rp ' + total.toLocaleString('id-ID');
+        }
+
+        // Tutup Modal
+        function closeModal() {
+            const modal = document.getElementById('detail-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            currentProduct = null;
         }
 
-        function changeQty(delta) {
-            const qtyInput = document.getElementById('modalQty');
-            let val = parseInt(qtyInput.value) + delta;
-            if (val < 1) val = 1;
-            qtyInput.value = val;
-        }
+        // Tambah ke Keranjang
+        function tambahKeKeranjangModal() {
+            if (!selectedProduct) return;
 
-        function addToCartFromModal() {
-            if (!currentProduct) return;
-            const option = document.getElementById('modalOption').value;
-            const qty = parseInt(document.getElementById('modalQty').value);
-
+            // Simpan ke localStorage agar sinkron langsung
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
             cart.push({
-                id: currentProduct.id,
-                name: currentProduct.name,
-                price: currentProduct.price,
-                option: option,
-                qty: qty
+                id: selectedProduct.id,
+                nama: selectedProduct.nama,
+                harga: selectedProduct.harga,
+                qty: currentQty,
+                bahan: selectedBahan,
+                finishing: selectedFinishing,
+                satuan: selectedProduct.satuan
             });
+            localStorage.setItem('cart', JSON.stringify(cart));
 
-            localStorage.setItem('rosa_cart', JSON.stringify(cart));
-            updateCartUI();
-            closeProductModal();
-            alert('Produk berhasil ditambahkan ke Keranjang!');
+            // Update badge counter
+            const totalItems = cart.reduce((acc, curr) => acc + curr.qty, 0);
+            const headerBadge = document.getElementById('cart-counter-header');
+            const bottomBadge = document.getElementById('cart-counter-bottom');
+            if (headerBadge) headerBadge.innerText = totalItems;
+            if (bottomBadge) bottomBadge.innerText = totalItems;
+
+            closeModal();
+            alert(`Berhasil menambahkan ${currentQty} ${selectedProduct.nama} ke keranjang!`);
         }
 
-        function removeCartItem(index) {
-            cart.splice(index, 1);
-            localStorage.setItem('rosa_cart', JSON.stringify(cart));
-            updateCartUI();
-        }
-
-        function openCartModal() {
-            updateCartUI();
-            const modal = document.getElementById('cartModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        function closeCartModal() {
-            const modal = document.getElementById('cartModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function checkoutWhatsApp() {
-            if (cart.length === 0) {
-                alert('Keranjang masih kosong!');
-                return;
-            }
-            let text = "*ORDER CETAK - ROSA INDAH PRINTING*\n\n";
-            let total = 0;
-            cart.forEach((item, i) => {
-                const sub = item.price * item.qty;
-                total += sub;
-                text += `${i + 1}. *${item.name}*\n   - Varian: ${item.option}\n   - Jumlah: ${item.qty}\n   - Subtotal: Rp ${sub.toLocaleString('id-ID')}\n\n`;
-            });
-            text += `*Total: Rp ${total.toLocaleString('id-ID')}*\n\nMohon info detail pengiriman & instruksi kirim file desain cetak. Terima kasih!`;
+        // Pesan via WhatsApp
+        function pesanWhatsAppModal() {
+            if (!selectedProduct) return;
+            const noWA = "6281234567890"; // Ganti dengan nomor WhatsApp percetakan Anda
+            const total = (selectedProduct.harga * currentQty).toLocaleString('id-ID');
+            const pesan = `Halo Rosa Indah Printing, saya mau pesan:%0A%0A` +
+                          `*Produk:* ${selectedProduct.nama}%0A` +
+                          `*Bahan:* ${selectedBahan}%0A` +
+                          `*Finishing:* ${selectedFinishing}%0A` +
+                          `*Jumlah:* ${currentQty} ${selectedProduct.satuan}%0A` +
+                          `*Estimasi Total:* Rp ${total}%0A%0A` +
+                          `Mohon konfirmasi ketersediaan dan cara kirim filenya. Terima kasih!`;
             
-            const noHp = "6281234567890"; // Ganti dengan nomor WhatsApp Anda
-            window.location.href = `https://wa.me/${noHp}?text=${encodeURIComponent(text)}`;
+            window.location.href = `https://wa.me/${noWA}?text=${pesan}`;
         }
 
-        updateCartUI();
+        // Tutup modal saat klik luar
+        window.onclick = function(event) {
+            const modal = document.getElementById('detail-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
     </script>
 </body>
 </html>
