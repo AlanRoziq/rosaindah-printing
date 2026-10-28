@@ -22,16 +22,14 @@
 
         <div class="portfolio-grid">
             <% portfolios.forEach(function(item) { %>
-                <div class="portfolio-card" data-aos="fade-up">
+                <a href="<%= page_url('detail-portofolio?id=' + item.id) %>" class="portfolio-card" data-aos="fade-up" title="<%= item.product_name %>">
                     <img src="<%= product_image_url(item.image) %>" alt="<%= item.product_name %>" loading="lazy">
                     <div class="portfolio-overlay">
+                        <span class="portfolio-tag"><i class="bi bi-patch-check-fill me-1"></i> Hasil Cetak Nyata</span>
                         <h5><%= item.product_name %></h5>
-                        <span>Dipesan oleh: <%= item.customer_name %></span>
-                        <div class="mt-2">
-                            <a href="<%= page_url('detail-portofolio?id=' + item.id) %>" class="btn btn-sm btn-light rounded-pill px-3">Lihat Detail</a>
-                        </div>
+                        <span class="portfolio-client"><i class="bi bi-person-fill me-1"></i> Dipesan oleh: <%= item.customer_name %></span>
                     </div>
-                </div>
+                </a>
             <% }); %>
         </div>
     </div>

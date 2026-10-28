@@ -1,147 +1,407 @@
-<%- include('_header', { title: 'Dashboard Ringkasan' }) %>
+<%- include('_header', { title: 'Dashboard' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="admin-title">
     <div>
-        <h2 class="fw-bold mb-1">Dashboard Ringkasan</h2>
-        <p class="text-muted mb-0">Gambaran kinerja operasional dan pesanan cetak Rosa Indah Printing hari ini.</p>
+        <h1>Dashboard</h1>
+        <p>Ringkasan operasional Rosa Indah Printing hari ini.</p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="<%= page_url('admin/pesanan') %>" class="btn btn-outline-secondary">
-            <i class="bi bi-cart-check"></i> Semua Pesanan
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a class="admin-btn secondary" href="<%= page_url('admin/nota-manual') %>">
+            <i class="bi bi-receipt"></i> Buat Nota Manual
         </a>
-        <a href="<%= page_url('admin/produk') %>" class="btn btn-primary" style="background: #d64a8a; border-color: #d64a8a;">
+        <a class="admin-btn secondary" href="<%= page_url('admin/laporan') %>">
+            <i class="bi bi-bar-chart-line"></i> Lihat Laporan
+        </a>
+        <a class="admin-btn" href="<%= page_url('admin/produk') %>">
             <i class="bi bi-plus-lg"></i> Tambah Produk
         </a>
     </div>
 </div>
 
 <!-- Main Stats -->
-<div class="row g-4 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card-pink d-flex align-items-center gap-3">
-            <div class="rounded-3 p-3 bg-light text-primary fs-3"><i class="bi bi-box-seam"></i></div>
-            <div>
-                <h3 class="fw-bold mb-0"><%= stats.products %></h3>
-                <small class="text-muted">Total Produk Katalog</small>
-            </div>
-        </div>
+<div class="admin-stats">
+    <div class="admin-stat">
+        <i class="bi bi-box-seam"></i>
+        <strong><%= stats.products %></strong>
+        <span>Total Produk Katalog</span>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card-pink d-flex align-items-center gap-3">
-            <div class="rounded-3 p-3 bg-light text-success fs-3"><i class="bi bi-cart-check"></i></div>
-            <div>
-                <h3 class="fw-bold mb-0"><%= stats.orders %></h3>
-                <small class="text-muted">Total Pesanan</small>
-            </div>
-        </div>
+    <div class="admin-stat">
+        <i class="bi bi-check-circle"></i>
+        <strong><%= stats.active %></strong>
+        <span>Produk Aktif</span>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card-pink d-flex align-items-center gap-3">
-            <div class="rounded-3 p-3 bg-light text-warning fs-3"><i class="bi bi-hourglass-split"></i></div>
-            <div>
-                <h3 class="fw-bold mb-0"><%= stats.waiting_payment %></h3>
-                <small class="text-muted">Menunggu Verifikasi</small>
-            </div>
-        </div>
+    <div class="admin-stat">
+        <i class="bi bi-cart-check"></i>
+        <strong><%= stats.orders %></strong>
+        <span>Total Pesanan Masuk</span>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="stat-card-pink d-flex align-items-center gap-3">
-            <div class="rounded-3 p-3 bg-light text-info fs-3"><i class="bi bi-people"></i></div>
-            <div>
-                <h3 class="fw-bold mb-0"><%= stats.customers %></h3>
-                <small class="text-muted">Member Terdaftar</small>
-            </div>
-        </div>
+    <div class="admin-stat">
+        <i class="bi bi-people"></i>
+        <strong><%= stats.customers %></strong>
+        <span>Member Terdaftar</span>
     </div>
 </div>
 
-<!-- Revenue Highlight -->
-<div class="row g-4 mb-4">
-    <div class="col-md-6">
-        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-circle p-3 text-white fs-3" style="background: #d64a8a; width: 60px; height: 60px; display: grid; place-items: center;">
-                    <i class="bi bi-graph-up-arrow"></i>
-                </div>
-                <div>
-                    <span class="text-muted small">Total Estimasi Omset:</span>
-                    <h3 class="fw-bold text-dark mb-0"><%= format_rupiah(stats.month_sales) %></h3>
-                    <small class="text-muted"><%= stats.orders %> transaksi pesanan tercatat</small>
-                </div>
-            </div>
+<!-- Highlight Row -->
+<div class="dashboard-highlight-grid">
+    <div class="admin-card dashboard-highlight">
+        <div class="highlight-icon">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div>
+            <span>Penjualan Bulan Ini</span>
+            <strong><%= format_rupiah(stats.month_sales) %></strong>
+            <small><%= stats.orders %> pesanan · Dibayar <%= format_rupiah(stats.month_paid) %></small>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <span class="text-muted small">Alur Status Pesanan Saat Ini:</span>
-                    <div class="d-flex flex-wrap gap-2 mt-2">
-                        <span class="badge bg-warning text-dark">Baru: <%= stats.orderCounts.pending %></span>
-                        <span class="badge bg-info text-dark">Dikonfirmasi: <%= stats.orderCounts.confirmed %></span>
-                        <span class="badge bg-secondary">Diproses: <%= stats.orderCounts.processing %></span>
-                        <span class="badge bg-primary">Dicetak: <%= stats.orderCounts.printed %></span>
-                        <span class="badge bg-success">Selesai: <%= stats.orderCounts.completed %></span>
-                    </div>
-                </div>
-                <a href="<%= page_url('admin/pesanan') %>" class="btn btn-sm btn-outline-primary">Kelola</a>
-            </div>
+    <div class="admin-card dashboard-highlight">
+        <div class="highlight-icon">
+            <i class="bi bi-credit-card"></i>
         </div>
+        <div>
+            <span>Perlu Verifikasi Pembayaran</span>
+            <strong><%= stats.waiting_payment %></strong>
+            <small>Menunggu konfirmasi mutasi · <%= stats.paid %> pesanan lunas</small>
+        </div>
+        <a class="admin-btn secondary" href="<%= page_url('admin/pesanan?payment=waiting') %>" style="margin-left: auto;">
+            Periksa
+        </a>
     </div>
 </div>
 
-<!-- Recent Orders Table -->
-<div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold mb-0">Pesanan Masuk Terbaru</h4>
-        <a href="<%= page_url('admin/pesanan') %>" class="small fw-bold text-decoration-none" style="color: #d64a8a;">Lihat Semua Pesanan →</a>
+<!-- Order Pipeline -->
+<div class="admin-card admin-dashboard-orders">
+    <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap;">
+        <div>
+            <h2 style="margin: 0; color: #18243a; font-size: 19px; font-weight: 800;">Alur Status Pesanan</h2>
+            <p style="margin: 4px 0 0; color: #7d747c; font-size: 13px;">Pantau posisi order saat ini secara real-time.</p>
+        </div>
+        <a class="admin-btn secondary" href="<%= page_url('admin/pesanan') %>">
+            Kelola Pesanan <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
+    <div class="dashboard-order-pills">
+        <a href="<%= page_url('admin/pesanan?status=pending') %>" class="order-pill-item">
+            <span>Baru Masuk</span> <b><%= stats.orderCounts.pending %></b>
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=confirmed') %>" class="order-pill-item">
+            <span>Dikonfirmasi</span> <b><%= stats.orderCounts.confirmed %></b>
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=processing') %>" class="order-pill-item">
+            <span>Diproses</span> <b><%= stats.orderCounts.processing %></b>
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=printed') %>" class="order-pill-item">
+            <span>Dicetak</span> <b><%= stats.orderCounts.printed %></b>
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=completed') %>" class="order-pill-item">
+            <span>Selesai</span> <b><%= stats.orderCounts.completed %></b>
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=cancelled') %>" class="order-pill-item">
+            <span>Dibatalkan</span> <b><%= stats.orderCounts.cancelled %></b>
+        </a>
+    </div>
+</div>
 
-    <% if (recent.length === 0) { %>
-        <p class="text-muted my-3 text-center">Belum ada pesanan masuk.</p>
-    <% } else { %>
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Nomor Order</th>
-                        <th>Pelanggan</th>
-                        <th>Total Estimasi</th>
-                        <th>Status Order</th>
-                        <th>Pembayaran</th>
-                        <th>Waktu</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% recent.forEach(function(o) { %>
-                        <tr>
-                            <td>
-                                <a href="<%= page_url('admin/pesanan?code=' + o.order_code) %>" class="fw-bold text-dark text-decoration-none">
-                                    <%= o.order_code %>
+<!-- Two Columns: Recent Orders & Quick Access -->
+<div class="dashboard-two-col">
+    <!-- Recent Orders -->
+    <div class="admin-card">
+        <div class="dashboard-section-head">
+            <div>
+                <h2>Pesanan Terbaru</h2>
+                <p>6 order terakhir masuk ke sistem.</p>
+            </div>
+            <a href="<%= page_url('admin/pesanan') %>">Lihat semua →</a>
+        </div>
+        <div class="dashboard-recent-list">
+            <% if (recent.length === 0) { %>
+                <div style="text-align: center; padding: 30px 10px; color: #9c919a; font-size: 13px;">
+                    <i class="bi bi-inbox" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
+                    Belum ada pesanan masuk.
+                </div>
+            <% } else { %>
+                <% recent.forEach(function(r) { %>
+                    <div class="dashboard-recent-item">
+                        <div>
+                            <strong><%= r.order_code %></strong>
+                            <span><%= r.customer_name %> · <%= r.created_at %></span>
+                        </div>
+                        <div style="text-align: right;">
+                            <b><%= format_rupiah(r.total_estimate) %></b>
+                            <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 4px;">
+                                <span class="status-pill status-pill-<%= r.status %>">
+                                    <%= r.status %>
+                                </span>
+                                <a href="<%= page_url('invoice?code=' + encodeURIComponent(r.order_code) + '&print=1') %>" target="_blank" style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 2px 7px; background: #fff0f6; border: 1px solid #f2c9db; border-radius: 6px; color: #e11d64; font-weight: 700; text-decoration: none;" title="Cetak Nota">
+                                    <i class="bi bi-printer"></i> Nota
                                 </a>
-                            </td>
-                            <td>
-                                <div><%= o.customer_name %></div>
-                                <small class="text-muted"><%= o.customer_phone %></small>
-                            </td>
-                            <td class="fw-bold text-danger"><%= format_rupiah(o.total_estimate) %></td>
-                            <td>
-                                <span class="status-pill status-pill-<%= o.status %>">
-                                    <%= o.status.toUpperCase() %>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-<%= o.payment_status === 'paid' ? 'success' : 'warning text-dark' %>">
-                                    <%= o.payment_status %>
-                                </span>
-                            </td>
-                            <td class="small text-muted"><%= o.created_at %></td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } %>
         </div>
-    <% } %>
+    </div>
+
+    <!-- Quick Access & Highlights -->
+    <div class="admin-card">
+        <div class="dashboard-section-head">
+            <div>
+                <h2>Akses Cepat Admin</h2>
+                <p>Navigasi cepat ke modul utama percetakan.</p>
+            </div>
+        </div>
+        <div class="quick-admin-links">
+            <a href="<%= page_url('admin/produk') %>">
+                <i class="bi bi-box-seam"></i>
+                <div>
+                    <strong>Katalog Produk</strong>
+                    <small>Kelola harga & stok</small>
+                </div>
+            </a>
+            <a href="<%= page_url('admin/pesanan') %>">
+                <i class="bi bi-cart-check"></i>
+                <div>
+                    <strong>Kelola Pesanan</strong>
+                    <small>Update alur cetak</small>
+                </div>
+            </a>
+            <a href="<%= page_url('admin/promo') %>">
+                <i class="bi bi-ticket-perforated"></i>
+                <div>
+                    <strong>Promo & Voucher</strong>
+                    <small>Diskon & kupon</small>
+                </div>
+            </a>
+            <a href="<%= page_url('admin/loyalty') %>">
+                <i class="bi bi-stars"></i>
+                <div>
+                    <strong>Poin & Reward</strong>
+                    <small>Aturan loyalitas</small>
+                </div>
+            </a>
+            <a href="<%= page_url('admin/pelanggan') %>">
+                <i class="bi bi-people"></i>
+                <div>
+                    <strong>Data Member</strong>
+                    <small>Customer loyal</small>
+                </div>
+            </a>
+            <a href="<%= page_url('admin/laporan') %>">
+                <i class="bi bi-bar-chart-line"></i>
+                <div>
+                    <strong>Laporan Omset</strong>
+                    <small>Rekapitulasi transaksi</small>
+                </div>
+            </a>
+        </div>
+    </div>
 </div>
+
+<style>
+.dashboard-highlight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+.dashboard-highlight {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 0;
+}
+.highlight-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: #fff0f6;
+    color: #e11d64;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    flex: 0 0 52px;
+}
+.dashboard-highlight span {
+    display: block;
+    color: #817982;
+    font-size: 12px;
+    font-weight: 600;
+}
+.dashboard-highlight strong {
+    display: block;
+    color: #18243a;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 4px 0 2px;
+    font-variant-numeric: tabular-nums;
+}
+.dashboard-highlight small {
+    color: #8a7e86;
+    font-size: 11.5px;
+}
+.dashboard-order-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+.order-pill-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 13px;
+    background: #fff8fb;
+    border: 1px solid #f2dce7;
+    border-radius: 11px;
+    color: #5d535e;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.order-pill-item:hover {
+    background: #ffe8f1;
+    border-color: #e11d64;
+    color: #be124f;
+    transform: translateY(-1px);
+}
+.order-pill-item b {
+    color: #e11d64;
+    font-weight: 800;
+    background: #ffffff;
+    padding: 2px 7px;
+    border-radius: 8px;
+    border: 1px solid #f2dce7;
+}
+.dashboard-two-col {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 18px;
+}
+.dashboard-section-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+.dashboard-section-head h2 {
+    margin: 0;
+    color: #18243a;
+    font-size: 18px;
+    font-weight: 800;
+}
+.dashboard-section-head p {
+    margin: 4px 0 0;
+    color: #817982;
+    font-size: 12.5px;
+}
+.dashboard-section-head a {
+    color: #e11d64;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 12.5px;
+}
+.dashboard-section-head a:hover {
+    text-decoration: underline;
+}
+.dashboard-recent-list {
+    display: grid;
+    gap: 0;
+}
+.dashboard-recent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f4e9ee;
+}
+.dashboard-recent-item:last-child {
+    border-bottom: 0;
+}
+.dashboard-recent-item strong {
+    display: block;
+    color: #18243a;
+    font-size: 13.5px;
+}
+.dashboard-recent-item span {
+    display: block;
+    color: #8b8087;
+    font-size: 11.5px;
+    margin-top: 3px;
+}
+.dashboard-recent-item b {
+    display: block;
+    color: #18243a;
+    font-size: 13px;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+}
+.quick-admin-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.quick-admin-links a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #f0dfe7;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #4e4850;
+    background: #fffafc;
+    transition: all 0.15s ease;
+}
+.quick-admin-links a:hover {
+    background: #ffe8f1;
+    border-color: #e11d64;
+    transform: translateY(-1px);
+}
+.quick-admin-links a i {
+    color: #e11d64;
+    font-size: 20px;
+    flex: 0 0 20px;
+}
+.quick-admin-links a strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #18243a;
+}
+.quick-admin-links a small {
+    display: block;
+    font-size: 11px;
+    color: #887d85;
+}
+@media (max-width: 900px) {
+    .dashboard-highlight-grid,
+    .dashboard-two-col {
+        grid-template-columns: 1fr;
+    }
+    .quick-admin-links {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 550px) {
+    .quick-admin-links {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-highlight {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .dashboard-highlight .admin-btn {
+        margin-left: 0 !important;
+        margin-top: 8px;
+    }
+    .dashboard-order-pills {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+</style>
 
 <%- include('_footer') %>

@@ -1,0 +1,435 @@
+<%- include('_header', { title: 'Nota Manual' }) %>
+
+<div class="admin-title">
+    <div>
+        <h1>Buat Nota Manual (Kasir Percetakan)</h1>
+        <p>Terbitkan nota transaksi langsung untuk pelanggan walk-in, pesanan offline, atau kustom tanpa melalui alur web.</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a href="<%= page_url('admin/pesanan') %>" class="admin-btn secondary">
+            <i class="bi bi-cart-check"></i> Daftar Pesanan
+        </a>
+    </div>
+</div>
+
+<% if (typeof notice !== 'undefined' && notice) { %>
+    <div class="admin-alert">
+        <i class="bi bi-check-circle-fill"></i>
+        <span><%= notice %></span>
+    </div>
+<% } %>
+
+<!-- Main Manual Nota Generator Form -->
+<form action="<%= page_url('admin/nota-manual') %>" method="POST" id="notaManualForm">
+    <div class="admin-card" style="margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid #f2dce7; padding-bottom: 14px;">
+            <div>
+                <h2 style="margin: 0; color: #18243a; font-size: 18px; font-weight: 800;">
+                    <i class="bi bi-receipt" style="color: #e11d64;"></i> Informasi Pelanggan & Transaksi
+                </h2>
+                <small style="color: #7d747c;">Lengkapi data pemesan dan nomor referensi nota.</small>
+            </div>
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #e11d64; background: #fff0f6; border: 1px solid #f2c9db; padding: 4px 10px; border-radius: 999px;">
+                    NOTA KASIR RESMI
+                </span>
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Nomor Nota Transaksi *</label>
+                <input type="text" name="order_code" id="orderCode" required value="NOTA-<%= new Date().toISOString().slice(0,10).replace(/-/g,'') %>-<%= Math.floor(1000 + Math.random() * 9000) %>" style="font-weight: 700; color: #18243a; font-family: monospace;">
+            </div>
+            <div class="admin-field">
+                <label>Tanggal Transaksi *</label>
+                <input type="datetime-local" name="created_at" id="createdAt" required value="<%= new Date().toISOString().slice(0,16) %>">
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Nama Pelanggan / Usaha / Instansi *</label>
+                <input type="text" name="customer_name" required placeholder="Contoh: Bapak Hendra (Toko Berkah)">
+            </div>
+            <div class="admin-field">
+                <label>No. WhatsApp / Telepon *</label>
+                <input type="tel" name="customer_phone" required placeholder="08xxxxxxxxxx">
+            </div>
+        </div>
+
+        <div class="admin-field">
+            <label>Alamat / Lokasi Pengantaran (Opsional)</label>
+            <input type="text" name="customer_address" placeholder="Contoh: Jl. Diponegoro No. 14, Pasuruan">
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Metode Pembayaran</label>
+                <select name="payment_method" id="paymentMethod">
+                    <option value="cash">Tunai / Cash Langsung</option>
+                    <option value="transfer">Transfer Bank (BCA / Mandiri / BRI)</option>
+                    <option value="qris">QRIS Rosa Indah</option>
+                </select>
+            </div>
+            <div class="admin-field">
+                <label>Status Pembayaran</label>
+                <select name="payment_status" id="paymentStatus" onchange="syncPaymentStatus(this.value)">
+                    <option value="paid">LUNAS (Sudah Diterima Penuh)</option>
+                    <option value="waiting">DP / Sebagian</option>
+                    <option value="unpaid">Belum Bayar (Tempo / Tagihan)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Nominal Pembayaran Diterima (Rp) *</label>
+                <input type="number" name="paid_amount" id="paidAmount" min="0" value="0" placeholder="0" oninput="calculateTotal()">
+            </div>
+            <div class="admin-field">
+                <label>Status Alur Pesanan</label>
+                <select name="status">
+                    <option value="completed">Selesai (Langsung Diambil / Serah Terima)</option>
+                    <option value="processing">Sedang Diproses Cetak</option>
+                    <option value="printed">Selesai Dicetak (Menunggu Finishing)</option>
+                    <option value="confirmed">Dikonfirmasi</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="admin-field">
+            <label>Catatan Khusus / Spesifikasi Pengerjaan (Tampil di Nota)</label>
+            <textarea name="customer_note" rows="2" placeholder="Contoh: Finishing laminasi doff, lubang mata ayam tiap sudut, diambil besok jam 15.00 WIB"></textarea>
+        </div>
+    </div>
+
+    <!-- Line Items Section -->
+    <div class="admin-card" style="padding: 0; overflow: hidden; margin-bottom: 22px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; background: #fffcfd; border-bottom: 1px solid #f2dce7; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h2 style="margin: 0; color: #18243a; font-size: 17px; font-weight: 800;">
+                    Rincian Item Produk & Jasa Cetak
+                </h2>
+                <small style="color: #8c8289;">Tambahkan satu atau lebih item cetak untuk nota ini.</small>
+            </div>
+            <button type="button" class="admin-btn secondary" onclick="addItemRow()">
+                <i class="bi bi-plus-circle"></i> Tambah Baris Item
+            </button>
+        </div>
+
+        <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 12px 16px;">
+            <table class="admin-table" id="itemsTable" style="min-width: 780px;">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Nama Produk / Jasa Cetak</th>
+                        <th style="width: 25%;">Spesifikasi / Ukuran</th>
+                        <th style="width: 12%;">Qty</th>
+                        <th style="width: 12%;">Satuan</th>
+                        <th style="width: 18%; text-align: right;">Harga Satuan (Rp)</th>
+                        <th style="width: 18%; text-align: right;">Subtotal (Rp)</th>
+                        <th style="width: 40px; text-align: center;"></th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody">
+                    <!-- Default initial row -->
+                    <tr class="item-row">
+                        <td>
+                            <input type="text" name="item_name[]" class="admin-input-cell item-name" required placeholder="Contoh: Banner Spanduk Flexi" list="productList">
+                        </td>
+                        <td>
+                            <input type="text" name="item_spec[]" class="admin-input-cell" placeholder="Ukuran 3x1m, Mata Ayam 4 sudut">
+                        </td>
+                        <td>
+                            <input type="number" name="item_qty[]" class="admin-input-cell item-qty" required min="1" value="1" oninput="calculateRow(this)">
+                        </td>
+                        <td>
+                            <select name="item_unit[]" class="admin-input-cell">
+                                <option value="pcs">pcs</option>
+                                <option value="meter">meter</option>
+                                <option value="lembar">lembar</option>
+                                <option value="box">box</option>
+                                <option value="buku">buku</option>
+                                <option value="rim">rim</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="item_price[]" class="admin-input-cell item-price" required min="0" value="25000" oninput="calculateRow(this)" style="text-align: right;">
+                        </td>
+                        <td style="text-align: right; font-weight: 700; color: #18243a; font-variant-numeric: tabular-nums;">
+                            <span class="row-subtotal">Rp25.000</span>
+                            <input type="hidden" name="item_subtotal[]" class="item-subtotal-val" value="25000">
+                        </td>
+                        <td style="text-align: center;">
+                            <button type="button" class="btn-remove-row" onclick="removeRow(this)" title="Hapus Baris">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Catalog autocomplete datalist -->
+        <datalist id="productList">
+            <% products.forEach(function(p) { %>
+                <option value="<%= p.name %>" data-price="<%= p.price %>" data-unit="<%= p.unit %>"><%= p.name %> - <%= format_rupiah(p.price) %>/<%= p.unit %></option>
+            <% }); %>
+            <option value="Jasa Desain Grafis">Jasa Desain Grafis</option>
+            <option value="Biaya Tambahan Finishing">Biaya Tambahan Finishing</option>
+            <option value="Ongkos Kirim Kurir">Ongkos Kirim Kurir</option>
+        </datalist>
+
+        <!-- Calculation Summary Box -->
+        <div style="background: #fff8fb; border-top: 1px solid #f2dce7; padding: 20px 24px;">
+            <div style="display: flex; justify-content: flex-end;">
+                <div style="width: 360px; max-width: 100%;">
+                    <div style="display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 8px;">
+                        <span style="color: #6e646d;">Subtotal Item:</span>
+                        <strong id="displaySubtotal" style="font-variant-numeric: tabular-nums;">Rp25.000</strong>
+                        <input type="hidden" name="subtotal" id="inputSubtotal" value="25000">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; margin-bottom: 8px;">
+                        <span style="color: #6e646d;">Diskon / Potongan (Rp):</span>
+                        <input type="number" name="discount_amount" id="inputDiscount" min="0" value="0" style="width: 120px; text-align: right; padding: 5px 8px; border: 1px solid #eadde3; border-radius: 8px; font-size: 13px;" oninput="calculateTotal()">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; color: #e11d64; padding-top: 10px; border-top: 2px dashed #f1cadc; margin-top: 8px;">
+                        <span>Total Tagihan:</span>
+                        <span id="displayTotal" style="font-size: 20px; font-variant-numeric: tabular-nums;">Rp25.000</span>
+                        <input type="hidden" name="total_estimate" id="inputTotal" value="25000">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-top: 8px; color: #287a47;">
+                        <span>Uang Telah Dibayar:</span>
+                        <strong id="displayPaid" style="font-variant-numeric: tabular-nums;">Rp0</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13.5px; margin-top: 4px; font-weight: 700; color: #c0392b;">
+                        <span>Sisa Tagihan / Kurang:</span>
+                        <strong id="displayRemaining" style="font-variant-numeric: tabular-nums;">Rp25.000</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Toolbar -->
+    <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 40px; flex-wrap: wrap;">
+        <button type="submit" name="print_now" value="0" class="admin-btn secondary" style="padding: 12px 22px;">
+            <i class="bi bi-save"></i> Simpan ke Riwayat Pesanan
+        </button>
+        <button type="submit" name="print_now" value="1" class="admin-btn" style="padding: 12px 26px; font-size: 14px;">
+            <i class="bi bi-printer-fill"></i> Simpan & Langsung Cetak Nota
+        </button>
+    </div>
+</form>
+
+<!-- Riwayat Nota Manual Terbaru -->
+<div class="admin-card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 16px 22px; border-bottom: 1px solid #f2dce7; background: #fffcfd; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin: 0; color: #18243a; font-size: 17px; font-weight: 800;">
+            Riwayat Nota Transaksi Terbaru
+        </h2>
+        <a href="<%= page_url('admin/pesanan') %>" style="color: #e11d64; font-size: 12.5px; font-weight: 700; text-decoration: none;">
+            Lihat Semua Pesanan →
+        </a>
+    </div>
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="admin-table" style="min-width: 820px;">
+            <thead>
+                <tr>
+                    <th>No. Nota</th>
+                    <th>Nama Pelanggan</th>
+                    <th>Item Pesanan</th>
+                    <th>Total</th>
+                    <th>Status Bayar</th>
+                    <th style="width: 140px; text-align: center;">Aksi Nota</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% recentOrders.forEach(function(o) { %>
+                    <tr>
+                        <td>
+                            <strong style="color: #18243a;"><%= o.order_code %></strong>
+                            <small style="display: block; color: #8e838b; font-size: 11px;"><%= o.created_at %></small>
+                        </td>
+                        <td>
+                            <strong><%= o.customer_name %></strong>
+                            <small style="display: block; color: #7f747d; font-size: 11.5px;"><%= o.customer_phone %></small>
+                        </td>
+                        <td>
+                            <% o.items.forEach(function(it) { %>
+                                <div style="font-size: 12px; color: #3e3740;">
+                                    • <%= it.product_name %> (<%= it.quantity %> <%= it.unit %>)
+                                </div>
+                            <% }); %>
+                        </td>
+                        <td>
+                            <strong style="color: #e11d64; font-variant-numeric: tabular-nums;">
+                                <%= format_rupiah(o.total_estimate) %>
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="status-pill <%= o.payment_status === 'paid' ? 'status-pill-completed' : (o.payment_status === 'waiting' ? 'status-pill-pending' : 'status-pill-cancelled') %>">
+                                <%= o.payment_status.toUpperCase() %>
+                            </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <a href="<%= page_url('invoice?code=' + encodeURIComponent(o.order_code) + '&print=1') %>" target="_blank" class="admin-btn" style="padding: 5px 11px; font-size: 11.5px; border-radius: 8px;">
+                                <i class="bi bi-printer"></i> Cetak Nota
+                            </a>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.admin-input-cell {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #eadde3;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 13px;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.admin-input-cell:focus {
+    border-color: #e11d64;
+    box-shadow: 0 0 0 2px #ffe8f1;
+}
+.btn-remove-row {
+    background: transparent;
+    border: 0;
+    color: #e05252;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+.btn-remove-row:hover {
+    background: #ffecec;
+}
+</style>
+
+<script>
+function formatRupiahJs(number) {
+    return 'Rp' + Number(number || 0).toLocaleString('id-ID');
+}
+
+function calculateRow(inputElem) {
+    var row = inputElem.closest('tr');
+    if (!row) return;
+    var qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+    var price = parseFloat(row.querySelector('.item-price').value) || 0;
+    var subtotal = qty * price;
+    row.querySelector('.item-subtotal-val').value = subtotal;
+    row.querySelector('.row-subtotal').textContent = formatRupiahJs(subtotal);
+    calculateTotal();
+}
+
+function calculateTotal() {
+    var subtotals = document.querySelectorAll('.item-subtotal-val');
+    var totalSubtotal = 0;
+    subtotals.forEach(function(el) {
+        totalSubtotal += parseFloat(el.value) || 0;
+    });
+
+    var discount = parseFloat(document.getElementById('inputDiscount').value) || 0;
+    var totalEstimate = Math.max(0, totalSubtotal - discount);
+
+    document.getElementById('displaySubtotal').textContent = formatRupiahJs(totalSubtotal);
+    document.getElementById('inputSubtotal').value = totalSubtotal;
+
+    document.getElementById('displayTotal').textContent = formatRupiahJs(totalEstimate);
+    document.getElementById('inputTotal').value = totalEstimate;
+
+    var paidInput = document.getElementById('paidAmount');
+    var paid = parseFloat(paidInput.value) || 0;
+
+    var paymentStatusSelect = document.getElementById('paymentStatus');
+    if (paymentStatusSelect.value === 'paid' && (paid === 0 || paid < totalEstimate)) {
+        paidInput.value = totalEstimate;
+        paid = totalEstimate;
+    }
+
+    document.getElementById('displayPaid').textContent = formatRupiahJs(paid);
+    var remaining = Math.max(0, totalEstimate - paid);
+    document.getElementById('displayRemaining').textContent = formatRupiahJs(remaining);
+}
+
+function syncPaymentStatus(val) {
+    var total = parseFloat(document.getElementById('inputTotal').value) || 0;
+    var paidInput = document.getElementById('paidAmount');
+    if (val === 'paid') {
+        paidInput.value = total;
+    } else if (val === 'unpaid') {
+        paidInput.value = 0;
+    }
+    calculateTotal();
+}
+
+function addItemRow() {
+    var tbody = document.getElementById('itemsBody');
+    var tr = document.createElement('tr');
+    tr.className = 'item-row';
+    tr.innerHTML = `
+        <td>
+            <input type="text" name="item_name[]" class="admin-input-cell item-name" required placeholder="Contoh: Kartu Nama 2 Sisi" list="productList">
+        </td>
+        <td>
+            <input type="text" name="item_spec[]" class="admin-input-cell" placeholder="Art Paper 260gr, Doff">
+        </td>
+        <td>
+            <input type="number" name="item_qty[]" class="admin-input-cell item-qty" required min="1" value="1" oninput="calculateRow(this)">
+        </td>
+        <td>
+            <select name="item_unit[]" class="admin-input-cell">
+                <option value="pcs">pcs</option>
+                <option value="box">box</option>
+                <option value="meter">meter</option>
+                <option value="lembar">lembar</option>
+                <option value="buku">buku</option>
+                <option value="rim">rim</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" name="item_price[]" class="admin-input-cell item-price" required min="0" value="0" oninput="calculateRow(this)" style="text-align: right;">
+        </td>
+        <td style="text-align: right; font-weight: 700; color: #18243a; font-variant-numeric: tabular-nums;">
+            <span class="row-subtotal">Rp0</span>
+            <input type="hidden" name="item_subtotal[]" class="item-subtotal-val" value="0">
+        </td>
+        <td style="text-align: center;">
+            <button type="button" class="btn-remove-row" onclick="removeRow(this)" title="Hapus Baris">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function removeRow(btn) {
+    var rows = document.querySelectorAll('#itemsBody .item-row');
+    if (rows.length <= 1) {
+        alert('Minimal harus ada 1 baris item produk/jasa pada nota.');
+        return;
+    }
+    var tr = btn.closest('tr');
+    if (tr) {
+        tr.remove();
+        calculateTotal();
+    }
+}
+
+// Initial calculation on load
+window.addEventListener('DOMContentLoaded', () => {
+    calculateTotal();
+});
+</script>
+
+<%- include('_footer') %>

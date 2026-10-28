@@ -49,6 +49,9 @@ let products = [
     price: 25000,
     unit: 'meter',
     description: 'Banner dan spanduk custom dengan hasil cetak tajam dan warna cerah untuk kebutuhan promosi maupun acara.',
+    short_description: 'Banner dan spanduk custom dengan hasil cetak tajam dan warna cerah untuk promosi usaha dan acara.',
+    full_description: 'Cetak spanduk dan banner outdoor/indoor dengan teknologi digital printing resolusi tinggi. Menggunakan tinta solvent anti-luntur yang tahan terhadap terik matahari maupun hujan lebat di luar ruangan. Sangat ideal untuk promosi toko/warung, backdrop event, wisuda, baliho kampanye, dan pameran.',
+    specifications: 'Bahan: Flexi Korea 440gr / Frontlite 280gr\nUkuran: Bebas (Custom sesuai kebutuhan)\nFinishing: Mata ayam / Kolong bambu / Lipat pres\nMesin: Digital Printing Outdoor Hi-Res',
     features: ['Ukuran bebas', 'Full color', 'Bahan pilihan', 'Siap pasang'],
     status: 'active',
     is_featured: true,
@@ -66,6 +69,9 @@ let products = [
     price: 1500,
     unit: 'pcs',
     description: 'Undangan pernikahan elegan yang dapat disesuaikan dengan konsep dan kebutuhan acara Anda.',
+    short_description: 'Undangan pernikahan elegan yang dapat disesuaikan dengan konsep dan kebutuhan tema acara Anda.',
+    full_description: 'Percantik momen bahagia Anda dengan undangan pernikahan eksklusif dari Rosa Indah Printing. Dikerjakan dengan presisi tinggi, warna cerah, garis lipatan rapi, serta pilihan finishing mewah seperti hotprint poly emas dan laminasi doff. Bonus kartu ucapan souvenir dan plastik OPP untuk setiap pemesanan.',
+    specifications: 'Bahan Kertas: Jasmine / Art Carton 260gr / BC tebal\nUkuran Terbuka: 20 x 28 cm\nUkuran Lipat: 14 x 20 cm\nFinishing: Hotprint emas / Laminasi Doff\nBonus: Kartu ucapan souvenir + Plastik opp',
     features: ['Desain custom', 'Pilihan kertas', 'Cetak full color', 'Bisa request finishing'],
     status: 'active',
     is_featured: true,
@@ -83,6 +89,9 @@ let products = [
     price: 1500,
     unit: 'pcs',
     description: 'Undangan lipat tiga untuk berbagai acara seperti walimah, aqiqah, tahlil, dan acara keluarga.',
+    short_description: 'Undangan lipat tiga praktis untuk walimah, aqiqah, tahlil, dan berbagai acara syukuran keluarga.',
+    full_description: 'Undangan lipat 3 sisi serbaguna untuk kebutuhan walimatul ursy, aqiqah, tahlil, maupun reuni keluarga. Format rapi ukuran standar F4 terbuka yang nyaman dibaca, teks jelas tajam, dan proses pengerjaan cepat.',
+    specifications: 'Bahan: Brief Card 160gr / BC Super\nFormat: Lipat 3 sisi (Ukuran F4 terbuka)\nCetak: 1 warna / Full color\nWaktu: 2 - 3 hari kerja',
     features: ['Desain custom', 'Format lipat 3', 'Kertas berkualitas', 'Cetak tajam'],
     status: 'active',
     is_featured: false,
@@ -99,6 +108,9 @@ let products = [
     price: 25000,
     unit: 'box',
     description: 'Kartu nama profesional untuk kebutuhan bisnis, usaha, organisasi, maupun personal branding.',
+    short_description: 'Kartu nama profesional full color untuk identitas bisnis, organisasi, dan personal branding.',
+    full_description: 'Tingkatkan rasa percaya mitra bisnis dan pelanggan dengan kartu nama berkelas dari Rosa Indah Printing. Dicetak tajam di atas kertas tebal Art Paper 260gr dengan pilihan laminasi doff atau glossy bolak-balik (2 sisi). Dilengkapi wadah kotak mika bening eksklusif.',
+    specifications: 'Bahan: Art Paper 260gr / Ivory 260gr\nUkuran: 9 x 5.5 cm\nIsi: 100 lembar per box\nFinishing: Laminasi Doff / Glossy 2 sisi\nKemasan: Kotak mika bening',
     features: ['Desain custom', 'Cetak dua sisi', 'Pilihan finishing', 'Cocok untuk bisnis'],
     status: 'active',
     is_featured: true,
@@ -297,14 +309,45 @@ let portfolios = [
 ];
 
 let vouchers = [
-  { code: 'ROSAHEMAT10', name: 'Diskon 10% Spesial', discount_type: 'percent', discount_value: 10, min_order: 50000, max_discount: 25000, status: 'active' },
-  { code: 'MEMBERBARU', name: 'Potongan Rp 5.000', discount_type: 'fixed', discount_value: 5000, min_order: 30000, max_discount: null, status: 'active' },
-  { code: 'CETAKBANYAK', name: 'Diskon 15% Partai', discount_type: 'percent', discount_value: 15, min_order: 200000, max_discount: 50000, status: 'active' }
+  { id: 1, code: 'ROSAHEMAT10', name: 'Diskon 10% Spesial', discount_type: 'percent', discount_value: 10, min_order: 50000, max_discount: 25000, status: 'active', quota: 50, usage_count: 8, starts_at: '2025-01-01', ends_at: '2026-12-31' },
+  { id: 2, code: 'MEMBERBARU', name: 'Potongan Rp 5.000', discount_type: 'fixed', discount_value: 5000, min_order: 30000, max_discount: null, status: 'active', quota: 100, usage_count: 14, starts_at: '2025-01-01', ends_at: '2026-12-31' },
+  { id: 3, code: 'CETAKBANYAK', name: 'Diskon 15% Partai', discount_type: 'percent', discount_value: 15, min_order: 200000, max_discount: 50000, status: 'active', quota: 30, usage_count: 5, starts_at: '2025-01-01', ends_at: '2026-12-31' },
+  { id: 4, code: 'MEMBERROSA', name: 'Voucher Spesial Member', discount_type: 'fixed', discount_value: 10000, min_order: 100000, max_discount: null, status: 'active', quota: 50, usage_count: 8, starts_at: '2025-01-01', ends_at: '2026-12-31' }
 ];
 
 let customers = [
-  { id: 1, name: 'Alan Roziqin', phone: '082331035371', email: 'alanroziqin543@gmail.com', points: 150, is_verified: 1, address: 'Rejoso, Pasuruan' },
-  { id: 2, name: 'Ahmad Faisal', phone: '081234567890', email: 'faisal@example.com', points: 80, is_verified: 1, address: 'Jl. Merdeka No. 12, Pasuruan' }
+  {
+    id: 1,
+    name: 'Alan Roziqin',
+    username: 'alanroziqin',
+    phone: '082331035371',
+    email: 'alanroziqin543@gmail.com',
+    gender: 'L',
+    birth_date: '1998-05-15',
+    city: 'Pasuruan',
+    address: 'Jl. Raya Rejoso No. 45, RT 02 / RW 01',
+    address_note: 'Dekat Masjid Jami Rejoso, Rumah Pagar Hitam',
+    points: 150,
+    is_verified: 1,
+    member_tier: 'Platinum Member',
+    avatar: ''
+  },
+  {
+    id: 2,
+    name: 'Ahmad Faisal',
+    username: 'faisal_pasuruan',
+    phone: '081234567890',
+    email: 'faisal@example.com',
+    gender: 'L',
+    birth_date: '1995-11-20',
+    city: 'Pasuruan',
+    address: 'Jl. Merdeka No. 12, Kel. Kebonagung, Pasuruan',
+    address_note: 'Ruko Cat Kuning Sebelah Indomaret',
+    points: 80,
+    is_verified: 1,
+    member_tier: 'Gold Member',
+    avatar: ''
+  }
 ];
 
 let orders = [
@@ -405,7 +448,7 @@ function getUnitPrice(product, qty) {
 module.exports = {
   categories,
   homeCategories,
-  getProducts: (category, search) => {
+  getProducts: (category, search, sort = 'rekomendasi') => {
     let list = products.filter(p => p.status === 'active');
     if (category) {
       list = list.filter(p => p.category.toLowerCase() === category.toLowerCase());
@@ -414,6 +457,30 @@ module.exports = {
       const q = search.toLowerCase();
       list = list.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
     }
+
+    // Sorting Options
+    if (sort === 'terbaru') {
+      list = [...list].reverse();
+    } else if (sort === 'terlama') {
+      // original insertion order
+    } else if (sort === 'harga_termurah') {
+      list = [...list].sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+    } else if (sort === 'harga_termahal') {
+      list = [...list].sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
+    } else if (sort === 'terlaris') {
+      const bestSellers = ['banner', 'sticker', 'kartu-nama', 'undangan-nikah', 'sablon-dtf', 'mug', 'kalender'];
+      list = [...list].sort((a, b) => {
+        const aIndex = bestSellers.indexOf(a.id);
+        const bIndex = bestSellers.indexOf(b.id);
+        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+        if (aIndex !== -1) return -1;
+        if (bIndex !== -1) return 1;
+        return 0;
+      });
+    } else if (sort === 'rekomendasi') {
+      list = [...list].sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
+    }
+
     return list;
   },
   getAllProductsAdmin: () => products,
@@ -421,6 +488,8 @@ module.exports = {
   getUnitPrice,
   addProduct: (data) => {
     const id = data.id || ('prod-' + Date.now());
+    const shortDesc = data.short_description || data.description || '';
+    const fullDesc = data.full_description || shortDesc;
     const newProd = {
       id,
       name: data.name,
@@ -428,24 +497,64 @@ module.exports = {
       image: data.image || 'products/spanduk.png',
       price: Number(data.price) || 0,
       unit: data.unit || 'pcs',
-      description: data.description || '',
-      features: Array.isArray(data.features) ? data.features : (data.features ? data.features.split(',').map(s => s.trim()) : ['Kualitas terbaik']),
-      status: data.status || 'active',
+      description: shortDesc,
+      short_description: shortDesc,
+      full_description: fullDesc,
+      specifications: data.specifications || '',
+      features: Array.isArray(data.features) 
+        ? data.features 
+        : (typeof data.features === 'string' ? data.features.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : ['Kualitas terbaik']),
+      status: data.status === 'inactive' ? 'inactive' : 'active',
       is_featured: !!data.is_featured,
-      pricing: data.pricing || []
+      pricing: Array.isArray(data.pricing) ? data.pricing : []
     };
     products.unshift(newProd);
     return newProd;
   },
-  updateProduct: (id, data) => {
-    const idx = products.findIndex(p => p.id === id);
+  updateProduct: (oldId, data) => {
+    const idx = products.findIndex(p => p.id === oldId);
     if (idx !== -1) {
-      products[idx] = {
-        ...products[idx],
-        ...data,
-        price: Number(data.price !== undefined ? data.price : products[idx].price)
+      const current = products[idx];
+      const newId = data.id || oldId;
+      const shortDesc = data.short_description !== undefined ? data.short_description : (data.description !== undefined ? data.description : (current.short_description || current.description || ''));
+      const fullDesc = data.full_description !== undefined ? data.full_description : (current.full_description || shortDesc);
+      const updated = {
+        ...current,
+        id: newId,
+        name: data.name !== undefined ? data.name : current.name,
+        category: data.category !== undefined ? data.category : current.category,
+        image: data.image !== undefined && data.image ? data.image : current.image,
+        price: data.price !== undefined ? Number(data.price) : current.price,
+        unit: data.unit !== undefined ? data.unit : current.unit,
+        description: shortDesc,
+        short_description: shortDesc,
+        full_description: fullDesc,
+        specifications: data.specifications !== undefined ? data.specifications : (current.specifications || ''),
+        features: Array.isArray(data.features) 
+          ? data.features 
+          : (typeof data.features === 'string' ? data.features.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : current.features),
+        status: data.status !== undefined ? data.status : current.status,
+        is_featured: data.is_featured !== undefined ? !!data.is_featured : current.is_featured,
+        pricing: Array.isArray(data.pricing) ? data.pricing : (current.pricing || [])
       };
+      products[idx] = updated;
       return products[idx];
+    }
+    return null;
+  },
+  toggleProductStatus: (id) => {
+    const p = products.find(prod => prod.id === id);
+    if (p) {
+      p.status = p.status === 'active' ? 'inactive' : 'active';
+      return p;
+    }
+    return null;
+  },
+  toggleProductFeatured: (id) => {
+    const p = products.find(prod => prod.id === id);
+    if (p) {
+      p.is_featured = !p.is_featured;
+      return p;
     }
     return null;
   },
@@ -490,7 +599,7 @@ module.exports = {
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
     const rand = Math.floor(1000 + Math.random() * 9000);
-    const orderCode = `RIP-${dateStr}-${rand}`;
+    const orderCode = data.order_code || `RIP-${dateStr}-${rand}`;
 
     const newOrder = {
       id: orders.length + 1,
@@ -503,17 +612,17 @@ module.exports = {
       discount_amount: Number(data.discount_amount) || 0,
       voucher_code: data.voucher_code || '',
       total_estimate: Number(data.total_estimate) || 0,
-      status: 'pending',
-      payment_status: 'waiting',
+      status: data.status || 'pending',
+      payment_status: data.payment_status || 'waiting',
       payment_method: data.payment_method || 'transfer',
-      paid_amount: 0,
-      payment_proof: null,
-      created_at: now.toISOString().replace('T', ' ').slice(0, 19),
+      paid_amount: Number(data.paid_amount) || 0,
+      payment_proof: data.payment_proof || null,
+      created_at: data.created_at || now.toISOString().replace('T', ' ').slice(0, 19),
       items: data.items || [],
       history: [
         {
-          status: 'pending',
-          note: 'Pesanan dibuat oleh pelanggan',
+          status: data.status || 'pending',
+          note: data.note || 'Pesanan dicatat di sistem',
           created_at: now.toISOString().replace('T', ' ').slice(0, 19)
         }
       ]
@@ -562,14 +671,46 @@ module.exports = {
     const c = {
       id: customers.length + 1,
       name: data.name,
+      username: data.username || '',
       phone: data.phone,
       email: data.email || '',
+      gender: data.gender || 'L',
+      birth_date: data.birth_date || '',
+      city: data.city || 'Pasuruan',
       points: 10,
       is_verified: 1,
-      address: data.address || ''
+      member_tier: 'Silver Member',
+      address: data.address || '',
+      address_note: data.address_note || ''
     };
     customers.push(c);
     return c;
+  },
+  updateCustomer: (idOrPhone, data) => {
+    const c = customers.find(item => item.id === Number(idOrPhone) || item.phone === String(idOrPhone));
+    if (c) {
+      if (data.name !== undefined) c.name = data.name.trim();
+      if (data.username !== undefined) c.username = data.username.trim();
+      if (data.phone !== undefined) c.phone = data.phone.trim();
+      if (data.email !== undefined) c.email = data.email.trim();
+      if (data.gender !== undefined) c.gender = data.gender;
+      if (data.birth_date !== undefined) c.birth_date = data.birth_date;
+      if (data.city !== undefined) c.city = data.city.trim();
+      if (data.address !== undefined) c.address = data.address.trim();
+      if (data.address_note !== undefined) c.address_note = data.address_note.trim();
+      if (data.avatar !== undefined) c.avatar = data.avatar;
+      return c;
+    }
+    return null;
+  },
+  getCustomerOrders: (idOrPhone) => {
+    const phoneClean = String(idOrPhone || '').replace(/\D/g, '');
+    const numId = Number(idOrPhone);
+    return orders.filter(o => 
+      (numId > 0 && o.customer_id === numId) ||
+      (phoneClean && o.customer_phone && o.customer_phone.replace(/\D/g, '').endsWith(phoneClean.slice(-8))) ||
+      (o.customer_name && o.customer_name.toLowerCase() === String(idOrPhone).toLowerCase())
+    );
   },
   getStats: () => {
     const activeProducts = products.filter(p => p.status === 'active').length;
@@ -600,5 +741,205 @@ module.exports = {
       month_orders: totalOrders,
       orderCounts
     };
+  },
+  // Promotions & Vouchers
+  getPromotions: () => promotions,
+  getVouchers: () => vouchers,
+  addPromotion: (data) => {
+    const item = {
+      id: promotions.length + 1,
+      name: data.name,
+      description: data.description || '',
+      discount_type: data.discount_type || 'percent',
+      discount_value: Number(data.discount_value) || 0,
+      min_order: Number(data.min_order) || 0,
+      max_discount: data.max_discount ? Number(data.max_discount) : null,
+      scope_type: data.scope_type || 'all',
+      scope_value: data.scope_value || null,
+      member_only: data.member_only !== undefined ? Number(data.member_only) : 1,
+      quota: data.quota ? Number(data.quota) : null,
+      usage_count: 0,
+      starts_at: data.starts_at || new Date().toISOString().slice(0, 10),
+      ends_at: data.ends_at || '2030-12-31',
+      status: data.status || 'active'
+    };
+    promotions.push(item);
+    return item;
+  },
+  deletePromotion: (id) => {
+    promotions = promotions.filter(p => p.id !== Number(id));
+  },
+  addVoucher: (data) => {
+    const item = {
+      id: vouchers.length + 1,
+      code: String(data.code || '').trim().toUpperCase(),
+      name: data.name,
+      description: data.description || '',
+      discount_type: data.discount_type || 'percent',
+      discount_value: Number(data.discount_value) || 0,
+      min_order: Number(data.min_order) || 0,
+      max_discount: data.max_discount ? Number(data.max_discount) : null,
+      scope_type: data.scope_type || 'all',
+      scope_value: data.scope_value || null,
+      member_only: data.member_only !== undefined ? Number(data.member_only) : 1,
+      quota: data.quota ? Number(data.quota) : null,
+      usage_count: 0,
+      starts_at: data.starts_at || new Date().toISOString().slice(0, 10),
+      ends_at: data.ends_at || '2030-12-31',
+      status: data.status || 'active'
+    };
+    vouchers.push(item);
+    return item;
+  },
+  deleteVoucher: (id) => {
+    vouchers = vouchers.filter(v => v.id !== Number(id));
+  },
+  // Loyalty & Rewards
+  getLoyaltySettings: () => loyaltySettings,
+  updateLoyaltySettings: (settings) => {
+    if (settings.points_per_amount) loyaltySettings.points_per_amount = Number(settings.points_per_amount);
+    if (settings.points_per_order_min !== undefined) loyaltySettings.points_per_order_min = Number(settings.points_per_order_min);
+    return loyaltySettings;
+  },
+  getLoyaltyRewards: () => loyaltyRewards,
+  addLoyaltyReward: (data) => {
+    const item = {
+      id: loyaltyRewards.length + 1,
+      name: data.name,
+      points_cost: Number(data.points_cost) || 100,
+      discount_type: data.discount_type || 'fixed',
+      discount_value: Number(data.discount_value) || 10000,
+      min_order: Number(data.min_order) || 0,
+      max_discount: data.max_discount ? Number(data.max_discount) : null,
+      validity_days: Number(data.validity_days) || 30,
+      quota: data.quota ? Number(data.quota) : null,
+      redeemed_count: 0,
+      status: data.status || 'active'
+    };
+    loyaltyRewards.push(item);
+    return item;
+  },
+  deleteLoyaltyReward: (id) => {
+    loyaltyRewards = loyaltyRewards.filter(r => r.id !== Number(id));
+  },
+  adjustCustomerPoints: (customerId, points, description) => {
+    const cust = customers.find(c => c.id === Number(customerId));
+    if (!cust) return false;
+    cust.points = Math.max(0, (cust.points || 0) + Number(points));
+    loyaltyTransactions.push({
+      id: loyaltyTransactions.length + 1,
+      customer_id: cust.id,
+      customer_name: cust.name,
+      points: Number(points),
+      description: description || 'Penyesuaian poin oleh Admin',
+      created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+    });
+    return true;
+  },
+  getLoyaltyTransactions: () => loyaltyTransactions,
+  // Notifications
+  getNotifications: () => notifications,
+  addNotification: (customerId, title, message, link) => {
+    const notif = {
+      id: notifications.length + 1,
+      customer_id: Number(customerId) || 0,
+      customer_name: Number(customerId) > 0 ? (customers.find(c => c.id === Number(customerId))?.name || 'Member') : 'Semua Member',
+      title,
+      message,
+      link: link || '',
+      type: 'general',
+      is_read: 0,
+      created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+    };
+    notifications.unshift(notif);
+    return notif;
+  },
+  // Admin Password
+  getAdminPassword: () => adminPassword,
+  updateAdminPassword: (newPassword) => {
+    adminPassword = newPassword;
+    return true;
   }
 };
+
+let adminPassword = 'admin';
+
+let promotions = [
+  {
+    id: 1,
+    name: 'Promo Member Pembukaan',
+    description: 'Diskon 5% untuk seluruh pesanan cetak member baru.',
+    discount_type: 'percent',
+    discount_value: 5,
+    min_order: 50000,
+    max_discount: 25000,
+    scope_type: 'all',
+    scope_value: null,
+    member_only: 1,
+    quota: 100,
+    usage_count: 14,
+    starts_at: '2025-01-01',
+    ends_at: '2026-12-31',
+    status: 'active'
+  }
+];
+
+let loyaltySettings = {
+  points_per_amount: 10000,
+  points_per_order_min: 0
+};
+
+let loyaltyRewards = [
+  {
+    id: 1,
+    name: 'Voucher Potongan Rp10.000',
+    points_cost: 100,
+    discount_type: 'fixed',
+    discount_value: 10000,
+    min_order: 50000,
+    max_discount: null,
+    validity_days: 30,
+    quota: null,
+    redeemed_count: 3,
+    status: 'active'
+  },
+  {
+    id: 2,
+    name: 'Diskon Cetak 10%',
+    points_cost: 150,
+    discount_type: 'percent',
+    discount_value: 10,
+    min_order: 100000,
+    max_discount: 30000,
+    validity_days: 30,
+    quota: null,
+    redeemed_count: 1,
+    status: 'active'
+  }
+];
+
+let loyaltyTransactions = [
+  {
+    id: 1,
+    customer_id: 1,
+    customer_name: 'Budi Santoso',
+    points: 15,
+    description: 'Poin bonus pendaftaran Member',
+    created_at: '2025-02-10 14:20'
+  }
+];
+
+let notifications = [
+  {
+    id: 1,
+    customer_id: 0,
+    customer_name: 'Semua Member',
+    title: 'Selamat Datang di Rosa Indah Member!',
+    message: 'Kumpulkan poin setiap pemesanan cetak dan nikmati promo eksklusif khusus member.',
+    link: '/produk',
+    type: 'general',
+    is_read: 0,
+    created_at: '2025-02-10 09:00'
+  }
+];
+

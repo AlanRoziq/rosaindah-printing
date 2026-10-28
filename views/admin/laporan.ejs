@@ -1,66 +1,79 @@
 <%- include('_header', { title: 'Laporan Penjualan' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="admin-title">
     <div>
-        <h2 class="fw-bold mb-1">Laporan Penjualan & Transaksi</h2>
-        <p class="text-muted mb-0">Rekapitulasi keuangan omset penjualan percetakan dan pembayaran masuk.</p>
+        <h1>Laporan Penjualan & Omset</h1>
+        <p>Rekapitulasi transaksi percetakan, pembayaran masuk, dan pendapatan bulanan.</p>
+    </div>
+    <button class="admin-btn secondary" type="button" onclick="window.print()">
+        <i class="bi bi-printer"></i> Cetak Laporan
+    </button>
+</div>
+
+<!-- Laporan Stats -->
+<div class="admin-stats" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="admin-stat">
+        <i class="bi bi-receipt"></i>
+        <strong><%= format_rupiah(stats.month_sales) %></strong>
+        <span>Total Estimasi Nilai Pesanan (<%= orders.length %> order)</span>
+    </div>
+    <div class="admin-stat">
+        <i class="bi bi-check-circle"></i>
+        <strong style="color: #287a47;"><%= format_rupiah(stats.month_paid) %></strong>
+        <span>Total Dana Diterima (<%= stats.paid %> order lunas)</span>
+    </div>
+    <div class="admin-stat">
+        <i class="bi bi-hourglass-split"></i>
+        <strong style="color: #c17a00;"><%= stats.waiting_payment %></strong>
+        <span>Pesanan Menunggu Verifikasi Bayar</span>
     </div>
 </div>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-            <span class="text-muted small">Total Estimasi Nilai Pesanan:</span>
-            <h3 class="fw-bold text-dark mt-1 mb-0"><%= format_rupiah(stats.month_sales) %></h3>
-            <small class="text-muted"><%= orders.length %> transaksi tercatat</small>
-        </div>
+<!-- Transactions Table Card -->
+<div class="admin-card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 18px 22px; border-bottom: 1px solid #f2dce7; background: #fffcfd;">
+        <h2 style="margin: 0; color: #18243a; font-size: 17px; font-weight: 800;">Detail Rekapitulasi Transaksi</h2>
     </div>
-    <div class="col-md-4">
-        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-            <span class="text-muted small">Total Dana Telah Diterima (Lunas):</span>
-            <h3 class="fw-bold text-success mt-1 mb-0"><%= format_rupiah(stats.month_paid) %></h3>
-            <small class="text-muted"><%= stats.paid %> pesanan terverifikasi</small>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-            <span class="text-muted small">Pesanan Menunggu Verifikasi:</span>
-            <h3 class="fw-bold text-warning mt-1 mb-0"><%= stats.waiting_payment %></h3>
-            <small class="text-muted">Perlu konfirmasi mutasi</small>
-        </div>
-    </div>
-</div>
-
-<div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-    <h4 class="fw-bold mb-3">Detail Rekapitulasi Transaksi</h4>
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead class="table-light">
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="admin-table" style="min-width: 900px;">
+            <thead>
                 <tr>
-                    <th>Waktu</th>
+                    <th>Waktu Order</th>
                     <th>Nomor Pesanan</th>
                     <th>Nama Pelanggan</th>
-                    <th>Metode</th>
+                    <th>Metode Pembayaran</th>
                     <th>Subtotal</th>
                     <th>Diskon</th>
                     <th>Total Akhir</th>
                     <th>Status Bayar</th>
+                    <th style="width: 100px; text-align: center;">Nota</th>
                 </tr>
             </thead>
             <tbody>
                 <% orders.forEach(function(o) { %>
                     <tr>
-                        <td class="small text-muted"><%= o.created_at %></td>
-                        <td class="fw-bold"><%= o.order_code %></td>
+                        <td style="color: #8b8087; font-size: 12px;"><%= o.created_at %></td>
+                        <td><strong style="color: #18243a;"><%= o.order_code %></strong></td>
                         <td><%= o.customer_name %></td>
-                        <td class="text-uppercase small"><%= o.payment_method %></td>
-                        <td><%= format_rupiah(o.subtotal) %></td>
-                        <td class="text-success"><%= o.discount_amount > 0 ? '-' + format_rupiah(o.discount_amount) : '-' %></td>
-                        <td class="fw-bold text-danger"><%= format_rupiah(o.total_estimate) %></td>
+                        <td style="text-transform: uppercase; font-size: 12px; color: #695e67;"><%= o.payment_method %></td>
+                        <td style="font-variant-numeric: tabular-nums;"><%= format_rupiah(o.subtotal) %></td>
+                        <td style="color: <%= o.discount_amount > 0 ? '#287a47' : '#999' %>; font-variant-numeric: tabular-nums;">
+                            <%= o.discount_amount > 0 ? '-' + format_rupiah(o.discount_amount) : '-' %>
+                        </td>
                         <td>
-                            <span class="badge bg-<%= o.payment_status === 'paid' ? 'success' : 'warning text-dark' %>">
-                                <%= o.payment_status.toUpperCase() %>
+                            <strong style="color: #e11d64; font-variant-numeric: tabular-nums;">
+                                <%= format_rupiah(o.total_estimate) %>
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="payment-pill payment-<%= o.payment_status %>">
+                                <%= o.payment_status === 'paid' ? 'LUNAS' : (o.payment_status === 'waiting' ? 'VERIFIKASI' : 'BELUM BAYAR') %>
                             </span>
+                        </td>
+                        <td style="text-align: center;">
+                            <a href="<%= page_url('invoice?code=' + encodeURIComponent(o.order_code) + '&print=1') %>" target="_blank" class="admin-btn" style="padding: 4px 9px; font-size: 11px; border-radius: 7px; text-decoration: none;" title="Cetak Nota">
+                                <i class="bi bi-printer"></i> Nota
+                            </a>
                         </td>
                     </tr>
                 <% }); %>
@@ -68,5 +81,35 @@
         </table>
     </div>
 </div>
+
+<style>
+.payment-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+.payment-unpaid { background: #f4f1f3; color: #716871; }
+.payment-waiting { background: #fff4df; color: #9a6711; }
+.payment-paid { background: #e8f8ef; color: #25764a; }
+@media print {
+    .admin-top, .admin-side, .admin-title button {
+        display: none !important;
+    }
+    .admin-layout {
+        display: block !important;
+    }
+    .admin-main {
+        padding: 0 !important;
+    }
+    .admin-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+}
+</style>
 
 <%- include('_footer') %>

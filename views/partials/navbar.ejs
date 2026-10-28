@@ -53,7 +53,12 @@
             </a>
             <% if (currentUser) { %>
                 <a href="<%= page_url('akun') %>" class="login-btn" title="Akun Saya">
-                    <i class="bi bi-person-circle"></i>
+                    <% if (currentUser.avatar) { %>
+                        <img src="/<%= currentUser.avatar.replace(/^\/+/, '') %>" alt="<%= currentUser.name %>" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e11d64;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                        <i class="bi bi-person-circle" style="display: none;"></i>
+                    <% } else { %>
+                        <i class="bi bi-person-circle"></i>
+                    <% } %>
                     <span><%= currentUser.name.split(' ')[0] %></span>
                 </a>
             <% } else { %>

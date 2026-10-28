@@ -6,58 +6,500 @@
     <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %>Admin - Rosa Indah Printing</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<%= asset_url('css/admin.css') %>">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fbf7f9; }
-        .admin-sidebar { min-height: 100vh; background: #1a1622; color: #fff; width: 250px; flex-shrink: 0; }
-        .admin-sidebar a { color: #b6b0c2; text-decoration: none; padding: 12px 20px; display: flex; align-items: center; gap: 12px; font-weight: 500; border-radius: 8px; margin: 4px 12px; }
-        .admin-sidebar a:hover, .admin-sidebar a.active { color: #fff; background: #d64a8a; }
-        .admin-header-bar { background: #fff; border-bottom: 1px solid #f0e6ec; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .admin-content-area { padding: 30px; flex-grow: 1; }
-        .stat-card-pink { background: #fff; border: 1px solid #f5e4ed; border-radius: 14px; padding: 20px; }
-        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .status-pill-pending { background: #fff3cd; color: #856404; }
-        .status-pill-confirmed { background: #cce5ff; color: #004085; }
-        .status-pill-processing { background: #e2e3e5; color: #383d41; }
-        .status-pill-printed { background: #d4edda; color: #155724; }
-        .status-pill-completed { background: #28a745; color: #fff; }
-        .status-pill-cancelled { background: #f8d7da; color: #721c24; }
+        :root {
+            --rosa-pink: #e11d64;
+            --rosa-pink-dark: #be124f;
+            --rosa-pink-soft: #ffe8f1;
+            --rosa-pink-bg: #fff1f6;
+            --rosa-border: #f1dfe8;
+            --rosa-text: #18243a;
+            --rosa-muted: #7d747c;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #fdf8fb;
+            color: var(--rosa-text);
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        .admin-shell {
+            min-height: 100vh;
+            background: #fdf8fb;
+            display: flex;
+            flex-direction: column;
+        }
+        .admin-top {
+            background: #ffffff;
+            border-bottom: 1px solid #f2dce7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 26px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 10px rgba(225, 29, 100, 0.04);
+        }
+        .admin-brand {
+            font-size: 16px;
+            font-weight: 800;
+            color: #18243a;
+            text-decoration: none;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .admin-brand span {
+            color: #e11d64;
+        }
+        .admin-brand:hover {
+            color: #18243a;
+        }
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #6c6670;
+            font-size: 13px;
+        }
+        .admin-user span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #4b444d;
+            font-weight: 600;
+        }
+        .admin-user a {
+            color: #e11d64;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+        }
+        .admin-user a:hover {
+            background: #ffe8f1;
+            color: #be124f;
+        }
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 245px 1fr;
+            min-height: calc(100vh - 58px);
+            flex-grow: 1;
+        }
+        .admin-side {
+            background: #ffffff;
+            border-right: 1px solid #f2dce7;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .admin-side a {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 10px 14px;
+            border-radius: 11px;
+            color: #5f5a62;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+        .admin-side a i {
+            font-size: 16px;
+            color: #9c919a;
+            transition: color 0.15s ease;
+        }
+        .admin-side a:hover,
+        .admin-side a.active {
+            background: #ffe8f1;
+            color: #e11d64;
+            font-weight: 700;
+        }
+        .admin-side a:hover i,
+        .admin-side a.active i {
+            color: #e11d64;
+        }
+        .admin-side-divider {
+            height: 1px;
+            background: #f2dce7;
+            margin: 10px 8px;
+        }
+        .admin-main {
+            padding: 26px 30px;
+            max-width: 1400px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        .admin-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+        .admin-title h1 {
+            margin: 0;
+            color: #18243a;
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .admin-title p {
+            margin: 4px 0 0;
+            color: #7d747c;
+            font-size: 13px;
+        }
+        .admin-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 0;
+            border-radius: 11px;
+            background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+            color: #fff;
+            padding: 9px 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(225, 29, 100, 0.18);
+        }
+        .admin-btn:hover {
+            background: linear-gradient(90deg, #be124f 0%, #e11d64 50%, #f43f7e 100%);
+            transform: translateY(-1px);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(225, 29, 100, 0.25);
+        }
+        .admin-btn.secondary {
+            background: #ffffff;
+            color: #e11d64;
+            border: 1px solid #efc9da;
+            box-shadow: none;
+        }
+        .admin-btn.secondary:hover {
+            background: #fff1f6;
+            border-color: #e11d64;
+            color: #be124f;
+            transform: translateY(-1px);
+        }
+        .admin-btn.danger {
+            background: #e05252;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(224, 82, 82, 0.18);
+        }
+        .admin-btn.danger:hover {
+            background: #c53c3c;
+            color: #fff;
+        }
+        .admin-card {
+            background: #ffffff;
+            border: 1px solid #f1dfe8;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(31, 24, 35, 0.03);
+            margin-bottom: 22px;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+        .admin-stat {
+            background: #ffffff;
+            border: 1px solid #f1dfe8;
+            border-radius: 16px;
+            padding: 18px 20px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .admin-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(225, 29, 100, 0.06);
+        }
+        .admin-stat i {
+            font-size: 22px;
+            color: #e11d64;
+        }
+        .admin-stat strong {
+            display: block;
+            font-size: 26px;
+            font-weight: 800;
+            color: #18243a;
+            margin-top: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+        .admin-stat span {
+            color: #817982;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .admin-table th, .admin-table td {
+            padding: 12px 14px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid #f2e7ec;
+            font-size: 13px;
+        }
+        .admin-table th {
+            font-size: 11px;
+            color: #8b7f87;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            background: #fff9fc;
+        }
+        .admin-table tbody tr:hover td {
+            background: #fffcfd;
+        }
+        .admin-product-img {
+            width: 52px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #faf1f5;
+            border: 1px solid #f0dce6;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .admin-actions a,
+        .admin-actions button {
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: #fff1f6;
+            color: #e11d64;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            border: 0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .admin-actions a:hover,
+        .admin-actions button:hover {
+            background: #ffe8f1;
+            color: #be124f;
+        }
+        .admin-form {
+            display: grid;
+            gap: 16px;
+        }
+        .admin-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .admin-field label,
+        label.admin-field {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #4e4850;
+            margin-bottom: 6px;
+        }
+        .admin-field input,
+        .admin-field select,
+        .admin-field textarea,
+        label.admin-field input,
+        label.admin-field select,
+        label.admin-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #eadde3;
+            border-radius: 11px;
+            padding: 10px 13px;
+            font: inherit;
+            font-size: 13.5px;
+            outline: none;
+            background: #ffffff;
+            transition: all 0.15s ease;
+        }
+        .admin-field textarea,
+        label.admin-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .admin-field input:focus,
+        .admin-field select:focus,
+        .admin-field textarea:focus,
+        label.admin-field input:focus,
+        label.admin-field select:focus,
+        label.admin-field textarea:focus {
+            border-color: #e11d64;
+            box-shadow: 0 0 0 3px #ffe8f1;
+        }
+        .admin-alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background: #eaf8ef;
+            color: #287a47;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #c9ebd4;
+        }
+        .admin-alert.error {
+            background: #fff0f0;
+            color: #a33b3b;
+            border-color: #f7d2d2;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .status-pill-pending { background: #fff4d8; color: #9b6a00; }
+        .status-pill-confirmed { background: #eef2ff; color: #4f67ae; }
+        .status-pill-processing { background: #f3eaff; color: #7d4ca9; }
+        .status-pill-printed { background: #fff0e4; color: #a8611e; }
+        .status-pill-completed { background: #eaf8ef; color: #287a47; }
+        .status-pill-cancelled { background: #fff0f0; color: #a33b3b; }
+
+        @media (max-width: 900px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+                display: block;
+            }
+            .admin-side {
+                border-right: 0;
+                border-bottom: 1px solid #f2dce7;
+                display: flex;
+                flex-direction: row;
+                gap: 6px;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+                padding: 8px 12px;
+            }
+            .admin-side a {
+                flex: 0 0 auto;
+                margin: 0;
+                padding: 8px 11px;
+                font-size: 12px;
+                gap: 7px;
+            }
+            .admin-side-divider {
+                display: none;
+            }
+            .admin-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .admin-grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .admin-main {
+                padding: 18px 14px;
+            }
+            .admin-top {
+                padding: 11px 16px;
+            }
+        }
+        @media (max-width: 550px) {
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+            .admin-title {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .admin-title .admin-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .admin-user span {
+                display: none;
+            }
+            .admin-card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+        }
     </style>
 </head>
-<body class="d-flex">
-    <!-- Sidebar -->
-    <aside class="admin-sidebar d-flex flex-column">
-        <div class="p-3 border-bottom border-secondary mb-2 text-center">
-            <h5 class="fw-bold text-white mb-0" style="letter-spacing: 1px;">ROSA INDAH</h5>
-            <small style="color: #f48fb1;">ADMIN DASHBOARD</small>
+<body>
+<div class="admin-shell">
+    <!-- Topbar -->
+    <header class="admin-top">
+        <a class="admin-brand" href="<%= page_url('admin/dashboard') %>">
+            ROSA INDAH <span>PRINTING</span>
+        </a>
+        <div class="admin-user">
+            <span><i class="bi bi-shield-check" style="color: #e11d64;"></i> Halo, <%= currentAdmin ? currentAdmin.name : 'Administrator' %></span>
+            <a href="<%= page_url('admin/ubah-password') %>"><i class="bi bi-shield-lock"></i> Ubah Password</a>
+            <a href="<%= page_url('admin/logout') %>"><i class="bi bi-box-arrow-right"></i> Keluar</a>
         </div>
-        <nav class="flex-grow-1">
-            <a href="<%= page_url('admin/dashboard') %>"><i class="bi bi-speedometer2"></i> Dashboard</a>
-            <a href="<%= page_url('admin/pesanan') %>"><i class="bi bi-cart-check"></i> Kelola Pesanan</a>
-            <a href="<%= page_url('admin/produk') %>"><i class="bi bi-box-seam"></i> Produk & Katalog</a>
-            <a href="<%= page_url('admin/laporan') %>"><i class="bi bi-bar-chart-line"></i> Laporan Penjualan</a>
-            <a href="<%= page_url('admin/pelanggan') %>"><i class="bi bi-people"></i> Data Member</a>
-            <hr class="border-secondary mx-3 my-2">
-            <a href="<%= page_url('') %>" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Lihat Website</a>
-        </nav>
-        <div class="p-3 border-top border-secondary">
-            <a href="<%= page_url('admin/logout') %>" class="text-danger m-0 p-2"><i class="bi bi-box-arrow-right"></i> Logout Admin</a>
-        </div>
-    </aside>
+    </header>
 
-    <!-- Main Wrapper -->
-    <div class="d-flex flex-column flex-grow-1" style="min-width: 0;">
-        <header class="admin-header-bar">
-            <div>
-                <h5 class="mb-0 fw-bold text-dark">Panel Kontrol Operasional</h5>
-                <small class="text-muted">Rosa Indah Printing Pasuruan</small>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-light text-dark border p-2"><i class="bi bi-shield-check text-success"></i> <%= currentAdmin ? currentAdmin.name : 'Admin' %></span>
-                <a href="<%= page_url('') %>" class="btn btn-sm btn-outline-secondary">Website Publik</a>
-            </div>
-        </header>
-        <main class="admin-content-area">
+    <!-- Layout: Sidebar + Main -->
+    <div class="admin-layout">
+        <aside class="admin-side">
+            <a class="<%= current_path === '/admin/dashboard' || current_path === '/admin' ? 'active' : '' %>" href="<%= page_url('admin/dashboard') %>">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a class="<%= current_path.includes('/admin/produk') ? 'active' : '' %>" href="<%= page_url('admin/produk') %>">
+                <i class="bi bi-box-seam"></i> Produk
+            </a>
+            <a class="<%= current_path.includes('/admin/pesanan') ? 'active' : '' %>" href="<%= page_url('admin/pesanan') %>">
+                <i class="bi bi-cart-check"></i> Pesanan
+            </a>
+            <a class="<%= current_path.includes('/admin/nota-manual') ? 'active' : '' %>" href="<%= page_url('admin/nota-manual') %>">
+                <i class="bi bi-receipt"></i> Nota Manual
+            </a>
+            <a class="<%= current_path.includes('/admin/pelanggan') ? 'active' : '' %>" href="<%= page_url('admin/pelanggan') %>">
+                <i class="bi bi-people"></i> Member
+            </a>
+            <a class="<%= current_path.includes('/admin/laporan') && !current_path.includes('member-report') ? 'active' : '' %>" href="<%= page_url('admin/laporan') %>">
+                <i class="bi bi-bar-chart-line"></i> Laporan
+            </a>
+            <a class="<%= current_path.includes('/admin/member-report') ? 'active' : '' %>" href="<%= page_url('admin/member-report') %>">
+                <i class="bi bi-graph-up-arrow"></i> Laporan Member
+            </a>
+            <a class="<%= current_path.includes('/admin/promo') ? 'active' : '' %>" href="<%= page_url('admin/promo') %>">
+                <i class="bi bi-ticket-perforated"></i> Promo & Voucher
+            </a>
+            <a class="<%= current_path.includes('/admin/loyalty') ? 'active' : '' %>" href="<%= page_url('admin/loyalty') %>">
+                <i class="bi bi-stars"></i> Poin & Reward
+            </a>
+            <a class="<%= current_path.includes('/admin/notifikasi') ? 'active' : '' %>" href="<%= page_url('admin/notifikasi') %>">
+                <i class="bi bi-bell"></i> Notifikasi Member
+            </a>
+            <div class="admin-side-divider"></div>
+            <a href="<%= page_url('') %>" target="_blank">
+                <i class="bi bi-house"></i> Lihat Website
+            </a>
+        </aside>
+
+        <main class="admin-main">

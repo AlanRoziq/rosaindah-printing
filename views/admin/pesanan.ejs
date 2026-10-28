@@ -1,105 +1,132 @@
 <%- include('_header', { title: 'Kelola Pesanan' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="admin-title">
     <div>
-        <h2 class="fw-bold mb-1">Daftar & Alur Pesanan Cetak</h2>
-        <p class="text-muted mb-0">Kelola status produksi, verifikasi pembayaran, dan detail spesifikasi pemesan.</p>
+        <h1>Daftar & Alur Pesanan</h1>
+        <p>Kelola status produksi, verifikasi pembayaran, cetak nota, dan data pemesan.</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <a href="<%= page_url('admin/nota-manual') %>" class="admin-btn">
+            <i class="bi bi-file-earmark-plus"></i> Buat Nota Manual
+        </a>
     </div>
 </div>
 
 <% if (notice) { %>
-    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i> <%= notice %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="admin-alert">
+        <i class="bi bi-check-circle-fill"></i>
+        <span><%= notice %></span>
     </div>
 <% } %>
 
-<!-- Filter tabs -->
-<div class="card p-3 rounded-4 shadow-sm border-0 bg-white mb-4">
-    <div class="d-flex flex-wrap gap-2 align-items-center">
-        <span class="fw-bold small text-muted me-2">Filter Status:</span>
-        <a href="<%= page_url('admin/pesanan') %>" class="btn btn-sm <%= !statusFilter && !paymentFilter ? 'btn-primary' : 'btn-outline-secondary' %> rounded-pill">Semua</a>
-        <a href="<%= page_url('admin/pesanan?status=pending') %>" class="btn btn-sm <%= statusFilter === 'pending' ? 'btn-warning text-dark' : 'btn-outline-secondary' %> rounded-pill">Baru Masuk</a>
-        <a href="<%= page_url('admin/pesanan?status=confirmed') %>" class="btn btn-sm <%= statusFilter === 'confirmed' ? 'btn-info text-dark' : 'btn-outline-secondary' %> rounded-pill">Dikonfirmasi</a>
-        <a href="<%= page_url('admin/pesanan?status=processing') %>" class="btn btn-sm <%= statusFilter === 'processing' ? 'btn-secondary' : 'btn-outline-secondary' %> rounded-pill">Diproses</a>
-        <a href="<%= page_url('admin/pesanan?status=printed') %>" class="btn btn-sm <%= statusFilter === 'printed' ? 'btn-primary' : 'btn-outline-secondary' %> rounded-pill">Dicetak</a>
-        <a href="<%= page_url('admin/pesanan?status=completed') %>" class="btn btn-sm <%= statusFilter === 'completed' ? 'btn-success' : 'btn-outline-secondary' %> rounded-pill">Selesai</a>
-        <a href="<%= page_url('admin/pesanan?payment=waiting') %>" class="btn btn-sm <%= paymentFilter === 'waiting' ? 'btn-danger' : 'btn-outline-danger' %> rounded-pill ms-auto">
+<!-- Order Filter Chips -->
+<div class="admin-card" style="padding: 16px 20px; margin-bottom: 20px;">
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+        <span style="font-size: 12px; font-weight: 700; color: #817982; margin-right: 6px;">Filter Alur:</span>
+        <a href="<%= page_url('admin/pesanan') %>" class="filter-tab-pill <%= !statusFilter && !paymentFilter ? 'active' : '' %>">
+            Semua
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=pending') %>" class="filter-tab-pill <%= statusFilter === 'pending' ? 'active' : '' %>">
+            Baru Masuk
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=confirmed') %>" class="filter-tab-pill <%= statusFilter === 'confirmed' ? 'active' : '' %>">
+            Dikonfirmasi
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=processing') %>" class="filter-tab-pill <%= statusFilter === 'processing' ? 'active' : '' %>">
+            Diproses
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=printed') %>" class="filter-tab-pill <%= statusFilter === 'printed' ? 'active' : '' %>">
+            Dicetak
+        </a>
+        <a href="<%= page_url('admin/pesanan?status=completed') %>" class="filter-tab-pill <%= statusFilter === 'completed' ? 'active' : '' %>">
+            Selesai
+        </a>
+        <a href="<%= page_url('admin/pesanan?payment=waiting') %>" class="filter-tab-pill danger <%= paymentFilter === 'waiting' ? 'active' : '' %>" style="margin-left: auto;">
             <i class="bi bi-exclamation-circle"></i> Perlu Verifikasi Bayar
         </a>
     </div>
 </div>
 
-<!-- Orders Table -->
-<div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+<!-- Orders Table Card -->
+<div class="admin-card" style="padding: 0; overflow: hidden;">
     <% if (orders.length === 0) { %>
-        <div class="text-center py-5 text-muted">
-            <i class="bi bi-inbox display-4 d-block mb-3"></i>
-            Tidak ada pesanan pada filter ini.
+        <div style="text-align: center; padding: 60px 20px; color: #958a92;">
+            <i class="bi bi-inbox" style="font-size: 42px; display: block; margin-bottom: 10px; color: #d64a8a;"></i>
+            <h3 style="color: #433c46; font-size: 18px; margin: 0 0 6px;">Tidak ada pesanan ditemukan</h3>
+            <p style="margin: 0; font-size: 13px;">Belum ada pesanan dengan kriteria filter yang dipilih.</p>
         </div>
     <% } else { %>
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead class="table-light">
+        <div class="admin-order-table-wrap">
+            <table class="admin-table admin-orders-table">
+                <thead>
                     <tr>
-                        <th>Nomor Pesanan</th>
-                        <th>Pelanggan</th>
-                        <th>Item Pesanan</th>
-                        <th>Total</th>
-                        <th>Status Order</th>
-                        <th>Pembayaran</th>
-                        <th style="min-width: 140px;">Ubah Status</th>
+                        <th style="min-width: 150px;">Kode Pesanan & Nota</th>
+                        <th style="min-width: 170px;">Pelanggan</th>
+                        <th style="min-width: 220px;">Item Pesanan</th>
+                        <th style="min-width: 110px;">Total</th>
+                        <th style="min-width: 110px;">Status Order</th>
+                        <th style="min-width: 120px;">Pembayaran</th>
+                        <th style="min-width: 170px;">Update Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% orders.forEach(function(o) { %>
                         <tr>
                             <td>
-                                <strong class="d-block text-dark"><%= o.order_code %></strong>
-                                <small class="text-muted"><%= o.created_at %></small>
-                                <div class="mt-1">
-                                    <a href="https://wa.me/<%= o.customer_phone.replace(/\D/g, '') %>" target="_blank" rel="noopener" class="badge bg-success text-decoration-none">
-                                        <i class="bi bi-whatsapp"></i> Chat WA
+                                <strong style="color: #18243a; font-size: 13.5px;"><%= o.order_code %></strong>
+                                <small style="display: block; color: #8e838b; font-size: 11px; margin-top: 3px;"><%= o.created_at %></small>
+                                <div style="margin-top: 7px; display: flex; gap: 5px; flex-wrap: wrap;">
+                                    <a href="<%= page_url('invoice?code=' + encodeURIComponent(o.order_code) + '&print=1') %>" target="_blank" class="admin-actions-nota" title="Buka dan Cetak Nota PDF">
+                                        <i class="bi bi-receipt"></i> Cetak Nota
+                                    </a>
+                                    <a href="https://wa.me/<%= o.customer_phone.replace(/\D/g, '') %>" target="_blank" rel="noopener" class="admin-actions-wa" title="Chat WhatsApp">
+                                        <i class="bi bi-whatsapp"></i> WA
                                     </a>
                                 </div>
                             </td>
                             <td>
-                                <div class="fw-semibold"><%= o.customer_name %></div>
-                                <small class="text-muted d-block"><%= o.customer_phone %></small>
+                                <div style="font-weight: 700; color: #18243a;"><%= o.customer_name %></div>
+                                <small style="display: block; color: #7f747d; font-size: 11.5px; margin-top: 2px;"><%= o.customer_phone %></small>
                                 <% if (o.customer_address) { %>
-                                    <small class="text-muted text-truncate d-inline-block" style="max-width: 180px;"><%= o.customer_address %></small>
+                                    <small style="display: block; color: #9c919a; font-size: 11px; margin-top: 2px; max-width: 180px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"><%= o.customer_address %></small>
                                 <% } %>
                             </td>
                             <td>
                                 <% o.items.forEach(function(it) { %>
-                                    <div class="small">
-                                        <b><%= it.product_name %></b> (<%= it.quantity %> <%= it.unit %>)
+                                    <div style="font-size: 12.5px; color: #3d363f; margin-bottom: 2px;">
+                                        <strong><%= it.product_name %></strong> <span style="color: #8c8289;">(<%= it.quantity %> <%= it.unit %>)</span>
                                     </div>
                                 <% }); %>
                                 <% if (o.customer_note) { %>
-                                    <div class="small text-danger fst-italic mt-1">Catatan: <%= o.customer_note %></div>
+                                    <div style="font-size: 11.5px; color: #c0392b; background: #fff5f5; border: 1px dashed #f5c6cb; padding: 4px 8px; border-radius: 6px; margin-top: 5px;">
+                                        <i class="bi bi-chat-left-dots"></i> <%= o.customer_note %>
+                                    </div>
                                 <% } %>
                             </td>
                             <td>
-                                <span class="fw-bold text-danger"><%= format_rupiah(o.total_estimate) %></span>
+                                <strong style="color: #e11d64; font-size: 14px; font-variant-numeric: tabular-nums;">
+                                    <%= format_rupiah(o.total_estimate) %>
+                                </strong>
                             </td>
                             <td>
                                 <span class="status-pill status-pill-<%= o.status %>">
-                                    <%= o.status.toUpperCase() %>
+                                    <%= o.status %>
                                 </span>
                             </td>
                             <td>
-                                <span class="badge bg-<%= o.payment_status === 'paid' ? 'success' : (o.payment_status === 'waiting' ? 'warning text-dark' : 'danger') %>">
-                                    <%= o.payment_status.toUpperCase() %>
+                                <span class="payment-pill payment-<%= o.payment_status %>">
+                                    <%= o.payment_status === 'paid' ? 'LUNAS' : (o.payment_status === 'waiting' ? 'VERIFIKASI' : 'BELUM BAYAR') %>
                                 </span>
                                 <% if (o.payment_proof) { %>
-                                    <div class="small text-success mt-1"><i class="bi bi-paperclip"></i> Bukti Ada</div>
+                                    <div style="font-size: 11px; color: #287a47; margin-top: 4px; font-weight: 600;">
+                                        <i class="bi bi-paperclip"></i> Bukti Ada
+                                    </div>
                                 <% } %>
                             </td>
                             <td>
-                                <form action="<%= page_url('admin/pesanan/status') %>" method="POST" class="d-flex flex-column gap-1">
+                                <form action="<%= page_url('admin/pesanan/status') %>" method="POST" style="display: flex; flex-direction: column; gap: 5px; margin: 0;">
                                     <input type="hidden" name="order_code" value="<%= o.order_code %>">
-                                    <select name="status" class="form-select form-select-sm">
+                                    <select name="status" class="admin-select-sm">
                                         <option value="pending" <%= o.status === 'pending' ? 'selected' : '' %>>Baru (Pending)</option>
                                         <option value="confirmed" <%= o.status === 'confirmed' ? 'selected' : '' %>>Dikonfirmasi</option>
                                         <option value="processing" <%= o.status === 'processing' ? 'selected' : '' %>>Diproses Cetak</option>
@@ -107,12 +134,14 @@
                                         <option value="completed" <%= o.status === 'completed' ? 'selected' : '' %>>Selesai / Terkirim</option>
                                         <option value="cancelled" <%= o.status === 'cancelled' ? 'selected' : '' %>>Dibatalkan</option>
                                     </select>
-                                    <select name="payment_status" class="form-select form-select-sm">
-                                        <option value="waiting" <%= o.payment_status === 'waiting' ? 'selected' : '' %>>Menunggu Bayar</option>
+                                    <select name="payment_status" class="admin-select-sm">
+                                        <option value="waiting" <%= o.payment_status === 'waiting' ? 'selected' : '' %>>Menunggu Verifikasi</option>
                                         <option value="paid" <%= o.payment_status === 'paid' ? 'selected' : '' %>>Lunas</option>
                                         <option value="unpaid" <%= o.payment_status === 'unpaid' ? 'selected' : '' %>>Belum Bayar</option>
                                     </select>
-                                    <button type="submit" class="btn btn-sm btn-primary py-0 mt-1">Simpan</button>
+                                    <button type="submit" class="admin-btn" style="padding: 5px 10px; font-size: 11.5px; justify-content: center; border-radius: 8px;">
+                                        Simpan
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -122,5 +151,117 @@
         </div>
     <% } %>
 </div>
+
+<style>
+.filter-tab-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: #fff8fb;
+    border: 1px solid #f2dce7;
+    color: #6a6068;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.filter-tab-pill:hover {
+    background: #ffe8f1;
+    color: #e11d64;
+    border-color: #e11d64;
+}
+.filter-tab-pill.active {
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 3px 10px rgba(225, 29, 100, 0.2);
+}
+.filter-tab-pill.danger {
+    background: #fff5f5;
+    border-color: #fbd5d5;
+    color: #c53030;
+}
+.filter-tab-pill.danger:hover {
+    background: #fed7d7;
+    color: #9b2c2c;
+}
+.filter-tab-pill.danger.active {
+    background: #e53e3e;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(229, 62, 62, 0.25);
+}
+.admin-order-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.admin-orders-table {
+    min-width: 960px;
+}
+.admin-actions-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: #eaf8ef;
+    color: #287a47;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    transition: all 0.15s ease;
+}
+.admin-actions-wa:hover {
+    background: #d4f3de;
+    color: #1e6036;
+}
+.admin-actions-nota {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: #fff0f6;
+    border: 1px solid #f2c9db;
+    color: #e11d64;
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 700;
+    transition: all 0.15s ease;
+}
+.admin-actions-nota:hover {
+    background: #ffe8f1;
+    color: #be124f;
+    border-color: #e11d64;
+}
+.payment-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+.payment-unpaid { background: #f4f1f3; color: #716871; }
+.payment-waiting { background: #fff4df; color: #9a6711; }
+.payment-paid { background: #e8f8ef; color: #25764a; }
+.admin-select-sm {
+    border: 1px solid #eadde3;
+    border-radius: 8px;
+    padding: 6px 9px;
+    font: inherit;
+    font-size: 11.5px;
+    background: #ffffff;
+    color: #3f3940;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.admin-select-sm:focus {
+    border-color: #e11d64;
+    box-shadow: 0 0 0 2px #ffe8f1;
+}
+</style>
 
 <%- include('_footer') %>

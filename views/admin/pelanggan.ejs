@@ -1,16 +1,36 @@
 <%- include('_header', { title: 'Data Member' }) %>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="admin-title">
     <div>
-        <h2 class="fw-bold mb-1">Data Pelanggan & Member</h2>
-        <p class="text-muted mb-0">Daftar member terdaftar, kontak WhatsApp, dan poin loyalitas percetakan.</p>
+        <h1>Data Pelanggan & Member</h1>
+        <p>Kelola data member terdaftar, kontak WhatsApp, dan saldo poin loyalitas.</p>
     </div>
 </div>
 
-<div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead class="table-light">
+<!-- Customer Stats -->
+<div class="admin-stats" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="admin-stat">
+        <i class="bi bi-people"></i>
+        <strong><%= customers.length %></strong>
+        <span>Total Member Terdaftar</span>
+    </div>
+    <div class="admin-stat">
+        <i class="bi bi-stars"></i>
+        <strong><%= customers.reduce(function(sum, c) { return sum + (c.points || 0); }, 0) %></strong>
+        <span>Total Poin Beredar</span>
+    </div>
+    <div class="admin-stat">
+        <i class="bi bi-patch-check"></i>
+        <strong><%= customers.filter(function(c) { return c.is_verified; }).length %></strong>
+        <span>Member Terverifikasi</span>
+    </div>
+</div>
+
+<!-- Customers Table Card -->
+<div class="admin-card" style="padding: 0; overflow: hidden;">
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="admin-table" style="min-width: 820px;">
+            <thead>
                 <tr>
                     <th>Nama Pelanggan</th>
                     <th>Nomor WhatsApp</th>
@@ -24,22 +44,24 @@
                 <% customers.forEach(function(c) { %>
                     <tr>
                         <td>
-                            <strong class="text-dark"><%= c.name %></strong>
+                            <strong style="color: #18243a; font-size: 13.5px;"><%= c.name %></strong>
                         </td>
                         <td>
-                            <a href="https://wa.me/<%= c.phone.replace(/\D/g, '') %>" target="_blank" rel="noopener" class="text-decoration-none">
-                                <i class="bi bi-whatsapp text-success me-1"></i> <%= c.phone %>
+                            <a href="https://wa.me/<%= c.phone.replace(/\D/g, '') %>" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 5px; color: #287a47; font-weight: 700; text-decoration: none; font-size: 12.5px;">
+                                <i class="bi bi-whatsapp"></i> <%= c.phone %>
                             </a>
                         </td>
-                        <td class="text-muted"><%= c.email || '-' %></td>
-                        <td class="small text-muted"><%= c.address || '-' %></td>
+                        <td style="color: #6d646c; font-size: 12.5px;"><%= c.email || '-' %></td>
+                        <td style="color: #7b727a; font-size: 12.5px; max-width: 220px;"><%= c.address || '-' %></td>
                         <td>
-                            <span class="badge bg-light text-primary border fw-bold">
-                                <i class="bi bi-star-fill text-warning"></i> <%= c.points || 0 %> Poin
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #fff0f6; border: 1px solid #f2dce7; color: #e11d64; font-weight: 800; font-size: 12px;">
+                                <i class="bi bi-stars"></i> <%= c.points || 0 %> Poin
                             </span>
                         </td>
                         <td>
-                            <span class="badge bg-success">Terverifikasi</span>
+                            <span class="status-pill status-pill-completed">
+                                Terverifikasi
+                            </span>
                         </td>
                     </tr>
                 <% }); %>

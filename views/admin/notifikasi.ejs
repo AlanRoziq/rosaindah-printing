@@ -1,0 +1,121 @@
+<%- include('_header', { title: 'Notifikasi Member' }) %>
+
+<div class="admin-title">
+    <div>
+        <h1>Notifikasi Member</h1>
+        <p>Kirim pesan pengumuman, promo, dan info penting langsung ke pusat notifikasi akun Member.</p>
+    </div>
+</div>
+
+<% if (notice) { %>
+    <div class="admin-alert">
+        <i class="bi bi-check-circle-fill"></i>
+        <span><%= notice %></span>
+    </div>
+<% } %>
+
+<% if (error) { %>
+    <div class="admin-alert error">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span><%= error %></span>
+    </div>
+<% } %>
+
+<!-- Kirim Notifikasi Card -->
+<div class="admin-card">
+    <div style="margin-bottom: 16px;">
+        <h2 style="margin: 0; color: #18243a; font-size: 18px; font-weight: 800;">Kirim Broadcast Notifikasi</h2>
+        <p style="margin: 4px 0 0; color: #7d747c; font-size: 13px;">
+            Pilih satu Member tertentu atau kirim serentak ke Semua Member terdaftar.
+        </p>
+    </div>
+
+    <form action="<%= page_url('admin/notifikasi') %>" method="POST" class="admin-form">
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Target Penerima Notifikasi *</label>
+                <select name="customer_id" required>
+                    <option value="0">📢 Semua Member (Broadcast)</option>
+                    <% members.forEach(function(m) { %>
+                        <option value="<%= m.id %>"><%= m.name %> — <%= m.phone %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="admin-field">
+                <label>Judul Notifikasi *</label>
+                <input type="text" name="title" required maxlength="160" placeholder="Contoh: Promo Spesial Weekend Percetakan">
+            </div>
+        </div>
+
+        <div class="admin-field">
+            <label>Isi Pesan Notifikasi *</label>
+            <textarea name="message" rows="3" required placeholder="Tuliskan detail pengumuman, voucher diskon, info jam operasional, dll..."></textarea>
+        </div>
+
+        <div class="admin-field">
+            <label>Tautan / Link Arah (Opsional)</label>
+            <input type="text" name="link" placeholder="Contoh: /produk atau /promo">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="admin-btn">
+                <i class="bi bi-send"></i> Kirim Notifikasi
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Riwayat Notifikasi Table -->
+<div class="admin-card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 16px 22px; border-bottom: 1px solid #f2dce7; background: #fffcfd;">
+        <h2 style="margin: 0; color: #18243a; font-size: 17px; font-weight: 800;">Riwayat Notifikasi Member Terkirim</h2>
+    </div>
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="admin-table" style="min-width: 800px;">
+            <thead>
+                <tr>
+                    <th>Waktu Kirim</th>
+                    <th>Penerima</th>
+                    <th>Judul & Pesan</th>
+                    <th>Tipe</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (notifications.length === 0) { %>
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #9c919a; padding: 30px;">Belum ada riwayat notifikasi.</td>
+                    </tr>
+                <% } else { %>
+                    <% notifications.forEach(function(n) { %>
+                        <tr>
+                            <td style="color: #8c8189; font-size: 12px;"><%= n.created_at %></td>
+                            <td>
+                                <strong style="color: #18243a;"><%= n.customer_name %></strong>
+                            </td>
+                            <td>
+                                <strong style="color: #18243a; font-size: 13.5px;"><%= n.title %></strong>
+                                <small style="display: block; color: #6d646c; font-size: 11.5px; margin-top: 2px; max-width: 380px;"><%= n.message %></small>
+                                <% if (n.link) { %>
+                                    <small style="display: block; color: #e11d64; font-size: 11px; margin-top: 3px;"><i class="bi bi-link-45deg"></i> <%= n.link %></small>
+                                <% } %>
+                            </td>
+                            <td>
+                                <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background: #f2f2f7; color: #555; font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                                    <%= n.type %>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-pill status-pill-completed">
+                                    Terkirim
+                                </span>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('_footer') %>

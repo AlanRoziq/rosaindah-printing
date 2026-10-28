@@ -6,8 +6,8 @@
                 <small class="text-secondary">Cetak Ide Jadi Kenyataan • Solusi Percetakan Online Terlengkap & Cepat</small>
             </div>
             <div class="text-end">
-                <a href="<%= page_url('admin/dashboard') %>" class="text-secondary text-decoration-none small" style="opacity: 0.6;">
-                    <i class="bi bi-shield-lock"></i> Panel Admin
+                <a href="<%= page_url('admin/dashboard') %>" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 fw-semibold" style="font-size: 12px; border-color: rgba(255,255,255,0.3);">
+                    <i class="bi bi-shield-lock me-1" style="color: #f472b6;"></i> Masuk ke Dashboard Admin
                 </a>
             </div>
         </div>
@@ -18,7 +18,7 @@
     </div>
 </footer>
 
-<!-- MOBILE APP BOTTOM NAVIGATION BAR (5 MENU DENGAN 1 DI TENGAH BULAT PRIMARY) -->
+<!-- MOBILE APP BOTTOM NAVIGATION BAR (5 MENU: Beranda, Produk, Keranjang, Lacak, Profil) -->
 <nav class="mobile-bottom-nav d-md-none" aria-label="Navigasi Menu Mobile">
     <a href="<%= page_url('') %>" class="mobile-nav-item <%= (typeof current_path !== 'undefined' && (current_path === '/' || current_path === '')) ? 'active' : '' %>">
         <i class="bi bi-house-door-fill"></i>
@@ -26,27 +26,27 @@
     </a>
     <a href="<%= page_url('produk') %>" class="mobile-nav-item <%= (typeof current_path !== 'undefined' && (current_path.startsWith('/produk') || current_path.startsWith('/detail-produk'))) ? 'active' : '' %>">
         <i class="bi bi-grid-fill"></i>
-        <span>Katalog</span>
+        <span>Produk</span>
     </a>
 
-    <!-- Menu Tengah Bulat Berwarna Primary -->
-    <a href="<%= page_url('cart') %>" class="mobile-nav-center <%= (typeof current_path !== 'undefined' && current_path.startsWith('/cart')) ? 'active' : '' %>" aria-label="Pesan & Keranjang">
+    <!-- Menu Tengah Bulat Berwarna Primary: Keranjang -->
+    <a href="<%= page_url('cart') %>" class="mobile-nav-center <%= (typeof current_path !== 'undefined' && (current_path.startsWith('/cart') || current_path.startsWith('/checkout'))) ? 'active' : '' %>" aria-label="Keranjang">
         <div class="center-bubble">
-            <i class="bi bi-bag-plus-fill"></i>
+            <i class="bi bi-cart3"></i>
             <% if (cart_count > 0) { %>
                 <span class="center-badge"><%= cart_count %></span>
             <% } %>
         </div>
-        <span class="center-label">Pesan</span>
+        <span class="center-label">Keranjang</span>
     </a>
 
-    <a href="<%= page_url('promo') %>" class="mobile-nav-item <%= (typeof current_path !== 'undefined' && current_path.startsWith('/promo')) ? 'active' : '' %>">
-        <i class="bi bi-ticket-perforated-fill"></i>
-        <span>Promo</span>
-    </a>
     <a href="<%= page_url('lacak-pesanan') %>" class="mobile-nav-item <%= (typeof current_path !== 'undefined' && current_path.startsWith('/lacak-pesanan')) ? 'active' : '' %>">
         <i class="bi bi-search"></i>
         <span>Lacak</span>
+    </a>
+    <a href="<%= page_url('akun') %>" class="mobile-nav-item <%= (typeof current_path !== 'undefined' && (current_path.startsWith('/akun') || current_path.startsWith('/login') || current_path.startsWith('/daftar'))) ? 'active' : '' %>">
+        <i class="bi bi-person-fill"></i>
+        <span>Profil</span>
     </a>
 </nav>
 

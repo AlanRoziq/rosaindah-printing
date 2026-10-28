@@ -5,11 +5,11 @@
     <div class="container">
         <div class="section-title">
             <div>
-                <span class="small-title">KATEGORI PRODUK</span>
+                <span>KATEGORI PRODUK</span>
+                <h2>Pilihan Kategori Percetakan</h2>
+                <p>Temukan produk cetak berkualitas sesuai kebutuhan bisnis, acara, dan promosi Anda.</p>
             </div>
-            <a href="<?php echo page_url('produk.php'); ?>" class="lihat-semua">
-                Lihat Semua Produk →
-            </a>
+            <a href="<?php echo page_url('produk.php'); ?>" class="lihat-semua">Lihat Semua →</a>
         </div>
 
         <div class="category-row">

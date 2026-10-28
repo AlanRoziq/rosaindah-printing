@@ -1,92 +1,1117 @@
-<%- include('partials/header', { title: 'Akun Member' }) %>
+<%- include('partials/header', { title: 'Profil & Akun Member — Rosa Indah Printing' }) %>
+
+<style>
+/* =========================================================
+   MARKETPLACE PROFILE STYLING (DESKTOP, TABLET & MOBILE)
+   ========================================================= */
+.profile-page {
+    background: #fbf8fa;
+    min-height: 85vh;
+    padding-bottom: 70px;
+}
+.profile-hero-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fff4fa 100%);
+    border: 1.5px solid #f2dce7;
+    border-radius: 24px;
+    padding: 24px 28px;
+    box-shadow: 0 10px 30px rgba(225, 29, 100, 0.05);
+    margin-bottom: 22px;
+}
+.profile-avatar-wrap {
+    position: relative;
+    width: 82px;
+    height: 82px;
+    flex-shrink: 0;
+}
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ffffff;
+    box-shadow: 0 8px 22px rgba(225, 29, 100, 0.28);
+    display: block;
+}
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e11d64 0%, #f43f7e 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+    border: 3px solid #ffffff;
+    box-shadow: 0 8px 22px rgba(225, 29, 100, 0.28);
+    text-transform: uppercase;
+}
+.profile-avatar-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 26px;
+    height: 26px;
+    background: #28a745;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border: 2px solid #ffffff;
+}
+.avatar-upload-card {
+    background: #fff8fb;
+    border: 1.5px dashed #f2bad0;
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
+}
+.avatar-upload-card:hover {
+    border-color: #e11d64;
+    background: #fff3f8;
+}
+.avatar-preview-wrap {
+    width: 78px;
+    height: 78px;
+    position: relative;
+    flex-shrink: 0;
+}
+.avatar-preview-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e11d64;
+    box-shadow: 0 4px 14px rgba(225, 29, 100, 0.22);
+}
+.avatar-preview-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e11d64 0%, #f43f7e 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 14px rgba(225, 29, 100, 0.22);
+}
+.btn-upload-avatar {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 100%);
+    color: #ffffff !important;
+    border: 0;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(225, 29, 100, 0.22);
+    transition: all 0.2s ease;
+}
+.btn-upload-avatar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(225, 29, 100, 0.32);
+}
+.btn-remove-avatar {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #ffffff;
+    color: #dc3545;
+    border: 1px solid #f5c2c7;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-remove-avatar:hover {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+/* Marketplace Tab Bar */
+.marketplace-tabs-wrap {
+    margin-bottom: 22px;
+    border-bottom: 1.5px solid #f0dce6;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 6px 10px;
+    box-shadow: 0 4px 18px rgba(35, 15, 26, 0.03);
+}
+.marketplace-nav-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0;
+    padding: 4px 0;
+}
+.marketplace-nav-tabs::-webkit-scrollbar {
+    display: none;
+}
+.marketplace-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 14px;
+    border: 0;
+    background: transparent;
+    color: #635761;
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.marketplace-tab-btn i {
+    font-size: 16px;
+    color: #9c8e98;
+    transition: color 0.2s ease;
+}
+.marketplace-tab-btn:hover {
+    color: #e11d64;
+    background: #fff3f8;
+}
+.marketplace-tab-btn:hover i {
+    color: #e11d64;
+}
+.marketplace-tab-btn.active {
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(225, 29, 100, 0.28);
+}
+.marketplace-tab-btn.active i {
+    color: #ffffff;
+}
+.marketplace-tab-btn .badge-pill {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+}
+.marketplace-tab-btn:not(.active) .badge-pill {
+    background: #f4e3eb;
+    color: #e11d64;
+}
+
+/* Profile Form Card */
+.profile-card {
+    background: #ffffff;
+    border: 1.5px solid #f2dce7;
+    border-radius: 22px;
+    padding: 26px 28px;
+    box-shadow: 0 8px 24px rgba(35, 15, 26, 0.03);
+    margin-bottom: 22px;
+}
+.profile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f6e8ef;
+}
+.profile-card-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #18243a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.profile-card-header p {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    color: #837781;
+}
+
+/* Modern Marketplace Form Inputs */
+.form-field-group {
+    margin-bottom: 18px;
+}
+.form-field-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3b333a;
+    margin-bottom: 7px;
+}
+.form-field-group label span.req {
+    color: #e11d64;
+}
+.form-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.form-input-box i.input-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 17px;
+    color: #a4949f;
+    pointer-events: none;
+}
+.form-input-box input,
+.form-input-box select,
+.form-field-group textarea {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    font-size: 14.5px;
+    border: 1.5px solid #eddfe5;
+    border-radius: 13px;
+    background: #ffffff;
+    color: #18243a;
+    transition: all 0.2s ease;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+.form-field-group textarea {
+    padding: 12px 14px;
+    min-height: 85px;
+    resize: vertical;
+}
+.form-input-box input:focus,
+.form-input-box select:focus,
+.form-field-group textarea:focus {
+    border-color: #e11d64;
+    box-shadow: 0 0 0 3px rgba(225, 29, 100, 0.12);
+}
+.form-hint {
+    display: block;
+    font-size: 11.5px;
+    color: #8c7e87;
+    margin-top: 5px;
+    line-height: 1.45;
+}
+
+/* Gender Radio Pills */
+.gender-radio-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.gender-radio-pill {
+    position: relative;
+}
+.gender-radio-pill input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.gender-radio-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border: 1.5px solid #eddfe5;
+    border-radius: 13px;
+    background: #ffffff;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #554a52;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.gender-radio-pill input:checked + .gender-radio-label {
+    border-color: #e11d64;
+    background: #fff2f8;
+    color: #e11d64;
+    box-shadow: 0 4px 12px rgba(225, 29, 100, 0.1);
+}
+
+/* Save Button */
+.btn-save-profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+    color: #ffffff !important;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 14.5px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(225, 29, 100, 0.32);
+    transition: all 0.25s ease;
+    text-decoration: none;
+}
+.btn-save-profile:hover {
+    background: linear-gradient(90deg, #be124f 0%, #e11d64 50%, #f43f7e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(225, 29, 100, 0.42);
+}
+
+/* Order Item Card (Marketplace Style) */
+.profile-order-card {
+    background: #ffffff;
+    border: 1px solid #f0dce6;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    transition: all 0.2s ease;
+}
+.profile-order-card:hover {
+    box-shadow: 0 8px 22px rgba(225, 29, 100, 0.08);
+}
+.profile-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f6eaf0;
+    margin-bottom: 12px;
+}
+
+/* Quick Stats Bar */
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+.profile-stat-box {
+    background: #ffffff;
+    border: 1px solid #f2dce7;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.profile-stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #fff0f6;
+    color: #e11d64;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.profile-stat-info strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: #18243a;
+}
+.profile-stat-info span {
+    font-size: 11px;
+    color: #8c7f88;
+    font-weight: 600;
+}
+
+/* Mobile Specific Optimizations */
+@media (max-width: 768px) {
+    .profile-hero-card {
+        padding: 18px;
+        border-radius: 20px;
+    }
+    .profile-hero-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+    .profile-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    .profile-card {
+        padding: 18px;
+        border-radius: 18px;
+    }
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+    }
+    .profile-order-footer {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+    .profile-order-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px !important;
+    }
+    .btn-save-profile {
+        width: 100% !important;
+    }
+}
+</style>
 
 <header class="main-header">
     <%- include('partials/topbar') %>
     <%- include('partials/navbar') %>
 </header>
 
-<main class="py-5">
+<main class="profile-page py-3 py-md-4">
     <div class="container">
-        <!-- Breadcrumb -->
-        <div class="catalog-breadcrumb mb-4">
+        <!-- Breadcrumbs -->
+        <div class="catalog-breadcrumb mb-3" style="font-size: 12.5px;">
             <a href="<%= page_url('') %>">Home</a>
             <i class="bi bi-chevron-right"></i>
-            <span>Akun Member</span>
+            <span>Akun Saya</span>
         </div>
 
-        <div class="row g-4">
-            <!-- Sidebar Profile -->
-            <div class="col-lg-4">
-                <div class="card p-4 rounded-4 shadow-sm border-0 bg-white text-center">
-                    <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 36px;">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <h4 class="fw-bold mb-1"><%= user.name %></h4>
-                    <p class="text-muted small mb-3"><%= user.phone %></p>
-                    <span class="badge bg-success px-3 py-2 fs-6 mb-4">Member Terverifikasi</span>
+        <!-- Alert Notification Messages -->
+        <% if (typeof notice !== 'undefined' && notice) { %>
+            <div style="background: #eefbf3; border: 1.5px solid #b7eed0; color: #1e7e46; padding: 12px 18px; border-radius: 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13.5px;">
+                <i class="bi bi-check-circle-fill" style="font-size: 18px;"></i>
+                <span><%= notice %></span>
+            </div>
+        <% } %>
 
-                    <div class="p-3 bg-light rounded-3 text-start mb-4">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Poin Loyalty:</span>
-                            <span class="fw-bold text-primary"><i class="bi bi-star-fill text-warning"></i> <%= user.points || 0 %> Poin</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted small">Alamat:</span>
-                            <span class="fw-semibold small"><%= user.address || '-' %></span>
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div style="background: #fff2f5; border: 1.5px solid #f9ccd9; color: #c4234b; padding: 12px 18px; border-radius: 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13.5px;">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 18px;"></i>
+                <span><%= error %></span>
+            </div>
+        <% } %>
+
+        <!-- =========================================================
+             1. HEADER PROFILE CARD (MARKETPLACE USER HERO)
+             ========================================================= -->
+        <section class="profile-hero-card">
+            <div class="profile-hero-flex d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <!-- User Avatar Photo or Initial -->
+                    <div class="profile-avatar-wrap">
+                        <% if (user.avatar) { %>
+                            <img src="/<%= user.avatar.replace(/^\/+/, '') %>" alt="<%= user.name %>" class="profile-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                            <div class="profile-avatar" style="display: none;">
+                                <%= (user.name || 'M').charAt(0) %>
+                            </div>
+                        <% } else { %>
+                            <div class="profile-avatar">
+                                <%= (user.name || 'M').charAt(0) %>
+                            </div>
+                        <% } %>
+                        <div class="profile-avatar-badge" title="Akun Terverifikasi">
+                            <i class="bi bi-check-lg"></i>
                         </div>
                     </div>
 
-                    <a href="<%= page_url('logout') %>" class="btn btn-outline-danger w-100">
-                        <i class="bi bi-box-arrow-right me-1"></i> Keluar (Logout)
+                    <!-- User Name & Badges -->
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h1 style="font-size: 22px; font-weight: 800; color: #18243a; margin: 0;">
+                                <%= user.name %>
+                            </h1>
+                            <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="bi bi-award-fill"></i> <%= user.member_tier || 'Member Prioritas' %>
+                            </span>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3 mt-1 flex-wrap" style="font-size: 12.5px; color: #7d727b;">
+                            <span><i class="bi bi-person-circle text-rosa"></i> @<%= user.username || user.phone %></span>
+                            <span>•</span>
+                            <span><i class="bi bi-whatsapp text-success"></i> <%= user.phone %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Action / Reward Badges -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <a href="<%= page_url('akun?tab=poin') %>" style="background: #fff9df; border: 1px solid #fae69e; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #9c6c00; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-star-fill text-warning"></i>
+                        <span><%= user.points || 150 %> Poin Member</span>
+                    </a>
+
+                    <a href="<%= page_url('akun?tab=poin') %>" style="background: #fff0f6; border: 1px solid #f2c9de; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #e11d64; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="bi bi-ticket-perforated-fill"></i>
+                        <span><%= (typeof vouchers !== 'undefined' ? vouchers.length : 4) %> Voucher</span>
+                    </a>
+
+                    <a href="<%= page_url('logout') %>" style="background: #ffffff; border: 1px solid #f0dce6; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #a43a4e; font-weight: 700; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;" title="Keluar Akun">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span class="d-none d-sm-inline">Keluar</span>
                     </a>
                 </div>
             </div>
 
-            <!-- Orders History -->
-            <div class="col-lg-8">
-                <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i> Riwayat Pesanan Saya</h4>
-                        <a href="<%= page_url('lacak-pesanan') %>" class="btn btn-sm btn-outline-primary">Lacak Pesanan Lain</a>
+            <!-- Quick Stats Bar (Total, Aktif, Selesai, Total Belanja) -->
+            <div class="profile-stats-grid">
+                <div class="profile-stat-box">
+                    <div class="profile-stat-icon"><i class="bi bi-bag-check"></i></div>
+                    <div class="profile-stat-info">
+                        <strong><%= stats.total || orders.length %></strong>
+                        <span>Total Pesanan</span>
+                    </div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-icon" style="background:#fff9df;color:#c98b00;"><i class="bi bi-hourglass-split"></i></div>
+                    <div class="profile-stat-info">
+                        <strong><%= stats.active || 0 %></strong>
+                        <span>Sedang Diproses</span>
+                    </div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-icon" style="background:#e8f8ef;color:#1e7e46;"><i class="bi bi-check2-circle"></i></div>
+                    <div class="profile-stat-info">
+                        <strong><%= stats.completed || 0 %></strong>
+                        <span>Pesanan Selesai</span>
+                    </div>
+                </div>
+                <div class="profile-stat-box">
+                    <div class="profile-stat-icon"><i class="bi bi-wallet2"></i></div>
+                    <div class="profile-stat-info">
+                        <strong><%= format_rupiah(stats.spent || 0) %></strong>
+                        <span>Total Belanja</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             2. SEGMENTED NAVIGATION TABS (MARKETPLACE PILLS)
+             ========================================================= -->
+        <div class="marketplace-tabs-wrap">
+            <nav class="marketplace-nav-tabs" role="tablist">
+                <a href="<%= page_url('akun?tab=profil') %>" class="marketplace-tab-btn <%= (tab === 'profil') ? 'active' : '' %>">
+                    <i class="bi bi-person-vcard"></i>
+                    <span>Biodata Diri</span>
+                </a>
+                <a href="<%= page_url('akun?tab=pesanan') %>" class="marketplace-tab-btn <%= (tab === 'pesanan') ? 'active' : '' %>">
+                    <i class="bi bi-receipt"></i>
+                    <span>Pesanan Saya</span>
+                    <span class="badge-pill"><%= orders.length %></span>
+                </a>
+                <a href="<%= page_url('akun?tab=poin') %>" class="marketplace-tab-btn <%= (tab === 'poin') ? 'active' : '' %>">
+                    <i class="bi bi-stars"></i>
+                    <span>Poin & Voucher</span>
+                </a>
+                <a href="<%= page_url('akun?tab=alamat') %>" class="marketplace-tab-btn <%= (tab === 'alamat') ? 'active' : '' %>">
+                    <i class="bi bi-geo-alt"></i>
+                    <span>Alamat Pengiriman</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- =========================================================
+             3. TAB CONTENT: BIODATA DIRI / EDIT PROFIL (UTAMA)
+             ========================================================= -->
+        <% if (tab === 'profil') { %>
+            <div class="row g-4">
+                <!-- Left: Edit Form -->
+                <div class="col-lg-8">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div>
+                                <h2><i class="bi bi-pencil-square text-rosa"></i> Edit Biodata Diri</h2>
+                                <p>Kelola informasi identitas Anda untuk mempercepat proses pemesanan & cetak nota.</p>
+                            </div>
+                            <span style="font-size: 11px; background: #eefbf3; color: #1e7e46; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+                                <i class="bi bi-shield-check"></i> Data Aman
+                            </span>
+                        </div>
+
+                        <form action="<%= page_url('akun') %>" method="POST" enctype="multipart/form-data" id="editProfileForm">
+                            <!-- 0. Upload Foto Profil Pengguna -->
+                            <div class="avatar-upload-card">
+                                <label class="d-block fw-bold mb-2" style="font-size: 13.5px; color: #18243a;">
+                                    <i class="bi bi-camera-fill text-rosa me-1"></i> Foto Profil Member
+                                </label>
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <div class="avatar-preview-wrap">
+                                        <img id="avatarPreviewImg" src="<%= user.avatar ? '/' + user.avatar.replace(/^\/+/, '') : '' %>" alt="Preview Foto" 
+                                             class="avatar-preview-circle" style="<%= user.avatar ? '' : 'display: none;' %>">
+                                        <div id="avatarPlaceholder" class="avatar-preview-placeholder" style="<%= user.avatar ? 'display: none;' : '' %>">
+                                            <%= (user.name || 'M').charAt(0) %>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                            <label for="avatarInput" class="btn-upload-avatar">
+                                                <i class="bi bi-cloud-arrow-up-fill"></i>
+                                                <span id="btnUploadLabel"><%= user.avatar ? 'Ganti Foto Profil' : 'Unggah Foto Baru' %></span>
+                                            </label>
+                                            <input type="file" name="avatar" id="avatarInput" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;">
+
+                                            <button type="button" id="btnRemoveAvatar" class="btn-remove-avatar" style="<%= user.avatar ? '' : 'display: none;' %>" title="Hapus Foto Profil">
+                                                <i class="bi bi-trash3"></i> Hapus Foto
+                                            </button>
+                                            <input type="hidden" name="remove_avatar" id="removeAvatarInput" value="0">
+                                        </div>
+                                        <small class="text-muted d-block" style="font-size: 11.5px; line-height: 1.45;">
+                                            Format: JPG, JPEG, PNG, WEBP (Maksimal 4 MB). Klik <b>Simpan Perubahan Profil</b> di bawah untuk mengaktifkan foto profil baru Anda.
+                                        </small>
+                                        <div id="avatarSelectedInfo" class="mt-1" style="display: none; font-size: 11.5px;">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                <i class="bi bi-check2-circle me-1"></i> <span id="avatarFileName">Foto siap disimpan</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 1. Nama Lengkap & Username -->
+                            <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-field-group">
+                                    <label>Nama Lengkap <span class="req">*</span></label>
+                                    <div class="form-input-box">
+                                        <i class="bi bi-person input-icon"></i>
+                                        <input type="text" name="name" value="<%= user.name || '' %>" required placeholder="Nama lengkap sesuai KTP/ID">
+                                    </div>
+                                    <small class="form-hint">Nama ini akan dicetak pada invoice / nota resmi percetakan.</small>
+                                </div>
+
+                                <div class="form-field-group">
+                                    <label>Username / Panggilan</label>
+                                    <div class="form-input-box">
+                                        <i class="bi bi-at input-icon"></i>
+                                        <input type="text" name="username" value="<%= user.username || '' %>" placeholder="Contoh: alanroziqin">
+                                    </div>
+                                    <small class="form-hint">Nama panggilan unik akun Member Anda.</small>
+                                </div>
+                            </div>
+
+                            <!-- 2. Nomor WhatsApp & Email -->
+                            <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-field-group">
+                                    <label>Nomor WhatsApp Aktif <span class="req">*</span></label>
+                                    <div class="form-input-box">
+                                        <i class="bi bi-whatsapp input-icon text-success"></i>
+                                        <input type="tel" name="phone" value="<%= user.phone || '' %>" required placeholder="08xxxxxxxxxx">
+                                    </div>
+                                    <small class="form-hint">Digunakan untuk konfirmasi pesanan, proof desain & kirim file.</small>
+                                </div>
+
+                                <div class="form-field-group">
+                                    <label>Alamat Email</label>
+                                    <div class="form-input-box">
+                                        <i class="bi bi-envelope input-icon"></i>
+                                        <input type="email" name="email" value="<%= user.email || '' %>" placeholder="emailanda@example.com">
+                                    </div>
+                                    <small class="form-hint">Salinan invoice & update status akan dikirim ke email ini.</small>
+                                </div>
+                            </div>
+
+                            <!-- 3. Jenis Kelamin & Tanggal Lahir -->
+                            <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-field-group">
+                                    <label>Jenis Kelamin</label>
+                                    <div class="gender-radio-group">
+                                        <div class="gender-radio-pill">
+                                            <input type="radio" name="gender" id="gender_l" value="L" <%= (!user.gender || user.gender === 'L') ? 'checked' : '' %>>
+                                            <label for="gender_l" class="gender-radio-label">
+                                                <i class="bi bi-gender-male"></i> Laki-laki
+                                            </label>
+                                        </div>
+                                        <div class="gender-radio-pill">
+                                            <input type="radio" name="gender" id="gender_p" value="P" <%= (user.gender === 'P') ? 'checked' : '' %>>
+                                            <label for="gender_p" class="gender-radio-label">
+                                                <i class="bi bi-gender-female"></i> Perempuan
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-field-group">
+                                    <label>Tanggal Lahir</label>
+                                    <div class="form-input-box">
+                                        <i class="bi bi-calendar-event input-icon"></i>
+                                        <input type="date" name="birth_date" value="<%= user.birth_date || '' %>">
+                                    </div>
+                                    <small class="form-hint">Dapatkan promo & voucher potongan di hari ulang tahun Anda.</small>
+                                </div>
+                            </div>
+
+                            <hr style="border: 0; border-top: 1px solid #f6e8ef; margin: 10px 0 20px;">
+
+                            <!-- 4. Alamat Lengkap & Kota -->
+                            <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+                                <div class="form-field-group">
+                                    <label>Kota / Wilayah Pengiriman</label>
+                                    <div class="form-input-box">
+                                        <i class="bi bi-buildings input-icon"></i>
+                                        <input type="text" name="city" value="<%= user.city || 'Pasuruan' %>" placeholder="Contoh: Pasuruan">
+                                    </div>
+                                </div>
+
+                                <div class="form-field-group">
+                                    <label>Catatan / Patokan Alamat Pengantaran</label>
+                                    <div class="form-input-box">
+                                        <i class="bi bi-signpost-2 input-icon"></i>
+                                        <input type="text" name="address_note" value="<%= user.address_note || '' %>" placeholder="Contoh: Seberang Masjid Jami, Pagar Hitam">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-field-group">
+                                <label>Alamat Lengkap Rumah / Kantor / Toko</label>
+                                <textarea name="address" rows="3" placeholder="Tuliskan nama jalan, nomor rumah, RT/RW, dusun, desa/kelurahan, dan kecamatan secara lengkap..."><%= user.address || '' %></textarea>
+                                <small class="form-hint">Memudahkan kurir mengantarkan spanduk, banner, undangan, dan paket cetak langsung ke lokasi Anda.</small>
+                            </div>
+
+                            <!-- Tombol Simpan Perubahan -->
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mt-4 pt-2">
+                                <button type="submit" class="btn-save-profile">
+                                    <i class="bi bi-check2-circle" style="font-size: 18px;"></i> Simpan Perubahan Profil
+                                </button>
+                                <a href="<%= page_url('produk') %>" style="color: #8c7f88; text-decoration: none; font-size: 13.5px; font-weight: 700;">
+                                    Batal & Lanjut Belanja
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right: Profile Sidebar Card & Member Benefits -->
+                <div class="col-lg-4">
+                    <!-- Member Card Badge -->
+                    <div class="profile-card" style="background: linear-gradient(135deg, #18243a 0%, #2a1f28 100%); color: #ffffff; border: 0; box-shadow: 0 12px 35px rgba(24, 36, 58, 0.2);">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                <small style="color: #f472b6; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">KARTU MEMBER DIGITAL</small>
+                                <h3 style="color: #ffffff; font-size: 18px; font-weight: 800; margin: 3px 0 0;">Rosa Indah Printing</h3>
+                            </div>
+                            <i class="bi bi-qr-code" style="font-size: 28px; color: #fff;"></i>
+                        </div>
+
+                        <div style="margin: 25px 0;">
+                            <div style="font-size: 16px; font-weight: 800; letter-spacing: 1.5px; font-family: monospace;">
+                                RIP-MEMBER-<%= String(user.id || 1).padStart(5, '0') %>
+                            </div>
+                            <div style="font-size: 14px; color: #e2d9df; margin-top: 4px;">
+                                <%= user.name %>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-end pt-3" style="border-top: 1px solid rgba(255,255,255,0.15);">
+                            <div>
+                                <small style="color: #b5a9b2; font-size: 10.5px; display: block;">STATUS MEMBER</small>
+                                <strong style="color: #38ef7d; font-size: 13px;"><i class="bi bi-shield-fill-check"></i> Terverifikasi</strong>
+                            </div>
+                            <div class="text-end">
+                                <small style="color: #b5a9b2; font-size: 10.5px; display: block;">SALDO POIN</small>
+                                <strong style="color: #ffd700; font-size: 15px;"><i class="bi bi-star-fill"></i> <%= user.points || 150 %> Poin</strong>
+                            </div>
+                        </div>
                     </div>
 
-                    <% if (!orders || orders.length === 0) { %>
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox display-4 d-block mb-3"></i>
-                            Belum ada riwayat pesanan.
-                        </div>
-                    <% } else { %>
-                        <div class="list-group list-group-flush">
-                            <% orders.forEach(function(o) { %>
-                                <div class="list-group-item px-0 py-3 border-bottom">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <a href="<%= page_url('lacak-pesanan?code=' + o.order_code + '&phone=' + (o.customer_phone || '')) %>" class="fw-bold text-decoration-none text-dark fs-5">
-                                                <%= o.order_code %>
-                                            </a>
-                                            <small class="text-muted d-block"><%= o.created_at %> WIB</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="badge bg-<%= o.status === 'completed' ? 'success' : 'primary' %>"><%= o.status.toUpperCase() %></span>
-                                            <div class="fw-bold text-danger mt-1"><%= format_rupiah(o.total_estimate) %></div>
-                                        </div>
+                    <!-- Marketplace Tips Box -->
+                    <div class="profile-card" style="background: #fff9fc; border-color: #f2d1e0;">
+                        <h4 style="font-size: 14px; font-weight: 800; color: #18243a; margin-bottom: 10px; display: flex; align-items: center; gap: 7px;">
+                            <i class="bi bi-lightbulb-fill text-warning"></i> Tips Akun Member:
+                        </h4>
+                        <ul style="padding-left: 18px; margin: 0; font-size: 12.5px; color: #6f626b; line-height: 1.7;">
+                            <li>Pastikan <b>nomor WhatsApp</b> benar karena file revisi desain cetak dikirim via WA.</li>
+                            <li>Kumpulkan <b>poin belanja</b> setiap pesanan cetak dan tukarkan dengan voucher potongan.</li>
+                            <li>Gunakan patokan alamat yang jelas untuk mempermudah kurir saat kirim banner/undangan.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- =========================================================
+             4. TAB CONTENT: PESANAN SAYA
+             ========================================================= -->
+        <% if (tab === 'pesanan') { %>
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <h2><i class="bi bi-receipt text-rosa"></i> Riwayat & Status Pesanan</h2>
+                        <p>Pantau status produksi, cetak nota, dan cek tracking pesanan cetak Anda.</p>
+                    </div>
+                    <a href="<%= page_url('lacak-pesanan') %>" style="color: #e11d64; font-size: 12.5px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                        <i class="bi bi-search"></i> Lacak Nomor Lain
+                    </a>
+                </div>
+
+                <% if (!orders || orders.length === 0) { %>
+                    <div style="text-align: center; padding: 50px 20px;">
+                        <i class="bi bi-inbox" style="font-size: 48px; color: #d0c0c9;"></i>
+                        <h4 style="margin: 14px 0 6px; font-size: 17px; font-weight: 800; color: #18243a;">Belum Ada Riwayat Pesanan</h4>
+                        <p style="color: #8c7e87; font-size: 13px; max-width: 420px; margin: 0 auto 18px;">Pesanan yang Anda buat melalui website akan otomatis tercatat dan dapat dipantau di sini.</p>
+                        <a href="<%= page_url('produk') %>" class="btn-save-profile" style="padding: 10px 22px; font-size: 13.5px;">
+                            <i class="bi bi-bag"></i> Mulai Belanja Cetak
+                        </a>
+                    </div>
+                <% } else { %>
+                    <div>
+                        <% orders.forEach(function(o) { %>
+                            <%
+                                const statusMap = {
+                                    'pending': { label: 'Pesanan Baru', bg: '#fff0f6', color: '#e11d64' },
+                                    'confirmed': { label: 'Dikonfirmasi', bg: '#e8f4fd', color: '#0d6efd' },
+                                    'processing': { label: 'Sedang Didesain / Cetak', bg: '#fff9df', color: '#b27b00' },
+                                    'printed': { label: 'Selesai Cetak', bg: '#e3f7fc', color: '#0288d1' },
+                                    'completed': { label: 'Selesai Diambil / Kirim', bg: '#e8f8ef', color: '#1e7e46' },
+                                    'cancelled': { label: 'Dibatalkan', bg: '#fbe9eb', color: '#dc3545' }
+                                };
+                                const st = statusMap[o.status] || { label: o.status, bg: '#f0f0f0', color: '#555' };
+                            %>
+                            <div class="profile-order-card">
+                                <div class="profile-order-header">
+                                    <div>
+                                        <strong style="color: #18243a; font-size: 14.5px;"><%= o.order_code %></strong>
+                                        <small style="color: #8c7e87; display: block; font-size: 11.5px; margin-top: 2px;">
+                                            <i class="bi bi-clock"></i> <%= o.created_at %> WIB
+                                        </small>
                                     </div>
-                                    <div class="small text-muted mb-2">
-                                        <% o.items.forEach(function(it, i) { %>
-                                            <span><%= it.product_name %> (<%= it.quantity %> <%= it.unit %>)<%= i < o.items.length - 1 ? ', ' : '' %></span>
-                                        <% }); %>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span style="background: <%= st.bg %>; color: <%= st.color %>; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px;">
+                                            <%= st.label %>
+                                        </span>
+                                        <span style="background: <%= (o.payment_status === 'paid') ? '#e8f8ef' : '#fff0f0' %>; color: <%= (o.payment_status === 'paid') ? '#1e7e46' : '#d63031' %>; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px;">
+                                            <%= (o.payment_status === 'paid') ? 'Lunas' : 'Belum Lunas' %>
+                                        </span>
                                     </div>
-                                    <a href="<%= page_url('lacak-pesanan?code=' + o.order_code + '&phone=' + (o.customer_phone || '')) %>" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-eye"></i> Lihat Detail & Tracking
-                                    </a>
                                 </div>
-                            <% }); %>
+
+                                <!-- Items List -->
+                                <div style="margin: 12px 0;">
+                                    <% if (o.items && o.items.length > 0) { %>
+                                        <% o.items.forEach(function(item) { %>
+                                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px;">
+                                                <div style="color: #3b333a; font-weight: 700;">
+                                                    <i class="bi bi-box-seam text-rosa me-1"></i> <%= item.product_name %>
+                                                    <span style="color: #8c7e87; font-weight: 500;">x <%= item.quantity %> <%= item.unit || 'pcs' %></span>
+                                                </div>
+                                                <div style="color: #635761; font-variant-numeric: tabular-nums;">
+                                                    <%= format_rupiah(item.subtotal || (item.unit_price * item.quantity)) %>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <div style="font-size: 13px; color: #635761;">Pesanan Cetak Custom</div>
+                                    <% } %>
+                                </div>
+
+                                <!-- Order Footer: Total & Actions -->
+                                <div class="profile-order-footer d-flex justify-content-between align-items-center pt-3" style="border-top: 1px dashed #f0dce6;">
+                                    <div>
+                                        <small style="font-size: 11px; color: #8c7f88; display: block;">Total Pembayaran:</small>
+                                        <strong style="font-size: 17px; font-weight: 800; color: #e11d64;">
+                                            <%= format_rupiah(o.total_estimate) %>
+                                        </strong>
+                                    </div>
+
+                                    <div class="profile-order-actions d-flex gap-2 flex-wrap">
+                                        <!-- Tracking Button -->
+                                        <a href="<%= page_url('lacak-pesanan?code=' + encodeURIComponent(o.order_code) + '&phone=' + encodeURIComponent(user.phone)) %>" style="border: 1px solid #e11d64; color: #e11d64; background: #fff; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                                            <i class="bi bi-geo-alt"></i> Lacak
+                                        </a>
+
+                                        <!-- Invoice Button (Instant Print / PDF) -->
+                                        <a href="<%= page_url('invoice?code=' + encodeURIComponent(o.order_code)) %>" target="_blank" style="background: #18243a; color: #ffffff; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                                            <i class="bi bi-printer"></i> Nota PDF
+                                        </a>
+
+                                        <!-- Pay Button if Unpaid -->
+                                        <% if (o.payment_status !== 'paid') { %>
+                                            <a href="<%= page_url('lacak-pesanan?code=' + encodeURIComponent(o.order_code) + '&phone=' + encodeURIComponent(user.phone)) %>" style="background: #25d366; color: #ffffff; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                                                <i class="bi bi-cash-stack"></i> Bayar
+                                            </a>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
+
+        <!-- =========================================================
+             5. TAB CONTENT: POIN & VOUCHER MEMBER
+             ========================================================= -->
+        <% if (tab === 'poin') { %>
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="profile-card" style="background: linear-gradient(135deg, #fffcf5 0%, #fff7dc 100%); border-color: #fce8a6;">
+                        <h2 style="font-size: 17px; font-weight: 800; color: #8f6500; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <i class="bi bi-stars" style="font-size: 22px;"></i> Saldo Poin Saya
+                        </h2>
+                        <div style="font-size: 38px; font-weight: 800; color: #d67a00; font-variant-numeric: tabular-nums;">
+                            <%= user.points || 150 %> <span style="font-size: 16px; font-weight: 700; color: #8f6500;">Poin</span>
+                        </div>
+                        <p style="font-size: 12.5px; color: #7f6629; margin: 10px 0 16px; line-height: 1.6;">
+                            Kumpulkan poin setiap pemesanan cetak di Rosa Indah Printing. Setiap kelipatan belanja Rp10.000 otomatis mendapatkan 1 Poin reward.
+                        </p>
+                        <a href="<%= page_url('produk') %>" class="btn-save-profile" style="padding: 10px 20px; font-size: 13px;">
+                            <i class="bi bi-cart-plus"></i> Belanja Tambah Poin
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div>
+                                <h2><i class="bi bi-ticket-perforated text-rosa"></i> Kupon & Voucher Siap Pakai</h2>
+                                <p>Gunakan kode voucher saat checkout untuk mendapatkan potongan harga langsung.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; gap: 12px;">
+                            <% if (typeof vouchers !== 'undefined' && vouchers.length > 0) { %>
+                                <% vouchers.forEach(function(v) { %>
+                                    <div style="border: 1.5px dashed #f2bad0; background: #fffafc; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                        <div>
+                                            <div style="display: inline-block; background: #e11d64; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; margin-bottom: 5px;">
+                                                <%= v.code %>
+                                            </div>
+                                            <strong style="display: block; color: #18243a; font-size: 14px;"><%= v.name %></strong>
+                                            <small style="color: #796c76; font-size: 11.5px;">
+                                                Min. Order <%= format_rupiah(v.min_order) %> • Diskon <%= v.discount_type === 'percent' ? v.discount_value + '%' : format_rupiah(v.discount_value) %>
+                                            </small>
+                                        </div>
+                                        <button type="button" onclick="navigator.clipboard.writeText('<%= v.code %>'); this.innerText='Tersalin!'; setTimeout(() => this.innerText='Salin Kode', 2000);" style="border: 1px solid #e11d64; background: #fff; color: #e11d64; padding: 7px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                                            Salin Kode
+                                        </button>
+                                    </div>
+                                <% }); %>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- =========================================================
+             6. TAB CONTENT: ALAMAT PENGIRIMAN
+             ========================================================= -->
+        <% if (tab === 'alamat') { %>
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <h2><i class="bi bi-geo-alt text-rosa"></i> Alamat Pengiriman Utama</h2>
+                        <p>Alamat tujuan untuk kurir dan pengiriman hasil pesanan percetakan Anda.</p>
+                    </div>
+                    <a href="<%= page_url('akun?tab=profil') %>" class="btn-save-profile" style="padding: 8px 16px; font-size: 12.5px;">
+                        <i class="bi bi-pencil"></i> Ubah Alamat
+                    </a>
+                </div>
+
+                <div style="border: 1.5px solid #f2dce7; background: #fffcfd; border-radius: 16px; padding: 20px;">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">ALAMAT UTAMA</span>
+                        <strong style="color: #18243a; font-size: 15px;"><%= user.name %></strong>
+                        <span style="color: #8c7e87; font-size: 13px;">(<%= user.phone %>)</span>
+                    </div>
+
+                    <p style="color: #4b4149; font-size: 14px; line-height: 1.6; margin: 8px 0 10px;">
+                        <%= user.address || 'Alamat lengkap belum diisi. Silakan lengkapi pada tab Biodata Diri.' %>
+                    </p>
+
+                    <% if (user.city) { %>
+                        <div style="font-size: 13px; color: #6d616a; margin-bottom: 6px;">
+                            <i class="bi bi-buildings text-rosa me-1"></i> Kota / Kecamatan: <b><%= user.city %></b>
+                        </div>
+                    <% } %>
+
+                    <% if (user.address_note) { %>
+                        <div style="background: #fff0f6; border-left: 3px solid #e11d64; padding: 8px 12px; border-radius: 4px; font-size: 12.5px; color: #87254e;">
+                            <i class="bi bi-info-circle-fill me-1"></i> Patokan Kurir: <%= user.address_note %>
                         </div>
                     <% } %>
                 </div>
             </div>
-        </div>
+        <% } %>
     </div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatarInput = document.getElementById('avatarInput');
+        const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        const avatarSelectedInfo = document.getElementById('avatarSelectedInfo');
+        const avatarFileName = document.getElementById('avatarFileName');
+        const btnUploadLabel = document.getElementById('btnUploadLabel');
+        const btnRemoveAvatar = document.getElementById('btnRemoveAvatar');
+        const removeAvatarInput = document.getElementById('removeAvatarInput');
+
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function() {
+                const file = this.files && this.files[0];
+                if (file) {
+                    if (file.size > 4 * 1024 * 1024) {
+                        alert('Ukuran foto terlalu besar. Maksimal ukuran foto adalah 4 MB.');
+                        this.value = '';
+                        return;
+                    }
+                    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+                    if (!validTypes.includes(file.type.toLowerCase())) {
+                        alert('Format file tidak didukung. Harap pilih gambar dengan format JPG, PNG, atau WEBP.');
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (avatarPreviewImg) {
+                            avatarPreviewImg.src = e.target.result;
+                            avatarPreviewImg.style.display = 'block';
+                        }
+                        if (avatarPlaceholder) {
+                            avatarPlaceholder.style.display = 'none';
+                        }
+                        if (avatarFileName) {
+                            avatarFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB) siap disimpan';
+                        }
+                        if (avatarSelectedInfo) {
+                            avatarSelectedInfo.style.display = 'block';
+                        }
+                        if (btnUploadLabel) {
+                            btnUploadLabel.textContent = 'Ganti Foto Lain';
+                        }
+                        if (btnRemoveAvatar) {
+                            btnRemoveAvatar.style.display = 'inline-flex';
+                        }
+                        if (removeAvatarInput) {
+                            removeAvatarInput.value = '0';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (btnRemoveAvatar) {
+            btnRemoveAvatar.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (avatarInput) avatarInput.value = '';
+                if (avatarPreviewImg) avatarPreviewImg.style.display = 'none';
+                if (avatarPlaceholder) avatarPlaceholder.style.display = 'flex';
+                if (removeAvatarInput) removeAvatarInput.value = '1';
+                if (btnUploadLabel) btnUploadLabel.textContent = 'Unggah Foto Baru';
+                btnRemoveAvatar.style.display = 'none';
+                if (avatarSelectedInfo) {
+                    avatarSelectedInfo.style.display = 'block';
+                    if (avatarFileName) {
+                        avatarFileName.textContent = 'Foto profil akan dihapus saat Anda klik Simpan';
+                    }
+                }
+            });
+        }
+    });
+</script>
 
 <%- include('partials/footer') %>

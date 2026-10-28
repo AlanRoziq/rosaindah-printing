@@ -1299,38 +1299,62 @@ textarea {
     margin-top: 5px;
   }
 
-  /* Portofolio: 2 kolom, gambar persegi, statis/tidak terasa seperti tombol */
+  /* Portofolio: 2 kolom, interaktif dan bisa diklik langsung ke detail */
   .portfolio-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
   }
 
-  .portfolio-item {
-    cursor: default;
-    border-radius: 12px;
-    pointer-events: none;
+  .portfolio-item,
+  .portfolio-card {
+    cursor: pointer !important;
+    border-radius: 14px !important;
+    pointer-events: auto !important;
+    display: block !important;
+    text-decoration: none !important;
+    height: 185px !important;
+    position: relative !important;
+    overflow: hidden !important;
   }
 
-  .portfolio-item img {
-    height: auto;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    transition: none;
+  .portfolio-item img,
+  .portfolio-card img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
   }
 
-  .portfolio-item:hover img {
-    transform: none;
+  .portfolio-overlay {
+    opacity: 1 !important;
+    padding: 10px !important;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 15%, rgba(20, 10, 16, 0.78) 55%, rgba(20, 10, 16, 0.95) 100%) !important;
+  }
+
+  .portfolio-tag {
+    font-size: 8px !important;
+    padding: 2px 6px !important;
+    margin-bottom: 3px !important;
+  }
+
+  .portfolio-overlay h5 {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+    line-height: 1.25 !important;
+  }
+
+  .portfolio-client {
+    font-size: 9.5px !important;
   }
 
   .portfolio-item .overlay {
-    opacity: 1;
-    padding: 8px;
-    background: linear-gradient(transparent, rgba(214, 74, 138, 0.9));
+    opacity: 1 !important;
+    padding: 8px !important;
+    background: linear-gradient(transparent, rgba(214, 74, 138, 0.9)) !important;
   }
 
   .portfolio-item .overlay h4 {
-    font-size: 9px;
-    margin: 0;
+    font-size: 9.5px !important;
+    margin: 0 !important;
   }
 
   /* Testimoni: 2 kolom */
@@ -1959,27 +1983,32 @@ textarea {
   }
   .portfolio-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 9px;
+    gap: 9px !important;
   }
-  .portfolio-item {
-    cursor: default;
-    border-radius: 12px;
+  .portfolio-item,
+  .portfolio-card {
+    cursor: pointer !important;
+    border-radius: 12px !important;
+    pointer-events: auto !important;
+    display: block !important;
+    text-decoration: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+    height: 175px !important;
   }
-  .portfolio-item img {
-    height: auto !important;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-  }
-  .portfolio-item:hover img {
-    transform: none;
+  .portfolio-item img,
+  .portfolio-card img {
+    height: 100% !important;
+    width: 100% !important;
+    object-fit: cover !important;
   }
   .portfolio-item .overlay {
-    opacity: 1;
-    padding: 7px;
+    opacity: 1 !important;
+    padding: 7px !important;
   }
   .portfolio-item .overlay h4 {
-    font-size: 8px;
-    margin: 0;
+    font-size: 8px !important;
+    margin: 0 !important;
   }
   .testimonial-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -2860,9 +2889,9 @@ textarea {
     z-index: 3;
   }
 
-  /* Tetap rapat seperti desain lama, tetapi tidak sampai menimpa CTA. */
+  /* Margin rapi dan konsisten */
   .product-category .category-row {
-    margin-top: -24px;
+    margin-top: 0 !important;
   }
 }
 
@@ -2993,7 +3022,7 @@ textarea {
 
   .product-category .section-title > div {
     min-width: 0 !important;
-    margin-left: 20px;
+    margin-left: 0 !important;
   }
 
   .product-category .lihat-semua {
@@ -5069,9 +5098,18 @@ textarea {
   .feature small {
     font-size: 9.5px !important;
   }
+  .hero-right {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
   .hero-right img {
-    max-width: 230px !important;
-    max-height: 180px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    object-fit: contain !important;
   }
 
   /* 2. PRODUK DI MOBILE: TEKS LEBIH KECIL & RAPI (2 KOLOM, TIDAK MEMANJANG) */
@@ -5229,3 +5267,264 @@ textarea {
     background-color: #d64a8a !important;
   }
 }
+
+/* =========================================================
+   BOTTOM TAB NAVIGATION VISIBILITY:
+   HANYA TAMPIL PADA RESPONSIVE MOBILE (< 768px)
+   DESKTOP / TABLET (>= 768px) JANGAN DITAMPILKAN
+========================================================= */
+@media (min-width: 768px) {
+  .mobile-bottom-nav {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+  }
+  body {
+    padding-bottom: 0 !important;
+  }
+}
+
+/* =========================================================
+   MOBILE KERANJANG, CHECKOUT & LACAK PESANAN (RAPI & PROPORSIONAL)
+   Hanya berlaku di mobile (< 768px), desktop tetap utuh
+   ========================================================= */
+@media (max-width: 767.98px) {
+  .cart-page,
+  .checkout-page,
+  .tracking-page {
+    padding-top: 14px !important;
+    padding-bottom: 85px !important;
+  }
+
+  .cart-page-title,
+  .checkout-page-title,
+  .tracking-page-title {
+    font-size: 18px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .cart-page-subtitle,
+  .checkout-page-subtitle,
+  .tracking-page-subtitle {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .cart-header,
+  .checkout-header,
+  .tracking-header {
+    margin-bottom: 14px !important;
+  }
+
+  .cart-items-wrapper,
+  .cart-summary-card,
+  .checkout-card,
+  .checkout-summary-card,
+  .tracking-result-card,
+  .tracking-search-card {
+    padding: 14px !important;
+    border-radius: 14px !important;
+    border-color: #f2dce7 !important;
+  }
+
+  .cart-mobile-thumb {
+    width: 62px !important;
+    height: 62px !important;
+    border-radius: 10px !important;
+  }
+
+  .cart-mobile-title {
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+  }
+
+  .cart-mobile-cat {
+    font-size: 10.5px !important;
+  }
+
+  .cart-mobile-price {
+    font-size: 11.5px !important;
+  }
+
+  .cart-stepper-mobile .btn-step-minus,
+  .cart-stepper-mobile .btn-step-plus {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 14px !important;
+  }
+
+  .cart-stepper-mobile .qty-input {
+    width: 36px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+  }
+
+  .cart-mobile-subtotal-val {
+    font-size: 13.5px !important;
+  }
+
+  .cart-summary-title,
+  .checkout-card-title {
+    font-size: 14px !important;
+  }
+
+  .cart-total-price,
+  .checkout-total-val {
+    font-size: 17px !important;
+  }
+
+  .btn-checkout,
+  .btn-submit-checkout {
+    font-size: 13px !important;
+    padding: 10px 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .checkout-card-header {
+    margin-bottom: 12px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .checkout-icon-badge {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 13px !important;
+  }
+
+  .checkout-label {
+    font-size: 11.5px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .checkout-input {
+    font-size: 12.5px !important;
+    padding: 8px 11px !important;
+    border-radius: 9px !important;
+  }
+
+  .checkout-hint {
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+  }
+
+  .payment-card-option {
+    padding: 10px 11px !important;
+    border-radius: 11px !important;
+  }
+
+  .payment-title {
+    font-size: 12px !important;
+  }
+
+  .payment-chip {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+  }
+
+  .payment-desc {
+    font-size: 10px !important;
+  }
+
+  .checkout-item-name {
+    font-size: 12px !important;
+  }
+
+  .checkout-item-qty {
+    font-size: 10px !important;
+  }
+
+  .checkout-item-subtotal {
+    font-size: 12px !important;
+  }
+
+  .btn-voucher-chip {
+    font-size: 9.5px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Tracking Progress on Mobile */
+  .tracking-order-code {
+    font-size: 16px !important;
+  }
+
+  .tracking-status-badge {
+    font-size: 10.5px !important;
+    padding: 3px 8px !important;
+  }
+
+  .tracking-pay-badge {
+    font-size: 10px !important;
+  }
+
+  .tracking-step-circle {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+  }
+
+  .tracking-step-label {
+    font-size: 8.5px !important;
+    line-height: 1.15 !important;
+  }
+
+  .tracking-box-title {
+    font-size: 13px !important;
+  }
+
+  .tracking-item-name {
+    font-size: 12px !important;
+  }
+
+  .tracking-item-subtotal {
+    font-size: 12px !important;
+  }
+
+  .tracking-total-price {
+    font-size: 15px !important;
+  }
+
+  .bank-acc-no {
+    font-size: 14px !important;
+  }
+
+  .order-code-pill {
+    font-size: 12.5px !important;
+    padding: 3px 8px !important;
+  }
+
+  /* Profile Avatar Upload on Mobile */
+  .avatar-upload-card {
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .avatar-preview-wrap {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  .avatar-preview-placeholder {
+    font-size: 24px !important;
+  }
+
+  .btn-upload-avatar {
+    font-size: 12px !important;
+    padding: 7px 13px !important;
+    border-radius: 9px !important;
+  }
+
+  .btn-remove-avatar {
+    font-size: 11.5px !important;
+    padding: 7px 11px !important;
+    border-radius: 9px !important;
+  }
+}
+
+

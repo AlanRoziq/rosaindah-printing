@@ -1,0 +1,236 @@
+<%- include('_header', { title: 'Poin & Reward' }) %>
+
+<div class="admin-title">
+    <div>
+        <h1>Poin Member & Reward</h1>
+        <p>Kelola aturan loyalitas member, reward voucher tukar poin, dan penyesuaian saldo poin.</p>
+    </div>
+</div>
+
+<% if (notice) { %>
+    <div class="admin-alert">
+        <i class="bi bi-check-circle-fill"></i>
+        <span><%= notice %></span>
+    </div>
+<% } %>
+
+<% if (error) { %>
+    <div class="admin-alert error">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span><%= error %></span>
+    </div>
+<% } %>
+
+<div class="admin-grid-2">
+    <!-- Aturan Poin -->
+    <div class="admin-card">
+        <div style="margin-bottom: 16px;">
+            <h2 style="margin: 0; color: #18243a; font-size: 18px; font-weight: 800;">⚙️ Aturan Perolehan Poin</h2>
+            <p style="margin: 4px 0 0; color: #7d747c; font-size: 13px;">
+                Poin dihitung dan diberikan otomatis ketika pesanan diselesaikan.
+            </p>
+        </div>
+        <form action="<%= page_url('admin/loyalty') %>" method="POST" class="admin-form">
+            <input type="hidden" name="action" value="settings">
+            <div class="admin-field">
+                <label>Setiap Belanja Berapa Rupiah = 1 Poin?</label>
+                <input type="number" name="points_per_amount" min="1" value="<%= settings.points_per_amount %>" required>
+            </div>
+            <div class="admin-field">
+                <label>Minimum Belanja Per Pesanan (Rp)</label>
+                <input type="number" name="points_per_order_min" min="0" value="<%= settings.points_per_order_min %>">
+            </div>
+            <button type="submit" class="admin-btn">
+                <i class="bi bi-save"></i> Simpan Aturan Poin
+            </button>
+        </form>
+    </div>
+
+    <!-- Penyesuaian Poin Member -->
+    <div class="admin-card">
+        <div style="margin-bottom: 16px;">
+            <h2 style="margin: 0; color: #18243a; font-size: 18px; font-weight: 800;">➕ Penyesuaian Poin Member</h2>
+            <p style="margin: 4px 0 0; color: #7d747c; font-size: 13px;">
+                Beri bonus poin atau lakukan koreksi saldo poin pelanggan.
+            </p>
+        </div>
+        <form action="<%= page_url('admin/loyalty') %>" method="POST" class="admin-form">
+            <input type="hidden" name="action" value="adjust">
+            <div class="admin-field">
+                <label>Pilih Member *</label>
+                <select name="customer_id" required>
+                    <option value="">-- Pilih Member --</option>
+                    <% members.forEach(function(m) { %>
+                        <option value="<%= m.id %>"><%= m.name %> (<%= m.phone %>) — <%= m.points || 0 %> Poin</option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="admin-grid-2">
+                <div class="admin-field">
+                    <label>Jumlah Poin (+ / -) *</label>
+                    <input type="number" name="points" required placeholder="Contoh: 50 atau -20">
+                </div>
+                <div class="admin-field">
+                    <label>Keterangan Alasan</label>
+                    <input type="text" name="description" placeholder="Contoh: Bonus member setia">
+                </div>
+            </div>
+            <button type="submit" class="admin-btn">
+                <i class="bi bi-check2-circle"></i> Simpan Penyesuaian
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Reward Form -->
+<div class="admin-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h2 style="margin: 0; color: #18243a; font-size: 18px; font-weight: 800;">
+                🎁 <%= edit ? 'Edit Reward Loyalitas' : 'Buat Reward Voucher Baru' %>
+            </h2>
+            <p style="margin: 4px 0 0; color: #7d747c; font-size: 13px;">Katalog reward yang bisa ditukarkan member menggunakan poin yang telah dikumpulkan.</p>
+        </div>
+        <% if (edit) { %>
+            <a href="<%= page_url('admin/loyalty') %>" class="admin-btn secondary">Batal Edit</a>
+        <% } %>
+    </div>
+    <form action="<%= page_url('admin/loyalty') %>" method="POST" class="admin-form">
+        <input type="hidden" name="action" value="reward">
+        <input type="hidden" name="id" value="<%= edit ? edit.id : 0 %>">
+
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Nama Reward *</label>
+                <input type="text" name="name" required placeholder="Contoh: Voucher Diskon Rp10.000" value="<%= edit ? edit.name : '' %>">
+            </div>
+            <div class="admin-field">
+                <label>Biaya Poin Penukaran *</label>
+                <input type="number" name="points_cost" min="1" required placeholder="100" value="<%= edit ? edit.points_cost : 100 %>">
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Jenis Diskon</label>
+                <select name="discount_type">
+                    <option value="fixed" <%= edit && edit.discount_type === 'fixed' ? 'selected' : '' %>>Nominal Rupiah (Rp)</option>
+                    <option value="percent" <%= edit && edit.discount_type === 'percent' ? 'selected' : '' %>>Persentase (%)</option>
+                </select>
+            </div>
+            <div class="admin-field">
+                <label>Nilai Potongan *</label>
+                <input type="number" name="discount_value" min="1" required placeholder="10000" value="<%= edit ? edit.discount_value : 10000 %>">
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="admin-field">
+                <label>Minimal Belanja</label>
+                <input type="number" name="min_order" min="0" value="<%= edit ? edit.min_order : 0 %>">
+            </div>
+            <div class="admin-field">
+                <label>Masa Berlaku Voucher (Hari)</label>
+                <input type="number" name="validity_days" min="1" value="<%= edit ? edit.validity_days : 30 %>">
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="admin-btn">
+                <i class="bi bi-save"></i> <%= edit ? 'Simpan Perubahan Reward' : 'Buat Reward' %>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Reward List Table -->
+<div class="admin-card" style="padding: 0; overflow: hidden; margin-bottom: 22px;">
+    <div style="padding: 16px 22px; border-bottom: 1px solid #f2dce7; background: #fffcfd;">
+        <h2 style="margin: 0; color: #18243a; font-size: 17px; font-weight: 800;">Daftar Pilihan Reward</h2>
+    </div>
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="admin-table" style="min-width: 820px;">
+            <thead>
+                <tr>
+                    <th>Nama Reward</th>
+                    <th>Biaya Poin</th>
+                    <th>Nilai Diskon</th>
+                    <th>Ditukar</th>
+                    <th>Status</th>
+                    <th style="width: 130px; text-align: center;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (rewards.length === 0) { %>
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #9c919a; padding: 30px;">Belum ada reward aktif.</td>
+                    </tr>
+                <% } else { %>
+                    <% rewards.forEach(function(r) { %>
+                        <tr>
+                            <td>
+                                <strong style="color: #18243a;"><%= r.name %></strong>
+                                <small style="display: block; color: #887e87; font-size: 11px;">Masa berlaku <%= r.validity_days %> hari</small>
+                            </td>
+                            <td>
+                                <span style="font-weight: 800; color: #e11d64;"><%= r.points_cost %> Poin</span>
+                            </td>
+                            <td>
+                                <%= r.discount_type === 'fixed' ? format_rupiah(r.discount_value) : r.discount_value + '%' %>
+                            </td>
+                            <td><%= r.redeemed_count %> kali</td>
+                            <td>
+                                <span class="status-pill <%= r.status === 'active' ? 'status-pill-completed' : 'status-pill-cancelled' %>">
+                                    <%= r.status %>
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 6px; justify-content: center;">
+                                    <a href="<%= page_url('admin/loyalty?edit=' + r.id) %>" class="admin-btn secondary" style="padding: 5px 9px; font-size: 11.5px; border-radius: 8px;">Edit</a>
+                                    <form action="<%= page_url('admin/loyalty') %>" method="POST" onsubmit="return confirm('Hapus reward ini?');" style="margin: 0;">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="id" value="<%= r.id %>">
+                                        <button type="submit" class="admin-btn danger" style="padding: 5px 9px; font-size: 11.5px; border-radius: 8px;">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Member Points Table -->
+<div class="admin-card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 16px 22px; border-bottom: 1px solid #f2dce7; background: #fffcfd;">
+        <h2 style="margin: 0; color: #18243a; font-size: 17px; font-weight: 800;">Saldo Poin Seluruh Member</h2>
+    </div>
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table class="admin-table" style="min-width: 600px;">
+            <thead>
+                <tr>
+                    <th>Nama Member</th>
+                    <th>Nomor WhatsApp</th>
+                    <th style="text-align: right;">Saldo Poin</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% members.forEach(function(m) { %>
+                    <tr>
+                        <td><strong style="color: #18243a;"><%= m.name %></strong></td>
+                        <td style="color: #665f67;"><%= m.phone %></td>
+                        <td style="text-align: right;">
+                            <strong style="color: #e11d64; font-size: 14px; font-variant-numeric: tabular-nums;">
+                                <%= m.points || 0 %> Poin
+                            </strong>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%- include('_footer') %>

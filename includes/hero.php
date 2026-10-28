@@ -22,7 +22,7 @@
                     <i class="bi bi-sparkles me-1"></i> Pesan Sekarang
                 </a>
                 <a href="<?php echo page_url('produk.php'); ?>" class="btn-outline">
-                    <i class="bi bi-calculator me-1"></i> Simulasi Harga
+                    <i class="bi bi-grid me-1"></i> Lihat Produk
                 </a>
             </div>
 
@@ -52,7 +52,7 @@
         <div class="hero-right" data-aos="fade-left">
             <div class="hero-mockup-frame">
                 <img src="<?php echo asset_url('images/hero/mockup-printing.png'); ?>" alt="Rosa Indah Printing Hero Mockup">
-                <div class="hero-floating-badge badge-top-left d-none d-sm-flex">
+                <div class="hero-floating-badge badge-top-left">
                     <div class="floating-badge-icon">
                         <i class="bi bi-palette-fill"></i>
                     </div>
@@ -61,7 +61,7 @@
                         <small>Kalibrasi Mesin Digital</small>
                     </div>
                 </div>
-                <div class="hero-floating-badge badge-bottom-right d-none d-sm-flex">
+                <div class="hero-floating-badge badge-bottom-right">
                     <div class="floating-badge-icon badge-green">
                         <i class="bi bi-shield-check"></i>
                     </div>

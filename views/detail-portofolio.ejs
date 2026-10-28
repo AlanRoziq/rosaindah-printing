@@ -1,57 +1,117 @@
-<%- include('partials/header', { title: item ? item.product_name : 'Detail Portofolio' }) %>
+<%- include('partials/header', { title: item ? (item.product_name + ' - Detail Portofolio') : 'Detail Portofolio' }) %>
 
 <header class="main-header">
     <%- include('partials/topbar') %>
     <%- include('partials/navbar') %>
 </header>
 
-<main class="py-5">
+<main class="py-4 py-md-5 bg-light-subtle">
     <div class="container">
         <!-- Breadcrumb -->
         <div class="catalog-breadcrumb mb-4">
-            <a href="<%= page_url('') %>">Home</a>
+            <a href="<%= page_url('') %>"><i class="bi bi-house-door me-1"></i> Home</a>
             <i class="bi bi-chevron-right"></i>
             <a href="<%= page_url('portfolio') %>">Portofolio</a>
             <i class="bi bi-chevron-right"></i>
-            <span><%= item.product_name %></span>
+            <span class="text-truncate" style="max-width: 260px;"><%= item ? item.product_name : 'Detail Portofolio' %></span>
         </div>
 
-        <div class="card p-4 p-md-5 rounded-4 shadow-sm border-0">
-            <div class="row g-4 align-items-center">
-                <div class="col-md-6 text-center">
-                    <img src="<%= product_image_url(item.image) %>" alt="<%= item.product_name %>" class="img-fluid rounded-4 shadow-sm" style="max-height: 450px; object-fit: contain;">
-                </div>
-                <div class="col-md-6">
-                    <span class="badge bg-primary mb-2 px-3 py-2">Hasil Produksi Nyata</span>
-                    <h1 class="h2 fw-bold text-dark mb-3"><%= item.product_name %></h1>
-                    <p class="text-muted mb-4">
-                        Dokumentasi cetak asli pesanan pelanggan kami dengan standar kualitas tinggi, warna cerah, dan pemotongan rapi.
-                    </p>
-
-                    <div class="bg-light p-3 rounded-3 mb-4">
-                        <div class="d-flex justify-content-between py-1 border-bottom">
-                            <span class="text-muted">Pelanggan / Klien:</span>
-                            <span class="fw-bold"><%= item.customer_name %></span>
-                        </div>
-                        <div class="d-flex justify-content-between py-1 border-bottom">
-                            <span class="text-muted">Jumlah Cetak:</span>
-                            <span class="fw-bold"><%= item.quantity || 1 %> item</span>
-                        </div>
-                        <div class="d-flex justify-content-between py-1">
-                            <span class="text-muted">Nilai Pesanan:</span>
-                            <span class="fw-bold text-danger"><%= format_rupiah(item.price) %></span>
+        <% if (item) { %>
+            <div class="card p-3 p-md-5 rounded-4 shadow-sm border-0 mb-5 bg-white">
+                <div class="row g-4 align-items-center">
+                    <!-- Image Preview -->
+                    <div class="col-lg-6">
+                        <div class="portfolio-detail-img-box text-center p-3 rounded-4 position-relative" style="background: linear-gradient(135deg, #fff5f8 0%, #fff 100%); border: 1.5px solid #fedfe9;">
+                            <span class="badge position-absolute top-0 start-0 m-3 px-3 py-2 rounded-pill shadow-sm" style="background: #e11d64; font-size: 11.5px;">
+                                <i class="bi bi-camera-fill me-1"></i> 100% Foto Hasil Asli
+                            </span>
+                            <span class="badge position-absolute top-0 end-0 m-3 px-2 py-1 rounded-pill bg-success-subtle text-success fw-semibold" style="font-size: 11px;">
+                                <i class="bi bi-patch-check-fill me-1"></i> Order Selesai
+                            </span>
+                            <img src="<%= product_image_url(item.image) %>" alt="<%= item.product_name %>" class="img-fluid rounded-3" style="max-height: 440px; width: 100%; object-fit: contain;">
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <a href="<%= page_url('produk') %>" class="btn btn-primary btn-lg">Pesan Produk Serupa</a>
-                        <a href="https://wa.me/<%= whatsapp_number %>?text=Halo%20Rosa%20Indah%20Printing,%20saya%20tertarik%20dengan%20hasil%20cetak%20<%= encodeURIComponent(item.product_name) %>" target="_blank" rel="noopener" class="btn btn-success btn-lg">
-                            <i class="bi bi-whatsapp"></i> Tanya Desain Ini
-                        </a>
+                    <!-- Details Content -->
+                    <div class="col-lg-6">
+                        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: #ffe4ed; color: #be124f; font-size: 11.5px; font-weight: 700;">
+                            <i class="bi bi-award-fill"></i> Dokumentasi Percetakan
+                        </div>
+                        <h1 class="h2 fw-bold text-dark mb-2"><%= item.product_name %></h1>
+                        <p class="text-muted mb-4" style="font-size: 13.5px; line-height: 1.6;">
+                            Dokumentasi riil pesanan cetak pelanggan yang diproduksi di workshop <strong>Rosa Indah Printing</strong>. Dicetak menggunakan mesin beresolusi tinggi dengan kalibrasi warna akurat dan finishing rapi siap pakai.
+                        </p>
+
+                        <!-- Specification Table / Info Grid -->
+                        <div class="p-3 rounded-3 mb-4" style="background: #faf8f9; border: 1px solid #f3e2ea;">
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-secondary" style="font-size: 13px;"><i class="bi bi-person-fill text-rosa me-1"></i> Pemesan / Klien</span>
+                                <span class="fw-bold text-dark" style="font-size: 13px;"><%= item.customer_name %></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-secondary" style="font-size: 13px;"><i class="bi bi-box-seam text-rosa me-1"></i> Jumlah Cetak</span>
+                                <span class="fw-bold text-dark" style="font-size: 13px;"><%= item.quantity || 1 %> pcs / paket</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-secondary" style="font-size: 13px;"><i class="bi bi-tag-fill text-rosa me-1"></i> Nilai Transaksi</span>
+                                <span class="fw-bold" style="color: #e11d64; font-size: 14px;"><%= format_rupiah(item.price) %></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2 border-bottom">
+                                <span class="text-secondary" style="font-size: 13px;"><i class="bi bi-shield-check text-success me-1"></i> Standar Kualitas</span>
+                                <span class="badge bg-success-subtle text-success px-2 py-1" style="font-size: 11px;">Warna Akurat & QC Passed</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-2">
+                                <span class="text-secondary" style="font-size: 13px;"><i class="bi bi-clock-history text-rosa me-1"></i> Waktu Pengerjaan</span>
+                                <span class="fw-semibold text-dark" style="font-size: 13px;">Proses Cepat (1-2 Hari)</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <a href="https://wa.me/<%= whatsapp_number %>?text=Halo%20Rosa%20Indah%20Printing,%20saya%20melihat%20hasil%20cetak%20*<%= encodeURIComponent(item.product_name) %>*%20di%20website%20dan%20ingin%20konsultasi%20pesan%20seperti%20ini." target="_blank" rel="noopener" class="btn btn-success px-4 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-whatsapp fs-5"></i> Konsultasi Cetak Ini via WhatsApp
+                            </a>
+                            <a href="<%= page_url('produk') %>" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-cart-plus"></i> Pesan Produk Serupa
+                            </a>
+                        </div>
+                        <div>
+                            <a href="<%= page_url('portfolio') %>" class="text-decoration-none text-muted fw-semibold small d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-arrow-left"></i> Kembali ke Galeri Portofolio
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        <% } %>
+
+        <!-- Hasil Cetak & Portofolio Lainnya -->
+        <% if (typeof otherPortfolios !== 'undefined' && otherPortfolios && otherPortfolios.length > 0) { %>
+            <div class="mt-5">
+                <div class="section-title d-flex justify-content-between align-items-end mb-4">
+                    <div>
+                        <span class="small-title">KARYA TERBARU</span>
+                        <h2 class="h3 fw-bold mb-0">Hasil Cetak Lainnya</h2>
+                    </div>
+                    <a href="<%= page_url('portfolio') %>" class="lihat-semua text-decoration-none fw-bold" style="color: #e11d64;">
+                        Lihat Semua Portofolio &rarr;
+                    </a>
+                </div>
+
+                <div class="portfolio-grid">
+                    <% otherPortfolios.forEach(function(p) { %>
+                        <a href="<%= page_url('detail-portofolio?id=' + p.id) %>" class="portfolio-card" data-aos="fade-up" title="<%= p.product_name %>">
+                            <img src="<%= product_image_url(p.image) %>" alt="<%= p.product_name %>" loading="lazy">
+                            <div class="portfolio-overlay">
+                                <span class="portfolio-tag"><i class="bi bi-patch-check-fill me-1"></i> Order Selesai</span>
+                                <h5><%= p.product_name %></h5>
+                                <span class="portfolio-client"><i class="bi bi-person-fill me-1"></i> <%= p.customer_name %></span>
+                            </div>
+                        </a>
+                    <% }); %>
+                </div>
+            </div>
+        <% } %>
     </div>
 </main>
 

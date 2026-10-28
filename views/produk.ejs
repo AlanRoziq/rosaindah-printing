@@ -18,40 +18,130 @@
             <% } %>
         </div>
 
-        <!-- Header Filter / Search -->
-        <div class="catalog-header">
-            <div>
-                <h1>Katalog Produk Cetak</h1>
-                <p>Pilihan produk percetakan berkualitas tinggi dengan harga transparan.</p>
-            </div>
-
-            <!-- Search Form -->
-            <form action="<%= page_url('produk') %>" method="GET" class="catalog-search-form">
-                <% if (selectedCategory) { %>
-                    <input type="hidden" name="kategori" value="<%= selectedCategory %>">
-                <% } %>
-                <div class="input-group">
-                    <input type="text" name="q" class="form-control" placeholder="Cari nama produk, spanduk, mug..." value="<%= searchQuery || '' %>">
-                    <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Cari</button>
-                    <% if (searchQuery || selectedCategory) { %>
-                        <a href="<%= page_url('produk') %>" class="btn btn-outline-secondary" title="Reset filter">Reset</a>
-                    <% } %>
+        <!-- Header & Search (Marketplace Style) -->
+        <div class="marketplace-catalog-header mb-3">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-6 col-12">
+                    <h1 class="marketplace-catalog-title mb-1">Katalog Produk Cetak</h1>
+                    <p class="marketplace-catalog-subtitle mb-0">Solusi cetak cepat beresolusi tinggi dengan harga transparan langsung dari percetakan.</p>
                 </div>
-            </form>
+
+                <div class="col-lg-6 col-12">
+                    <!-- Marketplace Search Bar -->
+                    <form action="<%= page_url('produk') %>" method="GET" class="marketplace-search-form">
+                        <% if (selectedCategory) { %>
+                            <input type="hidden" name="kategori" value="<%= selectedCategory %>">
+                        <% } %>
+                        <% if (currentSort && currentSort !== 'rekomendasi') { %>
+                            <input type="hidden" name="sort" value="<%= currentSort %>">
+                        <% } %>
+                        <div class="marketplace-search-box">
+                            <i class="bi bi-search marketplace-search-icon"></i>
+                            <input type="text" name="q" class="marketplace-search-input" placeholder="Cari nama produk, spanduk, mug..." value="<%= searchQuery || '' %>">
+                            <% if (searchQuery) { %>
+                                <a href="<%= page_url('produk' + (selectedCategory ? '?kategori=' + encodeURIComponent(selectedCategory) : '') + (currentSort && currentSort !== 'rekomendasi' ? (selectedCategory ? '&' : '?') + 'sort=' + encodeURIComponent(currentSort) : '')) %>" class="marketplace-clear-btn" title="Hapus pencarian">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </a>
+                            <% } %>
+                            <button class="marketplace-search-btn" type="submit">Cari</button>
+                        </div>
+                    </form>
+
+                    <!-- Tombol Filter di Bawah Tombol Cari Produk -->
+                    <%
+                        const sortLabels = {
+                            'rekomendasi': 'Rekomendasi / Best Seller',
+                            'terlaris': 'Terlaris',
+                            'terbaru': 'Produk Terbaru → Terlama',
+                            'terlama': 'Terlama → Terbaru',
+                            'harga_termurah': 'Harga Termurah → Termahal',
+                            'harga_termahal': 'Termahal → Termurah'
+                        };
+                        const activeSortText = sortLabels[currentSort] || 'Rekomendasi / Best Seller';
+                    %>
+                    <div class="marketplace-search-subbar d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
+                        <div class="filter-count-label text-muted small">
+                            <i class="bi bi-box-seam text-rosa me-1"></i>
+                            <span>Menampilkan <strong><%= products.length %></strong> Produk</span>
+                        </div>
+                        <button type="button" class="btn-filter-popup" id="openFilterModalBtn">
+                            <i class="bi bi-sliders2-vertical"></i>
+                            <span class="btn-filter-text">Filter: <strong><%= activeSortText %></strong></span>
+                            <i class="bi bi-chevron-down ms-1 icon-chevron"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Filter Categories Tabs -->
-        <div class="category-filter-bar mb-4">
-            <a href="<%= page_url('produk' + (searchQuery ? '?q=' + encodeURIComponent(searchQuery) : '')) %>" 
-               class="btn <%= !selectedCategory ? 'btn-primary' : 'btn-outline-secondary' %> btn-sm me-2 mb-2 rounded-pill">
-                Semua Kategori (<%= totalCount %>)
-            </a>
-            <% categories.forEach(function(cat) { %>
-                <a href="<%= page_url('produk?kategori=' + encodeURIComponent(cat) + (searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '')) %>" 
-                   class="btn <%= selectedCategory === cat ? 'btn-primary' : 'btn-outline-secondary' %> btn-sm me-2 mb-2 rounded-pill">
-                    <%= cat %>
+        <!-- Marketplace Category Scroll Strip (Shopee / Tokopedia Style) -->
+        <%
+            const catIcons = {
+                'Undangan Nikah': 'bi-envelope-heart',
+                'Print Scan Copy': 'bi-printer',
+                'MUG': 'bi-cup-hot',
+                'Banner': 'bi-flag',
+                'Cetak Buku': 'bi-book',
+                'Lanyard & Id Card': 'bi-person-badge',
+                'Spanduk': 'bi-badge-ad',
+                'Kartu Nama': 'bi-person-vcard',
+                'Sticker': 'bi-tag',
+                'Undangan Lipat 3': 'bi-envelope-paper',
+                'Nota / Buku Tabungan': 'bi-receipt',
+                'Kalender': 'bi-calendar3',
+                'Sablon DTF': 'bi-palette',
+                'Cetak Foto': 'bi-image',
+                'Cetak Pigora': 'bi-aspect-ratio',
+                'Gantungan Kunci': 'bi-key'
+            };
+            const sortParam = (currentSort && currentSort !== 'rekomendasi') ? '&sort=' + encodeURIComponent(currentSort) : '';
+            const sortParamAlone = (currentSort && currentSort !== 'rekomendasi') ? '?sort=' + encodeURIComponent(currentSort) : '';
+        %>
+        <div class="marketplace-filter-wrapper mb-4">
+            <button type="button" class="category-scroll-btn prev" id="catScrollPrev" aria-label="Geser Kategori Kiri">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <div class="marketplace-category-strip" id="catStrip" role="tablist" aria-label="Kategori Produk">
+                <a href="<%= page_url('produk' + (searchQuery ? '?q=' + encodeURIComponent(searchQuery) + sortParam : sortParamAlone)) %>" 
+                   class="market-chip <%= !selectedCategory ? 'active' : '' %>">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>Semua Kategori</span>
+                    <span class="chip-count"><%= totalCount %></span>
                 </a>
-            <% }); %>
+                <% categories.forEach(function(cat) { 
+                    const iconClass = catIcons[cat] || 'bi-box-seam';
+                %>
+                    <a href="<%= page_url('produk?kategori=' + encodeURIComponent(cat) + (searchQuery ? '&q=' + encodeURIComponent(searchQuery) : '') + sortParam) %>" 
+                       class="market-chip <%= selectedCategory === cat ? 'active' : '' %>">
+                        <i class="bi <%= iconClass %>"></i>
+                        <span><%= cat %></span>
+                    </a>
+                <% }); %>
+            </div>
+            <button type="button" class="category-scroll-btn next" id="catScrollNext" aria-label="Geser Kategori Kanan">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+
+            <% if (selectedCategory || searchQuery || (currentSort && currentSort !== 'rekomendasi')) { %>
+                <div class="marketplace-active-filter-bar mt-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="active-filter-text">
+                        <span class="text-secondary small">Filter aktif:</span>
+                        <% if (selectedCategory) { %>
+                            <span class="active-tag"><i class="bi bi-tag-fill me-1"></i><%= selectedCategory %></span>
+                        <% } %>
+                        <% if (searchQuery) { %>
+                            <span class="active-tag"><i class="bi bi-search me-1"></i>"<%= searchQuery %>"</span>
+                        <% } %>
+                        <% if (currentSort && currentSort !== 'rekomendasi') { %>
+                            <span class="active-tag"><i class="bi bi-sliders2-vertical me-1"></i><%= activeSortText %></span>
+                        <% } %>
+                        <span class="text-muted small ms-1">(<%= products.length %> produk ditemukan)</span>
+                    </div>
+                    <a href="<%= page_url('produk') %>" class="btn-reset-filter">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset Semua
+                    </a>
+                </div>
+            <% } %>
         </div>
 
         <!-- Products Grid -->
@@ -90,5 +180,305 @@
         <% } %>
     </div>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const strip = document.getElementById('catStrip');
+    const prevBtn = document.getElementById('catScrollPrev');
+    const nextBtn = document.getElementById('catScrollNext');
+    if (!strip) return;
+
+    function updateScrollArrows() {
+        if (!prevBtn || !nextBtn) return;
+        const maxScroll = strip.scrollWidth - strip.clientWidth;
+        if (maxScroll <= 5) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            return;
+        }
+        prevBtn.style.display = strip.scrollLeft > 10 ? 'flex' : 'none';
+        nextBtn.style.display = strip.scrollLeft < (maxScroll - 10) ? 'flex' : 'none';
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            strip.scrollBy({ left: -220, behavior: 'smooth' });
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            strip.scrollBy({ left: 220, behavior: 'smooth' });
+        });
+    }
+
+    // Wheel event to horizontal scroll
+    strip.addEventListener('wheel', function(e) {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            e.preventDefault();
+            strip.scrollLeft += e.deltaY;
+            updateScrollArrows();
+        }
+    }, { passive: false });
+
+    // Drag-to-scroll for mouse
+    let isDown = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+    let hasDragged = false;
+
+    strip.addEventListener('mousedown', function(e) {
+        isDown = true;
+        hasDragged = false;
+        strip.classList.add('is-dragging');
+        startX = e.pageX - strip.offsetLeft;
+        startScrollLeft = strip.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (isDown) {
+            isDown = false;
+            strip.classList.remove('is-dragging');
+        }
+    });
+
+    strip.addEventListener('mousemove', function(e) {
+        if (!isDown) return;
+        const x = e.pageX - strip.offsetLeft;
+        const walk = (x - startX) * 1.4;
+        if (Math.abs(walk) > 4) {
+            hasDragged = true;
+        }
+        strip.scrollLeft = startScrollLeft - walk;
+        updateScrollArrows();
+    });
+
+    // Prevent navigation if it was a drag
+    strip.querySelectorAll('.market-chip').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            if (hasDragged) {
+                e.preventDefault();
+                hasDragged = false;
+            }
+        });
+    });
+
+    // Auto center active chip
+    const activeChip = strip.querySelector('.market-chip.active');
+    if (activeChip) {
+        setTimeout(function() {
+            const stripWidth = strip.clientWidth;
+            const chipLeft = activeChip.offsetLeft;
+            const chipWidth = activeChip.clientWidth;
+            strip.scrollTo({
+                left: chipLeft - (stripWidth / 2) + (chipWidth / 2),
+                behavior: 'smooth'
+            });
+            updateScrollArrows();
+        }, 120);
+    }
+
+    strip.addEventListener('scroll', updateScrollArrows, { passive: true });
+    window.addEventListener('resize', updateScrollArrows, { passive: true });
+    updateScrollArrows();
+    // Filter Popup Modal Logic
+    const openModalBtn = document.getElementById('openFilterModalBtn');
+    const modalOverlay = document.getElementById('filterModalOverlay');
+    const closeModalBtn = document.getElementById('closeFilterModalBtn');
+    const modalBackdrop = document.getElementById('filterModalBackdrop');
+    const applyFilterBtn = document.getElementById('applyFilterSortBtn');
+    const resetFilterBtn = document.getElementById('resetFilterSortBtn');
+    const optionCards = document.querySelectorAll('.filter-option-card');
+
+    function openFilterModal() {
+        if (!modalOverlay) return;
+        modalOverlay.classList.add('active');
+        modalOverlay.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeFilterModal() {
+        if (!modalOverlay) return;
+        modalOverlay.classList.remove('active');
+        modalOverlay.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+    }
+
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openFilterModal();
+        });
+    }
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeFilterModal();
+        });
+    }
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeFilterModal();
+        });
+    }
+
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modalOverlay && (modalOverlay.classList.contains('active') || modalOverlay.style.display !== 'none')) {
+            closeFilterModal();
+        }
+    });
+
+    // Option cards selection
+    optionCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            optionCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+        });
+    });
+
+    function navigateWithSort(newSort) {
+        const url = new URL(window.location.href);
+        if (newSort && newSort !== 'rekomendasi') {
+            url.searchParams.set('sort', newSort);
+        } else {
+            url.searchParams.delete('sort');
+        }
+        window.location.href = url.toString();
+    }
+
+    if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selectedRadio = document.querySelector('input[name="sort_option"]:checked');
+            const sortVal = selectedRadio ? selectedRadio.value : 'rekomendasi';
+            closeFilterModal();
+            navigateWithSort(sortVal);
+        });
+    }
+
+    if (resetFilterBtn) {
+        resetFilterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeFilterModal();
+            navigateWithSort('rekomendasi');
+        });
+    }
+});
+</script>
+
+<!-- ==============================================
+     POPUP MODAL FILTER & URUTKAN PRODUK
+=============================================== -->
+<div class="filter-modal-overlay" id="filterModalOverlay" style="display: none;">
+    <div class="filter-modal-backdrop" id="filterModalBackdrop"></div>
+    <div class="filter-modal-sheet" id="filterModalSheet">
+        <!-- Sheet Handle for Mobile -->
+        <div class="filter-modal-handle d-md-none"></div>
+
+        <!-- Modal Header -->
+        <div class="filter-modal-header">
+            <div class="d-flex align-items-center gap-2">
+                <div class="filter-header-icon">
+                    <i class="bi bi-sliders2-vertical"></i>
+                </div>
+                <div>
+                    <h5 class="filter-modal-title mb-0">Urutkan &amp; Filter Produk</h5>
+                    <p class="filter-modal-subtitle mb-0">Pilih susunan produk sesuai kebutuhan belanja Anda</p>
+                </div>
+            </div>
+            <button type="button" class="filter-modal-close" id="closeFilterModalBtn" aria-label="Tutup Filter">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body / Filter Options -->
+        <div class="filter-modal-body">
+            <div class="filter-options-list">
+                <% 
+                const filterItems = [
+                    {
+                        key: 'terbaru',
+                        title: 'Produk Terbaru → Terlama',
+                        desc: 'Urutkan dari produk cetak yang paling baru dirilis',
+                        icon: 'bi-clock-history',
+                        color: 'text-primary'
+                    },
+                    {
+                        key: 'terlama',
+                        title: 'Terlama → Terbaru',
+                        desc: 'Urutkan dari produk cetak pertama di katalog',
+                        icon: 'bi-hourglass-split',
+                        color: 'text-secondary'
+                    },
+                    {
+                        key: 'harga_termurah',
+                        title: 'Harga Termurah → Termahal',
+                        desc: 'Temukan pilihan harga paling hemat dan ekonomis',
+                        icon: 'bi-sort-numeric-down',
+                        color: 'text-success'
+                    },
+                    {
+                        key: 'harga_termahal',
+                        title: 'Termahal → Termurah',
+                        desc: 'Lihat paket cetak terlengkap dan bernilai tinggi',
+                        icon: 'bi-sort-numeric-down-alt',
+                        color: 'text-warning'
+                    },
+                    {
+                        key: 'terlaris',
+                        title: 'Terlaris',
+                        desc: 'Paling sering dipesan oleh pelanggan & pelaku UMKM',
+                        icon: 'bi-fire',
+                        color: 'text-danger'
+                    },
+                    {
+                        key: 'rekomendasi',
+                        title: 'Rekomendasi / Best Seller',
+                        desc: 'Pilihan produk unggulan & paling direkomendasikan',
+                        icon: 'bi-stars',
+                        color: 'text-rosa'
+                    }
+                ];
+                %>
+
+                <% filterItems.forEach(function(item) { 
+                    const isSelected = (currentSort === item.key);
+                %>
+                    <label class="filter-option-card <%= isSelected ? 'selected' : '' %>" for="filter_<%= item.key %>">
+                        <div class="filter-option-left">
+                            <span class="filter-option-icon <%= item.color %>">
+                                <i class="bi <%= item.icon %>"></i>
+                            </span>
+                            <div class="filter-option-info">
+                                <span class="filter-option-title"><%= item.title %></span>
+                                <span class="filter-option-desc"><%= item.desc %></span>
+                            </div>
+                        </div>
+                        <div class="filter-option-radio">
+                            <input type="radio" name="sort_option" id="filter_<%= item.key %>" value="<%= item.key %>" <%= isSelected ? 'checked' : '' %>>
+                            <span class="custom-radio-circle">
+                                <i class="bi bi-check"></i>
+                            </span>
+                        </div>
+                    </label>
+                <% }); %>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="filter-modal-footer">
+            <button type="button" class="btn-filter-reset" id="resetFilterSortBtn">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Default
+            </button>
+            <button type="button" class="btn-filter-apply" id="applyFilterSortBtn">
+                <i class="bi bi-check2-circle me-1"></i> Terapkan Filter
+            </button>
+        </div>
+    </div>
+</div>
 
 <%- include('partials/footer') %>

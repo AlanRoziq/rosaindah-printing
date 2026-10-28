@@ -32,7 +32,7 @@ if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])) {
 }
 $currentScript = basename($_SERVER['PHP_SELF'] ?? 'index.php');
 ?>
-<!-- MOBILE APP BOTTOM NAVIGATION BAR (5 MENU DENGAN 1 DI TENGAH BULAT PRIMARY) -->
+<!-- MOBILE APP BOTTOM NAVIGATION BAR (5 MENU: Beranda, Produk, Keranjang, Lacak, Profil) -->
 <nav class="mobile-bottom-nav d-md-none" aria-label="Navigasi Menu Mobile">
     <a href="<?php echo page_url(''); ?>" class="mobile-nav-item <?php echo ($currentScript === 'index.php') ? 'active' : ''; ?>">
         <i class="bi bi-house-door-fill"></i>
@@ -40,27 +40,27 @@ $currentScript = basename($_SERVER['PHP_SELF'] ?? 'index.php');
     </a>
     <a href="<?php echo page_url('produk.php'); ?>" class="mobile-nav-item <?php echo ($currentScript === 'produk.php' || $currentScript === 'detail-produk.php') ? 'active' : ''; ?>">
         <i class="bi bi-grid-fill"></i>
-        <span>Katalog</span>
+        <span>Produk</span>
     </a>
 
-    <!-- Menu Tengah Bulat Berwarna Primary -->
-    <a href="<?php echo page_url('cart.php'); ?>" class="mobile-nav-center <?php echo ($currentScript === 'cart.php' || $currentScript === 'checkout.php') ? 'active' : ''; ?>" aria-label="Pesan &amp; Keranjang">
+    <!-- Menu Tengah Bulat Berwarna Primary: Keranjang -->
+    <a href="<?php echo page_url('cart.php'); ?>" class="mobile-nav-center <?php echo ($currentScript === 'cart.php' || $currentScript === 'checkout.php') ? 'active' : ''; ?>" aria-label="Keranjang">
         <div class="center-bubble">
-            <i class="bi bi-bag-plus-fill"></i>
+            <i class="bi bi-cart3"></i>
             <?php if ($cartCount > 0): ?>
                 <span class="center-badge"><?php echo $cartCount; ?></span>
             <?php endif; ?>
         </div>
-        <span class="center-label">Pesan</span>
+        <span class="center-label">Keranjang</span>
     </a>
 
-    <a href="<?php echo page_url('promo.php'); ?>" class="mobile-nav-item <?php echo ($currentScript === 'promo.php') ? 'active' : ''; ?>">
-        <i class="bi bi-ticket-perforated-fill"></i>
-        <span>Promo</span>
-    </a>
     <a href="<?php echo page_url('lacak-pesanan.php'); ?>" class="mobile-nav-item <?php echo ($currentScript === 'lacak-pesanan.php') ? 'active' : ''; ?>">
         <i class="bi bi-search"></i>
         <span>Lacak</span>
+    </a>
+    <a href="<?php echo page_url('akun.php'); ?>" class="mobile-nav-item <?php echo ($currentScript === 'akun.php' || $currentScript === 'login.php' || $currentScript === 'daftar.php') ? 'active' : ''; ?>">
+        <i class="bi bi-person-fill"></i>
+        <span>Profil</span>
     </a>
 </nav>
 
