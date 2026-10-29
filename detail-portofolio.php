@@ -8,59 +8,10 @@ if (!function_exists('format_rupiah')) {
     }
 }
 
-$portfolios = [
-    [
-        'id' => 1,
-        'product_name' => 'Cetak Banner Outdoor Promosi Event',
-        'customer_name' => 'CV. Maju Bersama',
-        'quantity' => 12,
-        'price' => 300000,
-        'image' => 'banner.jpg',
-    ],
-    [
-        'id' => 2,
-        'product_name' => 'Undangan Pernikahan Hardcover Elegan',
-        'customer_name' => 'Rizky & Anisa',
-        'quantity' => 500,
-        'price' => 1250000,
-        'image' => 'undangan.jpg',
-    ],
-    [
-        'id' => 3,
-        'product_name' => 'Sablon Kaos DTF Komunitas',
-        'customer_name' => 'Komunitas Kreatif Pasuruan',
-        'quantity' => 45,
-        'price' => 3375000,
-        'image' => 'kaos.jpg',
-    ],
-    [
-        'id' => 4,
-        'product_name' => 'Mug Custom Souvenir Seminar',
-        'customer_name' => 'SMAN 1 Rejoso',
-        'quantity' => 120,
-        'price' => 2160000,
-        'image' => 'mug.jpg',
-    ],
-    [
-        'id' => 5,
-        'product_name' => 'Kartu Nama Bisnis Laminasi Doff',
-        'customer_name' => 'PT. Sinar Karya Mandiri',
-        'quantity' => 10,
-        'price' => 350000,
-        'image' => 'kartu-nama.jpg',
-    ],
-    [
-        'id' => 6,
-        'product_name' => 'Kalender Meja & Dinding Custom 2026',
-        'customer_name' => 'Koperasi Sejahtera',
-        'quantity' => 200,
-        'price' => 3600000,
-        'image' => 'kalender.jpg',
-    ],
-];
+$portfolios = load_portfolios_from_db();
 
-$id = (int)($_GET['id'] ?? 1);
-$item = $portfolios[0];
+$id = (int)($_GET['id'] ?? ($portfolios[0]['id'] ?? 1));
+$item = $portfolios[0] ?? null;
 foreach ($portfolios as $p) {
     if ((int)$p['id'] === $id) {
         $item = $p;
@@ -69,10 +20,12 @@ foreach ($portfolios as $p) {
 }
 
 $otherPortfolios = [];
-foreach ($portfolios as $p) {
-    if ((int)$p['id'] !== (int)$item['id']) {
-        $otherPortfolios[] = $p;
-        if (count($otherPortfolios) >= 4) break;
+if ($item) {
+    foreach ($portfolios as $p) {
+        if ((int)$p['id'] !== (int)$item['id']) {
+            $otherPortfolios[] = $p;
+            if (count($otherPortfolios) >= 4) break;
+        }
     }
 }
 

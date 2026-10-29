@@ -298,14 +298,16 @@ let products = [
 ];
 
 let portfolios = [
-  { id: 1, image: 'assets/images/products/banner.png', product_name: 'Banner Indoor Acara Seminar', price: 75000, quantity: 3, customer_name: 'Budi Santoso', created_at: '2026-03-15 10:00:00' },
-  { id: 2, image: 'assets/images/products/spanduk.png', product_name: 'Spanduk Promosi Warung', price: 100000, quantity: 4, customer_name: 'Siti Aminah', created_at: '2026-03-18 11:30:00' },
-  { id: 3, image: 'assets/images/products/mug.png', product_name: 'Mug Custom Souvenir Kantor', price: 700000, quantity: 20, customer_name: 'PT Maju Bersama', created_at: '2026-03-20 14:15:00' },
-  { id: 4, image: 'assets/images/products/sablon.png', product_name: 'Kaos Sablon DTF Komunitas', price: 1200000, quantity: 15, customer_name: 'Komunitas Gowes', created_at: '2026-03-22 09:20:00' },
-  { id: 5, image: 'assets/images/products/kartunama.png', product_name: 'Kartu Nama Bisnis Eksekutif', price: 50000, quantity: 2, customer_name: 'Hendra Wijaya', created_at: '2026-03-24 16:45:00' },
-  { id: 6, image: 'assets/images/products/kalender.png', product_name: 'Kalender Dinding Tahun 2026', price: 500000, quantity: 25, customer_name: 'Klinik Sehat', created_at: '2026-03-25 13:10:00' },
-  { id: 7, image: 'assets/images/products/undnikah.jpeg', product_name: 'Undangan Pernikahan Softcover', price: 450000, quantity: 300, customer_name: 'Dimas & Rina', created_at: '2026-03-27 15:30:00' },
-  { id: 8, image: 'assets/images/products/lanyard.png', product_name: 'Lanyard & ID Card Panitia', price: 300000, quantity: 20, customer_name: 'SMK Negeri 1', created_at: '2026-03-28 10:05:00' }
+  { id: 10, image: 'uploads/portofolio/portfolio-20260920131147-194820d446.png', product_name: 'Cetak Banner Hari Lahirnya Arsya Khalif', price: 30000, quantity: 1, customer_name: 'Laili', created_at: '2026-09-20 18:11:47', updated_at: '2026-09-20 18:11:47' },
+  { id: 9, image: 'uploads/portofolio/portfolio-20260920131044-5b858b3bfe.png', product_name: 'Jasa Desain CV Warna', price: 10000, quantity: 1, customer_name: 'Khasbi', created_at: '2026-09-20 18:10:44', updated_at: '2026-09-20 18:10:44' },
+  { id: 8, image: 'uploads/portofolio/portfolio-20260920130015-b2c474fd86.jpg', product_name: 'Cetak Kartu Iuran Paguyuban Wali Murid Kelas 8J', price: 1000, quantity: 40, customer_name: 'Bilqis Sofia', created_at: '2026-09-20 18:00:15', updated_at: '2026-09-20 18:00:15' },
+  { id: 7, image: 'uploads/portofolio/portfolio-20260920125757-69beae7699.png', product_name: 'Cetak Kupon Jalan Sehat Agustusan RT01 Desa Sambirejo', price: 800, quantity: 300, customer_name: 'Ketua RT 01 - R.Hidayat', created_at: '2026-09-20 17:57:57', updated_at: '2026-09-20 17:57:57' },
+  { id: 6, image: 'uploads/portofolio/portfolio-20260920123648-9159fd62b9.jpg', product_name: 'Gantungan Kunci - Akrilik', price: 5000, quantity: 10, customer_name: 'Bilqis Sofia', created_at: '2026-09-20 17:36:48', updated_at: '2026-09-20 17:42:16' },
+  { id: 5, image: 'uploads/portofolio/portfolio-20260920123532-1933ae757e.png', product_name: 'Stiker Ulang Tahun yang ke-1 Arsya Khalif', price: 500, quantity: 200, customer_name: 'Zavier Arsya Khalif', created_at: '2026-09-20 17:35:32', updated_at: '2026-09-20 17:35:32' },
+  { id: 4, image: 'uploads/portofolio/portfolio-20260920123300-f8d68200db.jpg', product_name: 'Cetak Buku Pelajaran SD Kelas 5', price: 20000, quantity: 8, customer_name: 'Mela', created_at: '2026-09-20 17:33:00', updated_at: '2026-09-20 17:33:00' },
+  { id: 3, image: 'uploads/portofolio/portfolio-20260920102856-cae0a81845.png', product_name: 'Stand Menu Makan Acara Resepsi Nikah', price: 8000, quantity: 5, customer_name: 'Alan Roziqin', created_at: '2026-09-20 15:28:56', updated_at: '2026-09-20 15:28:56' },
+  { id: 2, image: 'uploads/portofolio/portfolio-20260920102442-352b77db0c.png', product_name: 'Kartu Penukaran Souvenir', price: 200, quantity: 100, customer_name: 'Arifin Bugul Lor', created_at: '2026-09-20 15:24:42', updated_at: '2026-09-20 15:24:42' },
+  { id: 1, image: 'uploads/portofolio/portfolio-20260920102056-eab2170e91.jpg', product_name: 'Undangan Nikah - seri Griya Silver 013', price: 900, quantity: 600, customer_name: 'Akhmad Zindan', created_at: '2026-09-20 15:20:56', updated_at: '2026-09-20 15:20:56' }
 ];
 
 let vouchers = [
