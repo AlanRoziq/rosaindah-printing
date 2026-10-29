@@ -1,12 +1,16 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/config/config.php';
 
 // Inisialisasi keranjang jika belum ada
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Data Produk Percetakan (Bisa dikoneksikan ke Database MySQL)
+// Data Produk Percetakan Rosa Indah Printing
 $daftar_produk = [
     [
         'id' => 1,
@@ -144,555 +148,492 @@ foreach ($_SESSION['cart'] as $item) {
     $total_keranjang += (int)($item['qty'] ?? 1);
 }
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog Produk Percetakan & Digital Printing</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                        }
-                    }
-                }
-            }
+<?php include 'includes/header.php'; ?>
+
+<!-- Integrasi Tailwind & Ikon untuk Katalog Produk Pink Rosa Indah -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    /* Pastikan ikon keranjang di header atas disembunyikan pada tampilan mobile */
+    @media (max-width: 767px) {
+        .main-header a[href*="keranjang"],
+        .main-header .cart-btn,
+        .main-header .header-cart {
+            display: none !important;
         }
-    </script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Sembunyikan scrollbar untuk kategori pills */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-800 antialiased pb-24 md:pb-12 min-h-screen flex flex-col">
+    }
+</style>
 
-    <!-- ============================================================== -->
-    <!-- HEADER ATAS (NAVBAR)                                           -->
-    <!-- Catatan: Ikon keranjang hanya muncul di Desktop (md:flex)      -->
-    <!-- Pada Mobile disembunyikan karena sudah ada di Bottom Tab!      -->
-    <!-- ============================================================== -->
-    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16 gap-3">
-                
-                <!-- Logo & Brand -->
-                <a href="index.php" class="flex items-center gap-2 flex-shrink-0">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
-                        <i data-lucide="printer" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <span class="font-black text-lg tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                            Rosa Indah
-                        </span>
-                        <span class="hidden sm:block text-[10px] tracking-widest text-slate-400 font-semibold uppercase">Digital Printing</span>
-                    </div>
-                </a>
+<!-- HEADER UTAMA SAMA PERSIS DENGAN INDEX.PHP -->
+<header class="main-header">
 
-                <!-- Search Bar -->
-                <div class="flex-1 max-w-lg mx-2">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="search-input"
-                            placeholder="Cari banner, stiker, brosur, nota..." 
-                            class="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 hover:bg-slate-50 focus:bg-white border border-transparent focus:border-indigo-500 rounded-full transition-all outline-none"
-                            onkeyup="filterProdukLive()"
-                        >
-                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                    </div>
-                </div>
+    <?php include 'includes/topbar.php'; ?>
 
-                <!-- Nav Action Buttons -->
-                <div class="flex items-center gap-2">
-                    <!-- Nav Link Desktop -->
-                    <nav class="hidden md:flex items-center gap-6 mr-3 text-sm font-medium text-slate-600">
-                        <a href="index.php" class="hover:text-indigo-600 transition">Beranda</a>
-                        <a href="produk.php" class="text-indigo-600 font-semibold">Produk</a>
-                        <a href="cek-ongkir.php" class="hover:text-indigo-600 transition">Cek Ongkir</a>
-                        <a href="kontak.php" class="hover:text-indigo-600 transition">Bantuan</a>
-                    </nav>
+    <?php include 'includes/navbar.php'; ?>
 
-                    <!-- IKON KERANJANG DESKTOP: Disembunyikan di Mobile (hidden md:flex) -->
-                    <a href="keranjang.php" class="hidden md:flex relative p-2.5 rounded-full hover:bg-slate-100 text-slate-600 transition items-center justify-center" title="Keranjang Belanja">
-                        <i data-lucide="shopping-bag" class="w-5 h-5"></i>
-                        <span id="cart-counter-header" class="absolute -top-1 -right-1 bg-indigo-600 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
-                            <?= $total_keranjang ?>
-                        </span>
-                    </a>
+</header>
 
-                    <!-- Login / Akun Button -->
-                    <a href="login.php" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900 hover:bg-indigo-600 text-white text-xs sm:text-sm font-semibold transition-all shadow-sm">
-                        <i data-lucide="user" class="w-4 h-4"></i>
-                        <span class="hidden sm:inline">Member</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Horizontal Category Pills -->
-        <div class="border-t border-slate-100 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
-                <button onclick="setKategori('semua')" class="filter-btn active whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-indigo-600 text-white shadow-sm transition" data-category="semua">
-                    Semua Produk
-                </button>
-                <button onclick="setKategori('banner')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="banner">
-                    Spanduk & Banner
-                </button>
-                <button onclick="setKategori('stiker')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="stiker">
-                    Stiker & Label
-                </button>
-                <button onclick="setKategori('brosur')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="brosur">
-                    Brosur & Flyer
-                </button>
-                <button onclick="setKategori('kartu_nama')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="kartu_nama">
-                    Kartu Nama
-                </button>
-                <button onclick="setKategori('kaos')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="kaos">
-                    Kaos & Sablon
-                </button>
-                <button onclick="setKategori('merchandise')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="merchandise">
-                    Merchandise
-                </button>
-                <button onclick="setKategori('stationery')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 transition" data-category="stationery">
-                    Buku & Nota
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- ============================================================== -->
-    <!-- CONTENT SECTION: DAFTAR PRODUK                                 -->
-    <!-- ============================================================== -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
-        
-        <!-- Header Info & Sorting -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+<!-- BANNER JUDUL HALAMAN & FILTER KATEGORI PINK -->
+<section class="bg-gradient-to-r from-pink-600 via-rose-500 to-pink-500 text-white py-8 sm:py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Katalog Cetak & Percetakan</h1>
-                <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Pilih produk, tentukan ukuran & bahan, lalu pesan kilat online</p>
-            </div>
-            
-            <div class="flex items-center gap-2 self-start sm:self-auto">
-                <span class="text-xs text-slate-400 font-medium">Urutkan:</span>
-                <select id="sort-select" onchange="sortProduk()" class="text-xs font-semibold bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-700 outline-none focus:border-indigo-500 shadow-sm cursor-pointer">
-                    <option value="terpopuler">Paling Populer</option>
-                    <option value="harga_terendah">Harga Terendah</option>
-                    <option value="harga_tertinggi">Harga Tertinggi</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Grid Produk -->
-        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-            <?php foreach ($daftar_produk as $item): ?>
-                <div class="product-card group bg-white rounded-2xl border border-slate-200 hover:border-indigo-400 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between"
-                     data-id="<?= $item['id'] ?>"
-                     data-kategori="<?= $item['kategori'] ?>"
-                     data-nama="<?= strtolower($item['nama']) ?>"
-                     data-harga="<?= $item['harga'] ?>">
-                    
-                    <div>
-                        <!-- Image Container -->
-                        <div class="relative aspect-square w-full overflow-hidden bg-slate-100 cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
-                            <img 
-                                src="<?= htmlspecialchars($item['gambar']) ?>" 
-                                alt="<?= htmlspecialchars($item['nama']) ?>" 
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
-                            >
-                            <!-- Badge -->
-                            <span class="absolute top-2 left-2 bg-indigo-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                                <?= $item['badge'] ?>
-                            </span>
-
-                            <!-- Rating badge -->
-                            <div class="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[11px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
-                                <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
-                                <span><?= $item['rating'] ?></span>
-                            </div>
-                        </div>
-
-                        <!-- Card Body -->
-                        <div class="p-3.5 sm:p-4">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
-                                <?= $item['kategori_label'] ?>
-                            </span>
-                            
-                            <h3 class="font-bold text-slate-800 text-xs sm:text-sm line-clamp-2 mt-1 leading-snug group-hover:text-indigo-600 transition cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
-                                <?= htmlspecialchars($item['nama']) ?>
-                            </h3>
-
-                            <div class="mt-2.5 flex items-baseline gap-1.5 flex-wrap">
-                                <span class="text-sm sm:text-base font-extrabold text-slate-900">
-                                    Rp <?= number_format($item['harga'], 0, ',', '.') ?>
-                                </span>
-                                <span class="text-[11px] text-slate-400">/ <?= $item['satuan'] ?></span>
-                            </div>
-
-                            <?php if ($item['harga_coret']): ?>
-                                <div class="text-[10px] text-slate-400 line-through">
-                                    Rp <?= number_format($item['harga_coret'], 0, ',', '.') ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <div class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
-                                <i data-lucide="check-circle" class="w-3 h-3 text-emerald-500"></i>
-                                <span>Terjual <?= $item['terjual'] ?>+</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card Action Button -->
-                    <div class="p-3.5 sm:p-4 pt-0">
-                        <button 
-                            onclick="openDetailModal(<?= $item['id'] ?>)"
-                            class="w-full py-2 px-3 bg-slate-900 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-95"
-                        >
-                            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
-                            <span>Pilih Spesifikasi</span>
-                        </button>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-
-        <!-- State Kosong jika Pencarian Nihil -->
-        <div id="empty-state" class="hidden text-center py-16">
-            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
-                <i data-lucide="search-x" class="w-8 h-8"></i>
-            </div>
-            <h3 class="font-bold text-slate-700">Produk Tidak Ditemukan</h3>
-            <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci lain atau pilih kategori 'Semua'</p>
-        </div>
-    </main>
-
-    <!-- ============================================================== -->
-    <!-- MODAL POPUP DETAIL & SPESIFIKASI PRODUK                        -->
-    <!-- ============================================================== -->
-    <div id="detail-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <!-- Modal Header -->
-            <div class="relative bg-slate-100 aspect-video w-full">
-                <img id="modal-img" src="" alt="Detail Produk" class="w-full h-full object-cover">
-                <button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white hover:bg-black flex items-center justify-center transition">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-                <div class="absolute bottom-3 left-3">
-                    <span id="modal-badge" class="bg-indigo-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow"></span>
-                </div>
+                <span class="inline-block bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full mb-2 uppercase tracking-wider">
+                    Rosa Indah Digital Printing
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Katalog Produk & Layanan Cetak</h1>
+                <p class="text-pink-100 text-xs sm:text-sm mt-1">Pilih produk percetakan berkualitas tinggi, tentukan spesifikasi, dan pesan langsung</p>
             </div>
 
-            <!-- Modal Content -->
-            <div class="p-5 sm:p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-                <div>
-                    <span id="modal-kategori" class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider"></span>
-                    <h2 id="modal-nama" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5"></h2>
-                    <p id="modal-deskripsi" class="text-xs text-slate-500 mt-1.5 leading-relaxed"></p>
+            <!-- Kolom Pencarian Cepat -->
+            <div class="w-full md:w-80">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Cari spanduk, stiker, brosur, nota..." 
+                        class="w-full pl-10 pr-4 py-2.5 text-sm text-slate-800 bg-white rounded-full shadow-md focus:ring-2 focus:ring-pink-300 outline-none"
+                        onkeyup="filterProdukLive()"
+                    >
+                    <i data-lucide="search" class="w-4 h-4 text-pink-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
                 </div>
-
-                <!-- Pilihan Bahan -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Pilihan Bahan</label>
-                    <div id="modal-bahan-container" class="grid grid-cols-1 gap-2"></div>
-                </div>
-
-                <!-- Pilihan Finishing -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Finishing / Opsi</label>
-                    <div id="modal-finishing-container" class="grid grid-cols-1 gap-2"></div>
-                </div>
-
-                <!-- Input Jumlah / Qty -->
-                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                    <div>
-                        <span class="text-xs font-bold text-slate-700">Jumlah / Kuantitas</span>
-                        <p class="text-[10px] text-slate-400" id="modal-satuan-label">Per satuan</p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <button onclick="updateQty(-1)" class="w-8 h-8 rounded-lg bg-white border border-slate-300 font-bold text-slate-700 flex items-center justify-center active:scale-95 shadow-sm">-</button>
-                        <span id="modal-qty" class="text-sm font-extrabold text-slate-900 w-6 text-center">1</span>
-                        <button onclick="updateQty(1)" class="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center active:scale-95 shadow-sm">+</button>
-                    </div>
-                </div>
-
-                <!-- Total Estimasi -->
-                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-                    <span class="text-xs text-slate-500 font-medium">Total Estimasi:</span>
-                    <span id="modal-total-harga" class="text-lg font-black text-indigo-600">Rp 0</span>
-                </div>
-            </div>
-
-            <!-- Modal Footer Buttons -->
-            <div class="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex gap-2">
-                <button onclick="tambahKeKeranjangModal()" class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95">
-                    <i data-lucide="shopping-bag" class="w-4 h-4"></i>
-                    <span>+ Keranjang</span>
-                </button>
-                <button onclick="pesanWhatsAppModal()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95 shadow-sm">
-                    <i data-lucide="message-circle" class="w-4 h-4"></i>
-                    <span>Pesan via WA</span>
-                </button>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- ============================================================== -->
-    <!-- BOTTOM TAB NAVIGATION UNTUK TAMPILAN MOBILE                    -->
-    <!-- Tetap tampil di bawah dengan keranjang belanja aktif           -->
-    <!-- ============================================================== -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 px-3 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <div class="flex items-center justify-around">
-            <!-- Beranda -->
-            <a href="index.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-indigo-600 transition">
-                <i data-lucide="home" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">Beranda</span>
-            </a>
+<!-- BAR FILTER KATEGORI PINK -->
+<div class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-pink-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            <button onclick="setKategori('semua')" class="filter-btn active whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-pink-600 text-white shadow-sm shadow-pink-200 transition" data-category="semua">
+                Semua Produk
+            </button>
+            <button onclick="setKategori('banner')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="banner">
+                Spanduk & Banner
+            </button>
+            <button onclick="setKategori('stiker')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="stiker">
+                Stiker & Label
+            </button>
+            <button onclick="setKategori('brosur')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="brosur">
+                Brosur & Flyer
+            </button>
+            <button onclick="setKategori('kartu_nama')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="kartu_nama">
+                Kartu Nama
+            </button>
+            <button onclick="setKategori('kaos')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="kaos">
+                Kaos & Sablon
+            </button>
+            <button onclick="setKategori('merchandise')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="merchandise">
+                Merchandise
+            </button>
+            <button onclick="setKategori('stationery')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="stationery">
+                Buku & Nota
+            </button>
+        </div>
 
-            <!-- Produk (Aktif) -->
-            <a href="produk.php" class="flex flex-col items-center gap-1 py-1 px-3 text-indigo-600 font-bold">
-                <div class="relative">
-                    <i data-lucide="grid" class="w-5 h-5"></i>
-                    <span class="absolute -top-1 -right-1 w-2 h-2 bg-indigo-600 rounded-full"></span>
-                </div>
-                <span class="text-[10px]">Produk</span>
-            </a>
+        <!-- Urutkan & Keranjang Desktop (Disembunyikan di HP: hidden md:flex) -->
+        <div class="hidden md:flex items-center gap-3 flex-shrink-0">
+            <select id="sort-select" onchange="sortProduk()" class="text-xs font-semibold bg-pink-50 border border-pink-200 rounded-full px-3.5 py-1.5 text-pink-700 outline-none focus:border-pink-500 cursor-pointer">
+                <option value="terpopuler">Paling Populer</option>
+                <option value="harga_terendah">Harga Terendah</option>
+                <option value="harga_tertinggi">Harga Tertinggi</option>
+            </select>
 
-            <!-- KERANJANG DI BOTTOM TAB (Dengan Badge Counter) -->
-            <a href="keranjang.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-500 hover:text-indigo-600 transition relative">
-                <div class="relative">
-                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
-                    <span id="cart-counter-bottom" class="absolute -top-1.5 -right-2.5 bg-indigo-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                        <?= $total_keranjang ?>
-                    </span>
-                </div>
-                <span class="text-[10px] font-medium">Keranjang</span>
-            </a>
-
-            <!-- Pesanan / Riwayat -->
-            <a href="pesanan.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-indigo-600 transition">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">Pesanan</span>
-            </a>
-
-            <!-- Akun / Profil -->
-            <a href="login.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-indigo-600 transition">
-                <i data-lucide="user" class="w-5 h-5"></i>
-                <span class="text-[10px] font-medium">Akun</span>
+            <a href="keranjang.php" class="hidden md:flex relative p-2 rounded-full bg-pink-50 hover:bg-pink-100 text-pink-600 transition items-center justify-center" title="Keranjang Belanja">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                <span id="cart-counter-header" class="absolute -top-1 -right-1 bg-pink-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
+                    <?= $total_keranjang ?>
+                </span>
             </a>
         </div>
-    </nav>
+    </div>
+</div>
 
-    <!-- ============================================================== -->
-    <!-- JAVASCRIPT LOGIC                                               -->
-    <!-- ============================================================== -->
-    <script>
-        // Data Produk dari PHP ke JavaScript
-        const produkData = <?= json_encode($daftar_produk) ?>;
-        let selectedProduct = null;
-        let currentQty = 1;
-        let selectedBahan = '';
-        let selectedFinishing = '';
+<!-- DAFTAR KARTU PRODUK BERTEMA PINK -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-12">
+    <!-- Sortir di Mobile -->
+    <div class="flex md:hidden items-center justify-between mb-4">
+        <span class="text-xs font-semibold text-slate-500">Menampilkan Katalog Produk</span>
+        <select id="sort-select-mobile" onchange="document.getElementById('sort-select').value=this.value; sortProduk();" class="text-xs font-semibold bg-white border border-pink-200 rounded-lg px-3 py-1.5 text-pink-700 outline-none">
+            <option value="terpopuler">Paling Populer</option>
+            <option value="harga_terendah">Harga Terendah</option>
+            <option value="harga_tertinggi">Harga Tertinggi</option>
+        </select>
+    </div>
 
-        // Inisialisasi ikon Lucide
-        lucide.createIcons();
+    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
+        <?php foreach ($daftar_produk as $item): ?>
+            <div class="product-card group bg-white rounded-2xl border border-pink-100 hover:border-pink-400 overflow-hidden shadow-sm hover:shadow-lg hover:shadow-pink-100/60 transition-all duration-300 flex flex-col justify-between"
+                 data-id="<?= $item['id'] ?>"
+                 data-kategori="<?= $item['kategori'] ?>"
+                 data-nama="<?= strtolower($item['nama']) ?>"
+                 data-harga="<?= $item['harga'] ?>">
+                
+                <div>
+                    <!-- Gambar Produk -->
+                    <div class="relative aspect-square w-full overflow-hidden bg-pink-50/40 cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
+                        <img 
+                            src="<?= htmlspecialchars($item['gambar']) ?>" 
+                            alt="<?= htmlspecialchars($item['nama']) ?>" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                        >
+                        <!-- Badge Pink -->
+                        <span class="absolute top-2.5 left-2.5 bg-gradient-to-r from-pink-600 to-rose-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                            <?= htmlspecialchars($item['badge']) ?>
+                        </span>
 
-        // Filter Kategori
-        function setKategori(kat) {
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.dataset.category === kat) {
-                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
-                    btn.classList.remove('bg-slate-100', 'text-slate-600');
-                } else {
-                    btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
-                    btn.classList.add('bg-slate-100', 'text-slate-600');
-                }
-            });
+                        <!-- Rating -->
+                        <div class="absolute bottom-2 right-2 bg-black/65 backdrop-blur-sm text-white text-[11px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
+                            <span><?= $item['rating'] ?></span>
+                        </div>
+                    </div>
 
-            const cards = document.querySelectorAll('.product-card');
-            let visibleCount = 0;
+                    <!-- Detail Card -->
+                    <div class="p-3.5 sm:p-4">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-pink-600">
+                            <?= htmlspecialchars($item['kategori_label']) ?>
+                        </span>
+                        
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm line-clamp-2 mt-1 leading-snug group-hover:text-pink-600 transition cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
+                            <?= htmlspecialchars($item['nama']) ?>
+                        </h3>
 
-            cards.forEach(card => {
-                if (kat === 'semua' || card.dataset.kategori === kat) {
-                    card.style.display = 'flex';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+                        <div class="mt-2.5 flex items-baseline gap-1.5 flex-wrap">
+                            <span class="text-sm sm:text-base font-extrabold text-pink-600">
+                                Rp <?= number_format($item['harga'], 0, ',', '.') ?>
+                            </span>
+                            <span class="text-[11px] text-slate-400">/ <?= htmlspecialchars($item['satuan']) ?></span>
+                        </div>
 
-            document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
-        }
+                        <?php if ($item['harga_coret']): ?>
+                            <div class="text-[10px] text-slate-400 line-through">
+                                Rp <?= number_format($item['harga_coret'], 0, ',', '.') ?>
+                            </div>
+                        <?php endif; ?>
 
-        // Live Search Filter
-        function filterProdukLive() {
-            const query = document.getElementById('search-input').value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.product-card');
-            let visibleCount = 0;
+                        <div class="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
+                            <i data-lucide="check-circle" class="w-3 h-3 text-pink-500"></i>
+                            <span>Terjual <?= htmlspecialchars($item['terjual']) ?>+</span>
+                        </div>
+                    </div>
+                </div>
 
-            cards.forEach(card => {
-                const nama = card.dataset.nama;
-                if (nama.includes(query)) {
-                    card.style.display = 'flex';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+                <!-- Tombol Aksi Card Pink -->
+                <div class="p-3.5 sm:p-4 pt-0">
+                    <button 
+                        onclick="openDetailModal(<?= $item['id'] ?>)"
+                        class="w-full py-2.5 px-3 bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm shadow-pink-200 active:scale-95"
+                    >
+                        <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+                        <span>Pesan Sekarang</span>
+                    </button>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
 
-            document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
-        }
+    <!-- State Kosong Jika Tidak Ditemukan -->
+    <div id="empty-state" class="hidden text-center py-16">
+        <div class="w-16 h-16 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-3 text-pink-500">
+            <i data-lucide="search-x" class="w-8 h-8"></i>
+        </div>
+        <h3 class="font-bold text-slate-700">Produk Tidak Ditemukan</h3>
+        <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci lain atau pilih kategori 'Semua Produk'</p>
+    </div>
+</main>
 
-        // Urutkan Produk
-        function sortProduk() {
-            const container = document.getElementById('product-grid');
-            const cards = Array.from(document.querySelectorAll('.product-card'));
-            const sortBy = document.getElementById('sort-select').value;
+<!-- MODAL POPUP SPESIFIKASI & ORDER (TEMA PINK) -->
+<div id="detail-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-pink-100">
+        <!-- Header Gambar Modal -->
+        <div class="relative bg-pink-50 aspect-video w-full">
+            <img id="modal-img" src="" alt="Detail Produk" class="w-full h-full object-cover">
+            <button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white hover:bg-pink-600 flex items-center justify-center transition">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <div class="absolute bottom-3 left-3">
+                <span id="modal-badge" class="bg-pink-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow"></span>
+            </div>
+        </div>
 
-            cards.sort((a, b) => {
-                if (sortBy === 'harga_terendah') {
-                    return parseInt(a.dataset.harga) - parseInt(b.dataset.harga);
-                } else if (sortBy === 'harga_tertinggi') {
-                    return parseInt(b.dataset.harga) - parseInt(a.dataset.harga);
-                }
-                return parseInt(a.dataset.id) - parseInt(b.dataset.id);
-            });
+        <!-- Isi Modal -->
+        <div class="p-5 sm:p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+            <div>
+                <span id="modal-kategori" class="text-[11px] font-bold text-pink-600 uppercase tracking-wider"></span>
+                <h2 id="modal-nama" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5"></h2>
+                <p id="modal-deskripsi" class="text-xs text-slate-500 mt-1.5 leading-relaxed"></p>
+            </div>
 
-            cards.forEach(card => container.appendChild(card));
-        }
+            <!-- Pilihan Bahan -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Pilihan Bahan</label>
+                <div id="modal-bahan-container" class="grid grid-cols-1 gap-2"></div>
+            </div>
 
-        // Buka Modal Detail
-        function openDetailModal(id) {
-            selectedProduct = produkData.find(p => p.id === id);
-            if (!selectedProduct) return;
+            <!-- Pilihan Finishing -->
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Finishing / Opsi</label>
+                <div id="modal-finishing-container" class="grid grid-cols-1 gap-2"></div>
+            </div>
 
-            currentQty = 1;
-            selectedBahan = selectedProduct.pilihan_bahan[0];
-            selectedFinishing = selectedProduct.finishing[0];
+            <!-- Jumlah / Kuantitas -->
+            <div class="flex items-center justify-between p-3 bg-pink-50/60 rounded-2xl border border-pink-100">
+                <div>
+                    <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
+                    <p class="text-[10px] text-slate-400" id="modal-satuan-label">Per satuan</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="updateQty(-1)" class="w-8 h-8 rounded-lg bg-white border border-pink-200 font-bold text-pink-600 flex items-center justify-center active:scale-95 shadow-sm">-</button>
+                    <span id="modal-qty" class="text-sm font-extrabold text-slate-900 w-6 text-center">1</span>
+                    <button onclick="updateQty(1)" class="w-8 h-8 rounded-lg bg-pink-600 text-white font-bold flex items-center justify-center active:scale-95 shadow-sm">+</button>
+                </div>
+            </div>
 
-            document.getElementById('modal-img').src = selectedProduct.gambar;
-            document.getElementById('modal-badge').innerText = selectedProduct.badge;
-            document.getElementById('modal-kategori').innerText = selectedProduct.kategori_label;
-            document.getElementById('modal-nama').innerText = selectedProduct.nama;
-            document.getElementById('modal-deskripsi').innerText = selectedProduct.deskripsi;
-            document.getElementById('modal-satuan-label').innerText = 'Per ' + selectedProduct.satuan;
-            document.getElementById('modal-qty').innerText = currentQty;
+            <!-- Total Estimasi -->
+            <div class="flex items-center justify-between pt-2 border-t border-pink-100">
+                <span class="text-xs text-slate-500 font-medium">Total Estimasi:</span>
+                <span id="modal-total-harga" class="text-lg font-black text-pink-600">Rp 0</span>
+            </div>
+        </div>
 
-            // Render opsi bahan
-            const bahanContainer = document.getElementById('modal-bahan-container');
-            bahanContainer.innerHTML = selectedProduct.pilihan_bahan.map((b, i) => `
-                <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer text-xs font-medium bg-white">
-                    <input type="radio" name="pilihan_bahan" value="${b}" ${i === 0 ? 'checked' : ''} onchange="selectedBahan='${b}'; updateModalTotal();" class="text-indigo-600 focus:ring-indigo-500">
-                    <span>${b}</span>
-                </label>
-            `).join('');
+        <!-- Tombol Bawah Modal -->
+        <div class="p-4 sm:p-5 bg-pink-50/40 border-t border-pink-100 flex gap-2.5">
+            <button onclick="tambahKeKeranjangModal()" class="flex-1 py-3 bg-pink-600 hover:bg-pink-700 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95 shadow-sm shadow-pink-200">
+                <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                <span>+ Keranjang</span>
+            </button>
+            <button onclick="pesanWhatsAppModal()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95 shadow-sm">
+                <i data-lucide="message-circle" class="w-4 h-4"></i>
+                <span>Pesan via WA</span>
+            </button>
+        </div>
+    </div>
+</div>
 
-            // Render opsi finishing
-            const finishingContainer = document.getElementById('modal-finishing-container');
-            finishingContainer.innerHTML = selectedProduct.finishing.map((f, i) => `
-                <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer text-xs font-medium bg-white">
-                    <input type="radio" name="pilihan_finishing" value="${f}" ${i === 0 ? 'checked' : ''} onchange="selectedFinishing='${f}';" class="text-indigo-600 focus:ring-indigo-500">
-                    <span>${f}</span>
-                </label>
-            `).join('');
+<!-- BOTTOM NAVIGATION KHUSUS MOBILE (Keranjang Tampil di Sini untuk HP) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-pink-100 px-3 py-1.5 shadow-[0_-4px_20px_rgba(236,72,153,0.08)]">
+    <div class="flex items-center justify-around">
+        <a href="index.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-pink-600 transition">
+            <i data-lucide="home" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Beranda</span>
+        </a>
 
-            updateModalTotal();
+        <a href="produk.php" class="flex flex-col items-center gap-1 py-1 px-3 text-pink-600 font-bold">
+            <div class="relative">
+                <i data-lucide="grid" class="w-5 h-5"></i>
+                <span class="absolute -top-1 -right-1 w-2 h-2 bg-pink-600 rounded-full"></span>
+            </div>
+            <span class="text-[10px]">Produk</span>
+        </a>
 
-            const modal = document.getElementById('detail-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            lucide.createIcons();
-        }
+        <a href="keranjang.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-500 hover:text-pink-600 transition relative">
+            <div class="relative">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                <span id="cart-counter-bottom" class="absolute -top-1.5 -right-2.5 bg-pink-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                    <?= $total_keranjang ?>
+                </span>
+            </div>
+            <span class="text-[10px] font-medium">Keranjang</span>
+        </a>
 
-        // Update Kuantitas
-        function updateQty(delta) {
-            currentQty = Math.max(1, currentQty + delta);
-            document.getElementById('modal-qty').innerText = currentQty;
-            updateModalTotal();
-        }
+        <a href="pesanan.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-pink-600 transition">
+            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Pesanan</span>
+        </a>
 
-        // Hitung Total Modal
-        function updateModalTotal() {
-            if (!selectedProduct) return;
-            const total = selectedProduct.harga * currentQty;
-            document.getElementById('modal-total-harga').innerText = 'Rp ' + total.toLocaleString('id-ID');
-        }
+        <a href="login.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-pink-600 transition">
+            <i data-lucide="user" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Akun</span>
+        </a>
+    </div>
+</nav>
 
-        // Tutup Modal
-        function closeModal() {
-            const modal = document.getElementById('detail-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
+<?php include 'includes/cta.php'; ?>
 
-        // Tambah ke Keranjang
-        function tambahKeKeranjangModal() {
-            if (!selectedProduct) return;
+<?php include 'includes/footer.php'; ?>
 
-            // Simpan ke localStorage agar sinkron langsung
-            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            cart.push({
-                id: selectedProduct.id,
-                nama: selectedProduct.nama,
-                harga: selectedProduct.harga,
-                qty: currentQty,
-                bahan: selectedBahan,
-                finishing: selectedFinishing,
-                satuan: selectedProduct.satuan
-            });
-            localStorage.setItem('cart', JSON.stringify(cart));
+<script>
+    const produkData = <?= json_encode($daftar_produk) ?>;
+    let selectedProduct = null;
+    let currentQty = 1;
+    let selectedBahan = '';
+    let selectedFinishing = '';
 
-            // Update badge counter
-            const totalItems = cart.reduce((acc, curr) => acc + curr.qty, 0);
-            const headerBadge = document.getElementById('cart-counter-header');
-            const bottomBadge = document.getElementById('cart-counter-bottom');
-            if (headerBadge) headerBadge.innerText = totalItems;
-            if (bottomBadge) bottomBadge.innerText = totalItems;
+    lucide.createIcons();
 
-            closeModal();
-            alert(`Berhasil menambahkan ${currentQty} ${selectedProduct.nama} ke keranjang!`);
-        }
-
-        // Pesan via WhatsApp
-        function pesanWhatsAppModal() {
-            if (!selectedProduct) return;
-            const noWA = "6281234567890"; // Ganti dengan nomor WhatsApp percetakan Anda
-            const total = (selectedProduct.harga * currentQty).toLocaleString('id-ID');
-            const pesan = `Halo Rosa Indah Printing, saya mau pesan:%0A%0A` +
-                          `*Produk:* ${selectedProduct.nama}%0A` +
-                          `*Bahan:* ${selectedBahan}%0A` +
-                          `*Finishing:* ${selectedFinishing}%0A` +
-                          `*Jumlah:* ${currentQty} ${selectedProduct.satuan}%0A` +
-                          `*Estimasi Total:* Rp ${total}%0A%0A` +
-                          `Mohon konfirmasi ketersediaan dan cara kirim filenya. Terima kasih!`;
-            
-            window.location.href = `https://wa.me/${noWA}?text=${pesan}`;
-        }
-
-        // Tutup modal saat klik luar
-        window.onclick = function(event) {
-            const modal = document.getElementById('detail-modal');
-            if (event.target === modal) {
-                closeModal();
+    function setKategori(kat) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.dataset.category === kat) {
+                btn.classList.add('bg-pink-600', 'text-white', 'shadow-sm', 'shadow-pink-200');
+                btn.classList.remove('bg-pink-50', 'text-pink-700');
+            } else {
+                btn.classList.remove('bg-pink-600', 'text-white', 'shadow-sm', 'shadow-pink-200');
+                btn.classList.add('bg-pink-50', 'text-pink-700');
             }
-        };
-    </script>
-</body>
-</html>
+        });
+
+        const cards = document.querySelectorAll('.product-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            if (kat === 'semua' || card.dataset.kategori === kat) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
+    }
+
+    function filterProdukLive() {
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.product-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const nama = card.dataset.nama;
+            if (nama.includes(query)) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
+    }
+
+    function sortProduk() {
+        const container = document.getElementById('product-grid');
+        const cards = Array.from(document.querySelectorAll('.product-card'));
+        const sortBy = document.getElementById('sort-select').value;
+
+        cards.sort((a, b) => {
+            if (sortBy === 'harga_terendah') {
+                return parseInt(a.dataset.harga) - parseInt(b.dataset.harga);
+            } else if (sortBy === 'harga_tertinggi') {
+                return parseInt(b.dataset.harga) - parseInt(a.dataset.harga);
+            }
+            return parseInt(a.dataset.id) - parseInt(b.dataset.id);
+        });
+
+        cards.forEach(card => container.appendChild(card));
+    }
+
+    function openDetailModal(id) {
+        selectedProduct = produkData.find(p => p.id === id);
+        if (!selectedProduct) return;
+
+        currentQty = 1;
+        selectedBahan = selectedProduct.pilihan_bahan[0];
+        selectedFinishing = selectedProduct.finishing[0];
+
+        document.getElementById('modal-img').src = selectedProduct.gambar;
+        document.getElementById('modal-badge').innerText = selectedProduct.badge;
+        document.getElementById('modal-kategori').innerText = selectedProduct.kategori_label;
+        document.getElementById('modal-nama').innerText = selectedProduct.nama;
+        document.getElementById('modal-deskripsi').innerText = selectedProduct.deskripsi;
+        document.getElementById('modal-satuan-label').innerText = 'Per ' + selectedProduct.satuan;
+        document.getElementById('modal-qty').innerText = currentQty;
+
+        const bahanContainer = document.getElementById('modal-bahan-container');
+        bahanContainer.innerHTML = selectedProduct.pilihan_bahan.map((b, i) => `
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-pink-100 hover:border-pink-500 cursor-pointer text-xs font-medium bg-white">
+                <input type="radio" name="pilihan_bahan" value="${b}" ${i === 0 ? 'checked' : ''} onchange="selectedBahan='${b}'; updateModalTotal();" class="accent-pink-600">
+                <span>${b}</span>
+            </label>
+        `).join('');
+
+        const finishingContainer = document.getElementById('modal-finishing-container');
+        finishingContainer.innerHTML = selectedProduct.finishing.map((f, i) => `
+            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-pink-100 hover:border-pink-500 cursor-pointer text-xs font-medium bg-white">
+                <input type="radio" name="pilihan_finishing" value="${f}" ${i === 0 ? 'checked' : ''} onchange="selectedFinishing='${f}';" class="accent-pink-600">
+                <span>${f}</span>
+            </label>
+        `).join('');
+
+        updateModalTotal();
+
+        const modal = document.getElementById('detail-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        lucide.createIcons();
+    }
+
+    function updateQty(delta) {
+        currentQty = Math.max(1, currentQty + delta);
+        document.getElementById('modal-qty').innerText = currentQty;
+        updateModalTotal();
+    }
+
+    function updateModalTotal() {
+        if (!selectedProduct) return;
+        const total = selectedProduct.harga * currentQty;
+        document.getElementById('modal-total-harga').innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('detail-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function tambahKeKeranjangModal() {
+        if (!selectedProduct) return;
+
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        cart.push({
+            id: selectedProduct.id,
+            nama: selectedProduct.nama,
+            harga: selectedProduct.harga,
+            qty: currentQty,
+            bahan: selectedBahan,
+            finishing: selectedFinishing,
+            satuan: selectedProduct.satuan
+        });
+        localStorage.setItem('cart', JSON.stringify(cart));
+
+        const totalItems = cart.reduce((acc, curr) => acc + curr.qty, 0);
+        const headerBadge = document.getElementById('cart-counter-header');
+        const bottomBadge = document.getElementById('cart-counter-bottom');
+        if (headerBadge) headerBadge.innerText = totalItems;
+        if (bottomBadge) bottomBadge.innerText = totalItems;
+
+        closeModal();
+        alert(`Berhasil menambahkan ${currentQty} ${selectedProduct.nama} ke keranjang!`);
+    }
+
+    function pesanWhatsAppModal() {
+        if (!selectedProduct) return;
+        const noWA = "6281234567890";
+        const total = (selectedProduct.harga * currentQty).toLocaleString('id-ID');
+        const pesan = `Halo Rosa Indah Printing, saya mau pesan:%0A%0A` +
+                      `*Produk:* ${selectedProduct.nama}%0A` +
+                      `*Bahan:* ${selectedBahan}%0A` +
+                      `*Finishing:* ${selectedFinishing}%0A` +
+                      `*Jumlah:* ${currentQty} ${selectedProduct.satuan}%0A` +
+                      `*Estimasi Total:* Rp ${total}%0A%0A` +
+                      `Mohon konfirmasi ketersediaan dan cara kirim filenya. Terima kasih!`;
+        
+        window.location.href = `https://wa.me/${noWA}?text=${pesan}`;
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('detail-modal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    };
+</script>
