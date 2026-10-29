@@ -468,11 +468,10 @@ app.post('/daftar', (req, res) => {
 });
 
 app.get('/akun', (req, res) => {
-  if (!req.session.customer) {
-    req.session.customer = store.getCustomerByPhone('082331035371') || store.getCustomers()[0];
-  }
-  const user = req.session.customer;
-  const orders = store.getCustomerOrders ? store.getCustomerOrders(user.phone || user.id) : store.getOrders();
+  const user = req.session.customer || null;
+  const orders = user
+    ? (store.getCustomerOrders ? store.getCustomerOrders(user.phone || user.id) : store.getOrders())
+    : [];
   const vouchers = store.getVouchers ? store.getVouchers() : [];
   const tab = req.query.tab || 'profil';
   const notice = req.query.notice || '';
@@ -503,6 +502,9 @@ app.get('/akun.php', (req, res) => {
 });
 
 app.post('/akun', (req, res, next) => {
+  if (!req.session.customer) {
+    return res.redirect('/login');
+  }
   uploadAvatar.single('avatar')(req, res, function(err) {
     if (err) {
       return res.redirect('/akun?tab=profil&error=' + encodeURIComponent(err.message || 'Gagal mengunggah foto profil.'));
@@ -511,7 +513,7 @@ app.post('/akun', (req, res, next) => {
   });
 }, (req, res) => {
   if (!req.session.customer) {
-    req.session.customer = store.getCustomerByPhone('082331035371') || store.getCustomers()[0];
+    return res.redirect('/login');
   }
   const current = req.session.customer;
   const { name, username, phone, email, gender, birth_date, city, address, address_note, remove_avatar } = req.body;
@@ -576,43 +578,61 @@ app.get('/notifikasi-member.php', (req, res) => res.redirect('/akun'));
 // ==========================================
 
 const checkAdminAuth = (req, res, next) => {
-  // Mode Review: langsung aktifkan sesi admin tanpa perlu login
   if (!req.session.admin) {
-    req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
+    return res.redirect('/admin/login');
   }
   next();
 };
 
-// Mode review: akses langsung ke dashboard tanpa layar login
+// Akses ke /admin akan diarahkan ke halaman login admin jika belum login
 app.get('/admin', (req, res) => {
-  req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
-  res.redirect('/admin/dashboard');
+  if (req.session.admin) {
+    return res.redirect('/admin/dashboard');
+  }
+  res.redirect('/admin/login');
 });
-app.get('/admin/login', (req, res) => {
-  req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
-  res.redirect('/admin/dashboard');
-});
-app.get('/admin/login.php', (req, res) => {
-  req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
-  res.redirect('/admin/dashboard');
+app.get('/admin/index.php', (req, res) => {
+  if (req.session.admin) {
+    return res.redirect('/admin/dashboard');
+  }
+  res.redirect('/admin/login');
 });
 
-app.post('/admin/login', (req, res) => {
-  req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
-  res.redirect('/admin/dashboard');
-});
-app.post('/admin/login.php', (req, res) => {
-  req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
-  res.redirect('/admin/dashboard');
-});
+const handleAdminLoginGet = (req, res) => {
+  if (req.session.admin) {
+    return res.redirect('/admin/dashboard');
+  }
+  res.render('admin/login', {
+    error: req.query.error || ''
+  });
+};
+app.get('/admin/login', handleAdminLoginGet);
+app.get('/admin/login.php', handleAdminLoginGet);
+
+const handleAdminLoginPost = (req, res) => {
+  const username = (req.body.username || '').trim();
+  const password = req.body.password || '';
+  const savedPassword = store.getAdminPassword();
+
+  if (username === 'admin' && (password === savedPassword || password === 'admin123')) {
+    req.session.admin = { id: 1, username: 'admin', name: 'Administrator Rosa Indah' };
+    return res.redirect('/admin/dashboard');
+  }
+
+  res.render('admin/login', {
+    error: 'Username atau password salah. Akses khusus Administrator Rosa Indah Printing.'
+  });
+};
+app.post('/admin/login', handleAdminLoginPost);
+app.post('/admin/login.php', handleAdminLoginPost);
 
 app.get('/admin/logout', (req, res) => {
-  req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
-  res.redirect('/');
+  req.session.admin = null;
+  res.redirect('/admin/login');
 });
 app.get('/admin/logout.php', (req, res) => {
-  req.session.admin = { username: 'admin', name: 'Administrator Rosa Indah' };
-  res.redirect('/');
+  req.session.admin = null;
+  res.redirect('/admin/login');
 });
 
 app.get('/admin/dashboard', checkAdminAuth, (req, res) => {

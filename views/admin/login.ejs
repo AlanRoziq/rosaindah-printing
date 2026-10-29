@@ -78,12 +78,12 @@
             </div>
         <% } %>
 
-        <form action="<%= page_url('admin/login') %>" method="POST">
+        <form action="<%= page_url('admin/login') %>" method="POST" autocomplete="on">
             <div class="mb-3">
                 <label for="username" class="form-label fw-bold small text-secondary">Username Administrator</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light text-muted border-end-0" style="border-radius: 11px 0 0 11px;"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control" id="username" name="username" required value="admin" style="border-radius: 0 11px 11px 0;">
+                    <input type="text" class="form-control" id="username" name="username" required placeholder="Masukkan username admin" autocomplete="username" style="border-radius: 0 11px 11px 0;">
                 </div>
             </div>
 
@@ -91,7 +91,7 @@
                 <label for="password" class="form-label fw-bold small text-secondary">Password</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light text-muted border-end-0" style="border-radius: 11px 0 0 11px;"><i class="bi bi-key"></i></span>
-                    <input type="password" class="form-control" id="password" name="password" required value="admin" style="border-radius: 0 11px 11px 0;">
+                    <input type="password" class="form-control" id="password" name="password" required placeholder="Masukkan password admin" autocomplete="current-password" style="border-radius: 0 11px 11px 0;">
                 </div>
             </div>
 

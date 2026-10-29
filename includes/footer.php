@@ -1,15 +1,8 @@
 <footer class="bg-dark text-white text-center p-4 mt-5">
     <div class="container">
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 text-start">
-            <div>
-                <h5 class="text-white mb-1 fw-bold">Rosa Indah Printing</h5>
-                <small class="text-secondary">Cetak Ide Jadi Kenyataan • Solusi Percetakan Online Terlengkap &amp; Cepat</small>
-            </div>
-            <div class="mt-2 mt-md-0">
-                <a href="<?php echo page_url('admin/dashboard.php'); ?>" class="text-secondary text-decoration-none small" style="opacity: 0.65;">
-                    <i class="bi bi-shield-lock"></i> Panel Admin
-                </a>
-            </div>
+        <div class="mb-3 text-center">
+            <h5 class="text-white mb-1 fw-bold">Rosa Indah Printing</h5>
+            <small class="text-secondary">Cetak Ide Jadi Kenyataan • Solusi Percetakan Online Terlengkap &amp; Cepat</small>
         </div>
         <hr class="border-secondary opacity-25">
         <p class="mb-0 text-secondary small">

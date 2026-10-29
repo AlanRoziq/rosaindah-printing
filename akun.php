@@ -1,32 +1,1494 @@
 <?php
-require_once __DIR__ . '/config/customer-auth.php';
-require_once __DIR__ . '/includes/order-tracking.php';
-require_once __DIR__ . '/includes/notifications.php';
-$pdo=db(); if(!$pdo){die('Database belum terhubung.');} try{customer_auth_init($pdo); order_tracking_ensure_tables($pdo);}catch(Throwable $e){die('Sistem pelanggan belum siap.');}
-if(!customer_logged_in()){header('Location: '.page_url('login.php'));exit;}
-$user=customer_user(); $id=(int)$user['id']; $message=''; $error='';
-if($_SERVER['REQUEST_METHOD']==='POST'){
-  if(!customer_verify_csrf($_POST['csrf']??'')) $error='Sesi tidak valid. Silakan muat ulang halaman.';
-  else {
-    $name=trim($_POST['name']??''); $phone=customer_normalize_phone(trim($_POST['phone']??'')); $email=trim($_POST['email']??''); $address=trim($_POST['address']??'');
-    if(mb_strlen($name)<3||$phone==='') $error='Nama dan nomor WhatsApp wajib diisi.';
-    elseif($email!==''&&!filter_var($email,FILTER_VALIDATE_EMAIL)) $error='Format email tidak valid.';
-    else { $q=$pdo->prepare('SELECT id FROM customers WHERE phone=? AND id<>? LIMIT 1'); $q->execute([$phone,$id]); if($q->fetch()) $error='Nomor WhatsApp sudah digunakan Member lain.'; else { $q=$pdo->prepare('UPDATE customers SET name=?,phone=?,email=?,address=? WHERE id=?'); $q->execute([$name,$phone,$email!==''?$email:null,$address,$id]); $c=$pdo->prepare('SELECT * FROM customers WHERE id=?');$c->execute([$id]);customer_login($c->fetch());$user=customer_user();$message='Profil berhasil diperbarui.'; } }
-  }
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
 }
-if(isset($_GET['welcome'])) $message='Akun Member berhasil diverifikasi. Selamat datang di Rosa Indah Printing!';
-$orders=[];$stats=['count'=>0,'active'=>0,'completed'=>0,'spent'=>0];
-$phone=$user['phone'];
-// Ambil pesanan berdasarkan customer_id atau nomor WhatsApp, sehingga pesanan lama ikut muncul.
-$q=$pdo->prepare("SELECT * FROM orders WHERE customer_id=? OR customer_phone=? ORDER BY created_at DESC LIMIT 100");$q->execute([$id,$phone]);$orders=$q->fetchAll();
-foreach($orders as $o){$stats['count']++; if(in_array($o['status'],['pending','confirmed','processing','printed'],true))$stats['active']++; if($o['status']==='completed')$stats['completed']++; if($o['status']!=='cancelled')$stats['spent']+=(float)$o['total_estimate'];}
-// Tautkan pesanan lama yang cocok berdasarkan nomor WA.
-try{$q=$pdo->prepare('UPDATE orders SET customer_id=? WHERE customer_id IS NULL AND customer_phone=?');$q->execute([$id,$phone]);}catch(Throwable $e){}
-$csrf=customer_csrf();
-$statusLabels=['pending'=>'Baru','confirmed'=>'Dikonfirmasi','processing'=>'Diproses','printed'=>'Dicetak','completed'=>'Selesai','cancelled'=>'Dibatalkan'];
-$paymentLabels=['unpaid'=>'Belum Bayar','waiting'=>'Menunggu Verifikasi','partial'=>'DP / Sebagian','paid'=>'Lunas','rejected'=>'Ditolak'];
-function account_e($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
+
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/customer-auth.php';
+if (file_exists(__DIR__ . '/includes/order-tracking.php')) {
+    require_once __DIR__ . '/includes/order-tracking.php';
+}
+if (file_exists(__DIR__ . '/includes/notifications.php')) {
+    require_once __DIR__ . '/includes/notifications.php';
+}
+
+if (!function_exists('format_rupiah')) {
+    function format_rupiah($angka) {
+        return 'Rp ' . number_format((float)$angka, 0, ',', '.');
+    }
+}
+if (!function_exists('account_e')) {
+    function account_e($v) {
+        return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+$pdo = db();
+if ($pdo) {
+    try {
+        customer_auth_init($pdo);
+        if (function_exists('order_tracking_ensure_tables')) {
+            order_tracking_ensure_tables($pdo);
+        }
+    } catch (Throwable $e) {
+        // Fallback aman jika tabel belum siap
+    }
+}
+
+$isLoggedIn = customer_logged_in();
+$user = $isLoggedIn ? customer_user() : null;
+$tab = isset($_GET['tab']) ? trim((string)$_GET['tab']) : 'profil';
+if (!in_array($tab, ['profil', 'pesanan', 'poin', 'alamat'], true)) {
+    $tab = 'profil';
+}
+
+$notice = '';
+$error = '';
+
+if (isset($_GET['welcome'])) {
+    $notice = 'Akun Member berhasil diverifikasi. Selamat datang di Rosa Indah Printing!';
+}
+if (isset($_GET['saved'])) {
+    $notice = 'Biodata dan profil Anda berhasil diperbarui!';
+}
+
+// Handle POST update profil hanya jika sudah login
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$isLoggedIn || !$user) {
+        header('Location: ' . page_url('login.php'));
+        exit;
+    }
+
+    $id = (int)($user['id'] ?? 0);
+    $name = trim($_POST['name'] ?? '');
+    $username = trim($_POST['username'] ?? '');
+    $phone = customer_normalize_phone(trim($_POST['phone'] ?? ''));
+    $email = trim($_POST['email'] ?? '');
+    $gender = in_array($_POST['gender'] ?? 'L', ['L', 'P'], true) ? $_POST['gender'] : 'L';
+    $birthDate = trim($_POST['birth_date'] ?? '');
+    $city = trim($_POST['city'] ?? 'Pasuruan');
+    $addressNote = trim($_POST['address_note'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $removeAvatar = ($_POST['remove_avatar'] ?? '0') === '1';
+
+    if (mb_strlen($name) < 3 || $phone === '') {
+        $error = 'Nama lengkap dan nomor WhatsApp aktif wajib diisi.';
+    } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Format alamat email tidak valid.';
+    } else {
+        $avatarPath = $user['avatar'] ?? '';
+        if ($removeAvatar) {
+            $avatarPath = '';
+        }
+
+        // Proses upload foto profil jika ada
+        if (!empty($_FILES['avatar']['name']) && ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+            $tmpFile = $_FILES['avatar']['tmp_name'];
+            $fileSize = (int)$_FILES['avatar']['size'];
+            $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if ($fileSize > 4 * 1024 * 1024) {
+                $error = 'Ukuran foto terlalu besar. Maksimal ukuran foto adalah 4 MB.';
+            } elseif (!in_array($ext, $allowedExts, true)) {
+                $error = 'Format foto tidak didukung. Gunakan JPG, PNG, atau WEBP.';
+            } else {
+                $uploadDir = __DIR__ . '/uploads/avatars';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0775, true);
+                }
+                $newFileName = 'avatar-' . ($id ?: time()) . '-' . time() . '.' . $ext;
+                if (@move_uploaded_file($tmpFile, $uploadDir . '/' . $newFileName)) {
+                    $avatarPath = 'uploads/avatars/' . $newFileName;
+                }
+            }
+        }
+
+        if ($error === '') {
+            if ($pdo && $id > 0) {
+                try {
+                    $q = $pdo->prepare('SELECT id FROM customers WHERE phone = ? AND id <> ? LIMIT 1');
+                    $q->execute([$phone, $id]);
+                    if ($q->fetch()) {
+                        $error = 'Nomor WhatsApp sudah digunakan oleh akun Member lain.';
+                    } else {
+                        $upd = $pdo->prepare('UPDATE customers SET name = ?, phone = ?, email = ?, address = ? WHERE id = ?');
+                        $upd->execute([$name, $phone, $email !== '' ? $email : null, $address, $id]);
+                    }
+                } catch (Throwable $e) {
+                    // Tetap lanjut update session
+                }
+            }
+
+            if ($error === '') {
+                $updatedUser = array_merge($user, [
+                    'name'         => $name,
+                    'username'     => $username !== '' ? $username : ($user['username'] ?? ''),
+                    'phone'        => $phone,
+                    'email'        => $email,
+                    'gender'       => $gender,
+                    'birth_date'   => $birthDate,
+                    'city'         => $city,
+                    'address_note' => $addressNote,
+                    'address'      => $address,
+                    'avatar'       => $avatarPath,
+                ]);
+                $_SESSION['customer'] = $updatedUser;
+                if (function_exists('customer_login')) {
+                    customer_login($updatedUser);
+                }
+                $user = $updatedUser;
+                $notice = 'Biodata dan profil Anda berhasil diperbarui!';
+            }
+        }
+    }
+}
+
+$orders = [];
+$stats = ['total' => 0, 'active' => 0, 'completed' => 0, 'spent' => 0];
+$vouchers = [
+    [
+        'code' => 'ROSAHEMAT10',
+        'name' => 'Diskon Spesial Member 10%',
+        'min_order' => 50000,
+        'discount_type' => 'percent',
+        'discount_value' => 10
+    ],
+    [
+        'code' => 'CETAKUMKM20',
+        'name' => 'Potongan Cetak Kemasan & Stiker 20%',
+        'min_order' => 100000,
+        'discount_type' => 'percent',
+        'discount_value' => 20
+    ],
+    [
+        'code' => 'UNDANGAN25RB',
+        'name' => 'Potongan Langsung Cetak Undangan',
+        'min_order' => 250000,
+        'discount_type' => 'fixed',
+        'discount_value' => 25000
+    ]
+];
+
+if ($isLoggedIn && $user) {
+    $id = (int)($user['id'] ?? 0);
+    $phone = (string)($user['phone'] ?? '');
+
+    if ($pdo) {
+        try {
+            $q = $pdo->prepare('SELECT * FROM orders WHERE customer_id = ? OR customer_phone = ? ORDER BY created_at DESC LIMIT 100');
+            $q->execute([$id, $phone]);
+            $orders = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+            foreach ($orders as &$o) {
+                $stats['total']++;
+                if (in_array($o['status'] ?? '', ['pending', 'confirmed', 'processing', 'printed'], true)) {
+                    $stats['active']++;
+                }
+                if (($o['status'] ?? '') === 'completed') {
+                    $stats['completed']++;
+                }
+                if (($o['status'] ?? '') !== 'cancelled') {
+                    $stats['spent'] += (float)($o['total_estimate'] ?? 0);
+                }
+
+                // Ambil item pesanan jika tabel order_items tersedia
+                $o['items'] = [];
+                try {
+                    $qi = $pdo->prepare('SELECT * FROM order_items WHERE order_id = ?');
+                    $qi->execute([(int)$o['id']]);
+                    $o['items'] = $qi->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                } catch (Throwable $e) {
+                    $o['items'] = [];
+                }
+            }
+            unset($o);
+        } catch (Throwable $e) {
+            $orders = [];
+        }
+    }
+}
+
+$title = 'Profil & Akun Member — Rosa Indah Printing';
+include __DIR__ . '/includes/header.php';
 ?>
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Akun Member — Rosa Indah Printing</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"><style>
-:root{--pink:#d64a8a;--pink2:#f7dbe7;--soft:#fff5fa;--ink:#18243a;--muted:#756d75;--line:#eadde4;--green:#287a54;--red:#a33b3b}*{box-sizing:border-box}body{margin:0;background:#fbf8fa;color:var(--ink);font-family:Arial,sans-serif}.wrap{max-width:1120px;margin:auto;padding:22px 18px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:25px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:900}.brand img{width:50px;height:50px;object-fit:contain}.brand span{color:var(--pink)}.top-actions{display:flex;gap:8px}.top-actions a{padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;text-decoration:none;color:var(--ink);font-weight:800;font-size:13px}.top-actions a.primary{background:var(--pink);border-color:var(--pink);color:#fff}.hero{background:linear-gradient(135deg,#fff,#fff3f8);border:1px solid var(--line);border-radius:22px;padding:28px;display:flex;justify-content:space-between;gap:20px;align-items:center}.hero small{color:var(--pink);font-weight:900;letter-spacing:.7px}.hero h1{margin:7px 0;font-size:31px}.hero p{margin:0;color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}.stat i{color:var(--pink);font-size:20px}.stat span{display:block;color:var(--muted);font-size:12px;margin-top:7px}.stat strong{font-size:20px}.grid{display:grid;grid-template-columns:1.1fr 1.9fr;gap:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}.card h2{font-size:19px;margin:0 0 5px}.card .desc{color:var(--muted);font-size:12px;margin:0 0 18px}.field{margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px}.field input,.field textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font:inherit}.save{border:0;background:var(--pink);color:#fff;padding:11px 15px;border-radius:10px;font-weight:900;cursor:pointer}.notice{padding:11px;border-radius:10px;background:#eefaf4;color:var(--green);margin-bottom:15px;font-size:13px}.err{padding:11px;border-radius:10px;background:#fff0f0;color:var(--red);margin-bottom:15px;font-size:13px}.order-list{display:flex;flex-direction:column;gap:10px}.order{border:1px solid var(--line);border-radius:13px;padding:14px;display:flex;justify-content:space-between;gap:12px;align-items:center}.order h3{margin:0 0 5px;font-size:14px}.order p{margin:0;color:var(--muted);font-size:11px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.pill{display:inline-flex;padding:5px 8px;border-radius:999px;background:var(--soft);color:var(--pink);font-size:10px;font-weight:900}.pill.pay{background:#f5f1f4;color:#665c64}.order-right{text-align:right}.order-right strong{display:block;color:var(--pink);margin-bottom:7px}.order-links{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}.order-links a{font-size:11px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;color:var(--ink);text-decoration:none;font-weight:800}.empty{text-align:center;color:var(--muted);padding:30px 10px}.tip{margin-top:15px;background:var(--soft);border:1px solid #f2d1e0;border-radius:12px;padding:13px;color:#6f626b;font-size:12px;line-height:1.6}@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.order{align-items:flex-start;flex-direction:column}.order-right{text-align:left}.order-links{justify-content:flex-start}}@media(max-width:520px){.wrap{padding:12px 10px 40px}.top{align-items:flex-start}.top-actions{flex-direction:column}.hero h1{font-size:25px}.stats{gap:8px}.stat{padding:13px}.stat strong{font-size:17px}.card{padding:15px}}
-</style></head><body><main class="wrap"><div class="top"><a class="brand" href="<?php echo page_url('index.php'); ?>"><img src="<?php echo asset_url('images/logo/logori.png'); ?>" alt="Rosa Indah Printing"><span>ROSA INDAH PRINTING</span></a><div class="top-actions"><a href="<?php echo page_url('produk.php'); ?>"><i class="bi bi-bag"></i> Belanja</a><a href="<?php echo page_url('logout.php'); ?>">Keluar</a></div></div><section class="hero"><div><small>AKUN MEMBER</small><h1>Halo, <?php echo account_e($user['name']); ?> 👋</h1><p>Kelola profil Member dan pantau seluruh pesanan Anda dari satu tempat.</p></div><a class="top-actions primary" href="<?php echo page_url('lacak-pesanan.php'); ?>" style="background:var(--pink);color:#fff;text-decoration:none;padding:11px 15px;border-radius:10px;font-weight:900">Lacak Pesanan</a></section><?php if($message): ?><div class="notice" style="margin-top:15px"><i class="bi bi-check-circle"></i> <?php echo account_e($message); ?></div><?php endif; ?><?php if($error): ?><div class="err" style="margin-top:15px"><i class="bi bi-exclamation-circle"></i> <?php echo account_e($error); ?></div><?php endif; ?><section class="stats"><div class="stat"><i class="bi bi-receipt"></i><span>Total Pesanan</span><strong><?php echo $stats['count']; ?></strong></div><div class="stat"><i class="bi bi-hourglass-split"></i><span>Pesanan Aktif</span><strong><?php echo $stats['active']; ?></strong></div><div class="stat"><i class="bi bi-check2-circle"></i><span>Pesanan Selesai</span><strong><?php echo $stats['completed']; ?></strong></div><div class="stat"><i class="bi bi-wallet2"></i><span>Total Belanja</span><strong>Rp<?php echo number_format($stats['spent'],0,',','.'); ?></strong></div></section><section class="card member-promo-card" style="margin-top:18px;background:linear-gradient(135deg,#fff9df,#fff);border-color:#f0e0b0"><h2>⭐ Poin & Reward Member</h2><p class="desc">Kumpulkan poin dari pesanan selesai dan tukarkan dengan voucher reward.</p><a href="<?php echo page_url('poin-member.php'); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--pink);color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:800"><i class="bi bi-stars"></i> Lihat Poin & Reward</a></section><section class="card member-promo-card" style="margin-top:18px;background:linear-gradient(135deg,#fff4fa,#fff);border-color:#f1d2e0"><h2>🎁 Promo & Voucher Member</h2><p class="desc">Cek promo terbaru dan gunakan voucher saat checkout.</p><a href="<?php echo page_url('promo.php'); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--pink);color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:800"><i class="bi bi-ticket-perforated"></i> Lihat Promo Member</a></section><?php $notifCount=0; if($pdo){try{$notifCount=member_notification_unread_count($pdo,$id);}catch(Throwable $e){}} ?><section class="card member-promo-card" style="margin-top:18px;background:linear-gradient(135deg,#f3f0ff,#fff);border-color:#ddd6f3"><h2>🔔 Notifikasi Member <?php if($notifCount>0): ?><span style="display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:23px;padding:0 6px;border-radius:999px;background:var(--pink);color:#fff;font-size:11px;vertical-align:middle"><?php echo min(99,$notifCount); ?></span><?php endif; ?></h2><p class="desc">Lihat promo, voucher, reward, bonus poin, dan informasi terbaru dari Rosa Indah Printing.</p><a href="<?php echo page_url('notifikasi-member.php'); ?>" style="display:inline-flex;align-items:center;gap:8px;background:var(--pink);color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-weight:800"><i class="bi bi-bell"></i> Buka Notifikasi</a></section><div class="grid"><section class="card"><h2>Profil Member</h2><p class="desc">Perbarui data Member yang akan membantu proses pemesanan.</p><form method="post"><input type="hidden" name="csrf" value="<?php echo account_e($csrf); ?>"><div class="field"><label>Nama Lengkap</label><input name="name" value="<?php echo account_e($user['name']); ?>" required></div><div class="field"><label>No. WhatsApp</label><input name="phone" type="tel" value="<?php echo account_e($user['phone']); ?>" required></div><div class="field"><label>Email</label><input name="email" type="email" value="<?php echo account_e($user['email']); ?>"></div><div class="field"><label>Alamat</label><textarea name="address" rows="4"><?php echo account_e($user['address']); ?></textarea></div><button class="save"><i class="bi bi-save"></i> Simpan Profil</button></form><div class="tip"><i class="bi bi-info-circle"></i> Pesanan lama dengan nomor WhatsApp yang sama akan otomatis dikaitkan ke Akun Member Anda.</div></section><section class="card"><h2>Riwayat Pesanan</h2><p class="desc">Semua pesanan yang terkait dengan akun Anda.</p><div class="order-list"><?php if(!$orders): ?><div class="empty"><i class="bi bi-receipt" style="font-size:30px;color:var(--pink)"></i><p>Belum ada pesanan.</p><a href="<?php echo page_url('produk.php'); ?>" style="color:var(--pink);font-weight:800;text-decoration:none">Mulai belanja</a></div><?php else: foreach($orders as $o): ?><article class="order"><div><h3><?php echo account_e($o['order_code']); ?></h3><p><?php echo date('d M Y, H:i',strtotime($o['created_at'])); ?> WIB</p><div class="pills"><span class="pill"><?php echo account_e($statusLabels[$o['status']]??$o['status']); ?></span><span class="pill pay"><?php echo account_e($paymentLabels[$o['payment_status']??'unpaid']??'Belum Bayar'); ?></span></div></div><div class="order-right"><strong>Rp<?php echo number_format((float)$o['total_estimate'],0,',','.'); ?></strong><div class="order-links"><a href="<?php echo page_url('lacak-pesanan.php?code='.urlencode($o['order_code']).'&phone='.urlencode($user['phone'])); ?>">Tracking</a><a href="<?php echo page_url('invoice.php?code='.urlencode($o['order_code']).'&phone='.urlencode($user['phone'])); ?>">Nota</a><?php if(($o['payment_status']??'unpaid')!=='paid'): ?><a href="<?php echo page_url('pembayaran.php?code='.urlencode($o['order_code']).'&phone='.urlencode($user['phone'])); ?>">Bayar</a><?php endif; ?></div></div></article><?php endforeach; endif; ?></div></section></div></main></body></html>
+
+<style>
+/* =========================================================
+   MARKETPLACE PROFILE STYLING (DESKTOP, TABLET & MOBILE)
+   ========================================================= */
+.profile-page {
+    background: #fbf8fa;
+    min-height: 85vh;
+    padding-bottom: 70px;
+}
+.profile-hero-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fff4fa 100%);
+    border: 1.5px solid #f2dce7;
+    border-radius: 24px;
+    padding: 24px 28px;
+    box-shadow: 0 10px 30px rgba(225, 29, 100, 0.05);
+    margin-bottom: 22px;
+}
+.profile-avatar-wrap {
+    position: relative;
+    width: 82px;
+    height: 82px;
+    flex-shrink: 0;
+}
+.profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #ffffff;
+    box-shadow: 0 8px 22px rgba(225, 29, 100, 0.28);
+    display: block;
+}
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e11d64 0%, #f43f7e 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 800;
+    border: 3px solid #ffffff;
+    box-shadow: 0 8px 22px rgba(225, 29, 100, 0.28);
+    text-transform: uppercase;
+}
+.profile-avatar-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 26px;
+    height: 26px;
+    background: #28a745;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border: 2px solid #ffffff;
+}
+.avatar-upload-card {
+    background: #fff8fb;
+    border: 1.5px dashed #f2bad0;
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    transition: all 0.2s ease;
+}
+.avatar-upload-card:hover {
+    border-color: #e11d64;
+    background: #fff3f8;
+}
+.avatar-preview-wrap {
+    width: 78px;
+    height: 78px;
+    position: relative;
+    flex-shrink: 0;
+}
+.avatar-preview-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e11d64;
+    box-shadow: 0 4px 14px rgba(225, 29, 100, 0.22);
+}
+.avatar-preview-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e11d64 0%, #f43f7e 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 800;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 14px rgba(225, 29, 100, 0.22);
+}
+.btn-upload-avatar {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 100%);
+    color: #ffffff !important;
+    border: 0;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(225, 29, 100, 0.22);
+    transition: all 0.2s ease;
+}
+.btn-upload-avatar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(225, 29, 100, 0.32);
+}
+.btn-remove-avatar {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #ffffff;
+    color: #dc3545;
+    border: 1px solid #f5c2c7;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-remove-avatar:hover {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+/* Marketplace Tab Bar */
+.marketplace-tabs-wrap {
+    margin-bottom: 22px;
+    border-bottom: 1.5px solid #f0dce6;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 6px 10px;
+    box-shadow: 0 4px 18px rgba(35, 15, 26, 0.03);
+}
+.marketplace-nav-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin: 0;
+    padding: 4px 0;
+}
+.marketplace-nav-tabs::-webkit-scrollbar {
+    display: none;
+}
+.marketplace-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 14px;
+    border: 0;
+    background: transparent;
+    color: #635761;
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.marketplace-tab-btn i {
+    font-size: 16px;
+    color: #9c8e98;
+    transition: color 0.2s ease;
+}
+.marketplace-tab-btn:hover {
+    color: #e11d64;
+    background: #fff3f8;
+}
+.marketplace-tab-btn:hover i {
+    color: #e11d64;
+}
+.marketplace-tab-btn.active {
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 18px rgba(225, 29, 100, 0.28);
+}
+.marketplace-tab-btn.active i {
+    color: #ffffff;
+}
+.marketplace-tab-btn .badge-pill {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+}
+.marketplace-tab-btn:not(.active) .badge-pill {
+    background: #f4e3eb;
+    color: #e11d64;
+}
+
+/* Profile Form Card */
+.profile-card {
+    background: #ffffff;
+    border: 1.5px solid #f2dce7;
+    border-radius: 22px;
+    padding: 26px 28px;
+    box-shadow: 0 8px 24px rgba(35, 15, 26, 0.03);
+    margin-bottom: 22px;
+}
+.profile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f6e8ef;
+}
+.profile-card-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #18243a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.profile-card-header p {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    color: #837781;
+}
+
+/* Modern Marketplace Form Inputs */
+.form-field-group {
+    margin-bottom: 18px;
+}
+.form-field-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3b333a;
+    margin-bottom: 7px;
+}
+.form-field-group label span.req {
+    color: #e11d64;
+}
+.form-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.form-input-box i.input-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 17px;
+    color: #a4949f;
+    pointer-events: none;
+}
+.form-input-box input,
+.form-input-box select,
+.form-field-group textarea {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    font-size: 14.5px;
+    border: 1.5px solid #eddfe5;
+    border-radius: 13px;
+    background: #ffffff;
+    color: #18243a;
+    transition: all 0.2s ease;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+.form-field-group textarea {
+    padding: 12px 14px;
+    min-height: 85px;
+    resize: vertical;
+}
+.form-input-box input:focus,
+.form-input-box select:focus,
+.form-field-group textarea:focus {
+    border-color: #e11d64;
+    box-shadow: 0 0 0 3px rgba(225, 29, 100, 0.12);
+}
+.form-hint {
+    display: block;
+    font-size: 11.5px;
+    color: #8c7e87;
+    margin-top: 5px;
+    line-height: 1.45;
+}
+
+/* Gender Radio Pills */
+.gender-radio-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.gender-radio-pill {
+    position: relative;
+}
+.gender-radio-pill input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.gender-radio-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 16px;
+    border: 1.5px solid #eddfe5;
+    border-radius: 13px;
+    background: #ffffff;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #554a52;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.gender-radio-pill input:checked + .gender-radio-label {
+    border-color: #e11d64;
+    background: #fff2f8;
+    color: #e11d64;
+    box-shadow: 0 4px 12px rgba(225, 29, 100, 0.1);
+}
+
+/* Save Button */
+.btn-save-profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+    color: #ffffff !important;
+    padding: 14px 28px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 14.5px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(225, 29, 100, 0.32);
+    transition: all 0.25s ease;
+    text-decoration: none;
+}
+.btn-save-profile:hover {
+    background: linear-gradient(90deg, #be124f 0%, #e11d64 50%, #f43f7e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(225, 29, 100, 0.42);
+}
+
+/* Order Item Card (Marketplace Style) */
+.profile-order-card {
+    background: #ffffff;
+    border: 1px solid #f0dce6;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    transition: all 0.2s ease;
+}
+.profile-order-card:hover {
+    box-shadow: 0 8px 22px rgba(225, 29, 100, 0.08);
+}
+.profile-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f6eaf0;
+    margin-bottom: 12px;
+}
+
+/* Quick Stats Bar */
+.profile-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+.profile-stat-box {
+    background: #ffffff;
+    border: 1px solid #f2dce7;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.profile-stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #fff0f6;
+    color: #e11d64;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.profile-stat-info strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    color: #18243a;
+}
+.profile-stat-info span {
+    font-size: 11px;
+    color: #8c7f88;
+    font-weight: 600;
+}
+
+/* Mobile Specific Optimizations */
+@media (max-width: 768px) {
+    .profile-hero-card {
+        padding: 18px;
+        border-radius: 20px;
+    }
+    .profile-hero-flex {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+    .profile-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+    .profile-card {
+        padding: 18px;
+        border-radius: 18px;
+    }
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+    }
+    .profile-order-footer {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+    .profile-order-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px !important;
+    }
+    .btn-save-profile {
+        width: 100% !important;
+    }
+}
+
+/* Guest Login Required State Card */
+.guest-profile-card {
+    max-width: 560px;
+    margin: 24px auto 40px;
+    background: #ffffff;
+    border: 1.5px solid #f2dce7;
+    border-radius: 24px;
+    padding: 36px 28px;
+    text-align: center;
+    box-shadow: 0 14px 40px rgba(225, 29, 100, 0.08);
+}
+.guest-profile-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fff0f6 0%, #ffe4ed 100%);
+    color: #e11d64;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    margin: 0 auto 18px;
+    border: 2px solid #fbcfe8;
+    box-shadow: 0 8px 20px rgba(225, 29, 100, 0.14);
+}
+.guest-profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff0f6;
+    color: #e11d64;
+    border: 1px solid #fbcfe8;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+.guest-profile-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #18243a;
+    margin: 0 0 10px;
+}
+.guest-profile-desc {
+    font-size: 13.5px;
+    color: #6b7280;
+    line-height: 1.65;
+    margin: 0 auto 22px;
+    max-width: 440px;
+}
+.guest-benefits-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    text-align: left;
+    background: #fff9fb;
+    border: 1px solid #f5dce8;
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+}
+.guest-benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: #374151;
+    font-weight: 600;
+}
+.guest-benefit-item i {
+    color: #e11d64;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.guest-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.btn-guest-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px 24px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+    color: #ffffff !important;
+    font-size: 14.5px;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 10px 26px -4px rgba(225, 29, 100, 0.4);
+    transition: all 0.25s ease;
+}
+.btn-guest-login:hover {
+    background: linear-gradient(90deg, #be124f 0%, #e11d64 50%, #f43f7e 100%);
+    transform: translateY(-2px);
+    color: #ffffff !important;
+}
+.btn-guest-register {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 24px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #e11d64 !important;
+    border: 1.5px solid #f2bad0;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-guest-register:hover {
+    background: #fff0f6;
+    border-color: #e11d64;
+}
+@media (max-width: 575.98px) {
+    .guest-profile-card {
+        padding: 26px 18px;
+        margin: 12px auto 30px;
+        border-radius: 20px;
+    }
+    .guest-profile-title {
+        font-size: 19px;
+    }
+    .guest-profile-desc {
+        font-size: 12.5px;
+    }
+}
+</style>
+
+<header class="main-header">
+    <?php include __DIR__ . '/includes/topbar.php'; ?>
+    <?php include __DIR__ . '/includes/navbar.php'; ?>
+</header>
+
+<main class="profile-page py-3 py-md-4">
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <div class="catalog-breadcrumb mb-3" style="font-size: 12.5px;">
+            <a href="<?php echo page_url(''); ?>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Akun Saya</span>
+        </div>
+
+        <!-- Alert Notification Messages -->
+        <?php if (!empty($notice)): ?>
+            <div style="background: #eefbf3; border: 1.5px solid #b7eed0; color: #1e7e46; padding: 12px 18px; border-radius: 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13.5px;">
+                <i class="bi bi-check-circle-fill" style="font-size: 18px;"></i>
+                <span><?php echo account_e($notice); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($error)): ?>
+            <div style="background: #fff2f5; border: 1.5px solid #f9ccd9; color: #c4234b; padding: 12px 18px; border-radius: 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13.5px;">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 18px;"></i>
+                <span><?php echo account_e($error); ?></span>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!$isLoggedIn || !$user): ?>
+            <!-- =========================================================
+                 TAMPILAN SAAT BELUM LOGIN MEMBER (INFORMASI HARUS LOGIN)
+                 ========================================================= -->
+            <section class="guest-profile-card">
+                <div class="guest-profile-icon">
+                    <i class="bi bi-person-lock"></i>
+                </div>
+                <span class="guest-profile-badge">
+                    <i class="bi bi-shield-lock-fill"></i> Akses Akun Member
+                </span>
+                <h1 class="guest-profile-title">Anda Belum Login Member</h1>
+                <p class="guest-profile-desc">
+                    Silakan login terlebih dahulu menggunakan akun Member Anda untuk melihat dan mengelola biodata diri, memantau riwayat pesanan cetak, serta menukarkan poin &amp; voucher promo.
+                </p>
+
+                <div class="guest-benefits-list">
+                    <div class="guest-benefit-item">
+                        <i class="bi bi-person-vcard-fill"></i>
+                        <span>Kelola biodata diri &amp; simpan alamat pengiriman tetap</span>
+                    </div>
+                    <div class="guest-benefit-item">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <span>Pantau status pesanan cetak &amp; unduh nota PDF kapan saja</span>
+                    </div>
+                    <div class="guest-benefit-item">
+                        <i class="bi bi-stars"></i>
+                        <span>Kumpulkan poin loyalitas &amp; klaim voucher diskon khusus Member</span>
+                    </div>
+                </div>
+
+                <div class="guest-action-buttons">
+                    <a href="<?php echo page_url('login.php'); ?>" class="btn-guest-login">
+                        <i class="bi bi-box-arrow-in-right"></i> Login Member Sekarang
+                    </a>
+                    <a href="<?php echo page_url('daftar.php'); ?>" class="btn-guest-register">
+                        <i class="bi bi-person-plus"></i> Belum Punya Akun? Daftar Member
+                    </a>
+                </div>
+            </section>
+        <?php else: ?>
+            <!-- =========================================================
+                 1. HEADER PROFILE CARD (MARKETPLACE USER HERO)
+                 ========================================================= -->
+            <section class="profile-hero-card">
+                <div class="profile-hero-flex d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- User Avatar Photo or Initial -->
+                        <div class="profile-avatar-wrap">
+                            <?php if (!empty($user['avatar'])): ?>
+                                <img src="<?php echo asset_url(ltrim((string)$user['avatar'], '/')); ?>" alt="<?php echo account_e($user['name'] ?? 'Member'); ?>" class="profile-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                <div class="profile-avatar" style="display: none;">
+                                    <?php echo account_e(mb_substr($user['name'] ?? 'M', 0, 1)); ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="profile-avatar">
+                                    <?php echo account_e(mb_substr($user['name'] ?? 'M', 0, 1)); ?>
+                                </div>
+                            <?php endif; ?>
+                            <div class="profile-avatar-badge" title="Akun Terverifikasi">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                        </div>
+
+                        <!-- User Name & Badges -->
+                        <div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h1 style="font-size: 22px; font-weight: 800; color: #18243a; margin: 0;">
+                                    <?php echo account_e($user['name'] ?? 'Member'); ?>
+                                </h1>
+                                <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="bi bi-award-fill"></i> <?php echo account_e($user['member_tier'] ?? 'Member Prioritas'); ?>
+                                </span>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-3 mt-1 flex-wrap" style="font-size: 12.5px; color: #7d727b;">
+                                <span><i class="bi bi-person-circle text-rosa"></i> @<?php echo account_e(!empty($user['username']) ? $user['username'] : ($user['phone'] ?? 'member')); ?></span>
+                                <span>•</span>
+                                <span><i class="bi bi-whatsapp text-success"></i> <?php echo account_e($user['phone'] ?? ''); ?></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Action / Reward Badges -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <a href="<?php echo page_url('akun.php?tab=poin'); ?>" style="background: #fff9df; border: 1px solid #fae69e; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #9c6c00; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="bi bi-star-fill text-warning"></i>
+                            <span><?php echo (int)($user['points'] ?? 150); ?> Poin Member</span>
+                        </a>
+
+                        <a href="<?php echo page_url('akun.php?tab=poin'); ?>" style="background: #fff0f6; border: 1px solid #f2c9de; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #e11d64; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="bi bi-ticket-perforated-fill"></i>
+                            <span><?php echo count($vouchers); ?> Voucher</span>
+                        </a>
+
+                        <a href="<?php echo page_url('logout.php'); ?>" style="background: #ffffff; border: 1px solid #f0dce6; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #a43a4e; font-weight: 700; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;" title="Keluar Akun">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span class="d-none d-sm-inline">Keluar</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Stats Bar (Total, Aktif, Selesai, Total Belanja) -->
+                <div class="profile-stats-grid">
+                    <div class="profile-stat-box">
+                        <div class="profile-stat-icon"><i class="bi bi-bag-check"></i></div>
+                        <div class="profile-stat-info">
+                            <strong><?php echo (int)$stats['total']; ?></strong>
+                            <span>Total Pesanan</span>
+                        </div>
+                    </div>
+                    <div class="profile-stat-box">
+                        <div class="profile-stat-icon" style="background:#fff9df;color:#c98b00;"><i class="bi bi-hourglass-split"></i></div>
+                        <div class="profile-stat-info">
+                            <strong><?php echo (int)$stats['active']; ?></strong>
+                            <span>Sedang Diproses</span>
+                        </div>
+                    </div>
+                    <div class="profile-stat-box">
+                        <div class="profile-stat-icon" style="background:#e8f8ef;color:#1e7e46;"><i class="bi bi-check2-circle"></i></div>
+                        <div class="profile-stat-info">
+                            <strong><?php echo (int)$stats['completed']; ?></strong>
+                            <span>Pesanan Selesai</span>
+                        </div>
+                    </div>
+                    <div class="profile-stat-box">
+                        <div class="profile-stat-icon"><i class="bi bi-wallet2"></i></div>
+                        <div class="profile-stat-info">
+                            <strong><?php echo format_rupiah($stats['spent']); ?></strong>
+                            <span>Total Belanja</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =========================================================
+                 2. SEGMENTED NAVIGATION TABS (MARKETPLACE PILLS)
+                 ========================================================= -->
+            <div class="marketplace-tabs-wrap">
+                <nav class="marketplace-nav-tabs" role="tablist">
+                    <a href="<?php echo page_url('akun.php?tab=profil'); ?>" class="marketplace-tab-btn <?php echo ($tab === 'profil') ? 'active' : ''; ?>">
+                        <i class="bi bi-person-vcard"></i>
+                        <span>Biodata Diri</span>
+                    </a>
+                    <a href="<?php echo page_url('akun.php?tab=pesanan'); ?>" class="marketplace-tab-btn <?php echo ($tab === 'pesanan') ? 'active' : ''; ?>">
+                        <i class="bi bi-receipt"></i>
+                        <span>Pesanan Saya</span>
+                        <span class="badge-pill"><?php echo count($orders); ?></span>
+                    </a>
+                    <a href="<?php echo page_url('akun.php?tab=poin'); ?>" class="marketplace-tab-btn <?php echo ($tab === 'poin') ? 'active' : ''; ?>">
+                        <i class="bi bi-stars"></i>
+                        <span>Poin &amp; Voucher</span>
+                    </a>
+                    <a href="<?php echo page_url('akun.php?tab=alamat'); ?>" class="marketplace-tab-btn <?php echo ($tab === 'alamat') ? 'active' : ''; ?>">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>Alamat Pengiriman</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- =========================================================
+                 3. TAB CONTENT: BIODATA DIRI / EDIT PROFIL
+                 ========================================================= -->
+            <?php if ($tab === 'profil'): ?>
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="profile-card">
+                            <div class="profile-card-header">
+                                <div>
+                                    <h2><i class="bi bi-pencil-square text-rosa"></i> Edit Biodata Diri</h2>
+                                    <p>Kelola informasi identitas Anda untuk mempercepat proses pemesanan &amp; cetak nota.</p>
+                                </div>
+                                <span style="font-size: 11px; background: #eefbf3; color: #1e7e46; font-weight: 700; padding: 4px 10px; border-radius: 8px;">
+                                    <i class="bi bi-shield-check"></i> Data Aman
+                                </span>
+                            </div>
+
+                            <form action="<?php echo page_url('akun.php'); ?>" method="POST" enctype="multipart/form-data" id="editProfileForm">
+                                <div class="avatar-upload-card">
+                                    <label class="d-block fw-bold mb-2" style="font-size: 13.5px; color: #18243a;">
+                                        <i class="bi bi-camera-fill text-rosa me-1"></i> Foto Profil Member
+                                    </label>
+                                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                                        <div class="avatar-preview-wrap">
+                                            <img id="avatarPreviewImg" src="<?php echo !empty($user['avatar']) ? asset_url(ltrim((string)$user['avatar'], '/')) : ''; ?>" alt="Preview Foto"
+                                                 class="avatar-preview-circle" style="<?php echo !empty($user['avatar']) ? '' : 'display: none;'; ?>">
+                                            <div id="avatarPlaceholder" class="avatar-preview-placeholder" style="<?php echo !empty($user['avatar']) ? 'display: none;' : ''; ?>">
+                                                <?php echo account_e(mb_substr($user['name'] ?? 'M', 0, 1)); ?>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                <label for="avatarInput" class="btn-upload-avatar">
+                                                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                                                    <span id="btnUploadLabel"><?php echo !empty($user['avatar']) ? 'Ganti Foto Profil' : 'Unggah Foto Baru'; ?></span>
+                                                </label>
+                                                <input type="file" name="avatar" id="avatarInput" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;">
+
+                                                <button type="button" id="btnRemoveAvatar" class="btn-remove-avatar" style="<?php echo !empty($user['avatar']) ? '' : 'display: none;'; ?>" title="Hapus Foto Profil">
+                                                    <i class="bi bi-trash3"></i> Hapus Foto
+                                                </button>
+                                                <input type="hidden" name="remove_avatar" id="removeAvatarInput" value="0">
+                                            </div>
+                                            <small class="text-muted d-block" style="font-size: 11.5px; line-height: 1.45;">
+                                                Format: JPG, JPEG, PNG, WEBP (Maksimal 4 MB). Klik <b>Simpan Perubahan Profil</b> di bawah untuk mengaktifkan foto profil baru Anda.
+                                            </small>
+                                            <div id="avatarSelectedInfo" class="mt-1" style="display: none; font-size: 11.5px;">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                    <i class="bi bi-check2-circle me-1"></i> <span id="avatarFileName">Foto siap disimpan</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div class="form-field-group">
+                                        <label>Nama Lengkap <span class="req">*</span></label>
+                                        <div class="form-input-box">
+                                            <i class="bi bi-person input-icon"></i>
+                                            <input type="text" name="name" value="<?php echo account_e($user['name'] ?? ''); ?>" required placeholder="Nama lengkap sesuai KTP/ID">
+                                        </div>
+                                        <small class="form-hint">Nama ini akan dicetak pada invoice / nota resmi percetakan.</small>
+                                    </div>
+
+                                    <div class="form-field-group">
+                                        <label>Username / Panggilan</label>
+                                        <div class="form-input-box">
+                                            <i class="bi bi-at input-icon"></i>
+                                            <input type="text" name="username" value="<?php echo account_e($user['username'] ?? ''); ?>" placeholder="Contoh: alanroziqin">
+                                        </div>
+                                        <small class="form-hint">Nama panggilan unik akun Member Anda.</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div class="form-field-group">
+                                        <label>Nomor WhatsApp Aktif <span class="req">*</span></label>
+                                        <div class="form-input-box">
+                                            <i class="bi bi-whatsapp input-icon text-success"></i>
+                                            <input type="tel" name="phone" value="<?php echo account_e($user['phone'] ?? ''); ?>" required placeholder="08xxxxxxxxxx">
+                                        </div>
+                                        <small class="form-hint">Digunakan untuk konfirmasi pesanan, proof desain &amp; kirim file.</small>
+                                    </div>
+
+                                    <div class="form-field-group">
+                                        <label>Alamat Email</label>
+                                        <div class="form-input-box">
+                                            <i class="bi bi-envelope input-icon"></i>
+                                            <input type="email" name="email" value="<?php echo account_e($user['email'] ?? ''); ?>" placeholder="emailanda@example.com">
+                                        </div>
+                                        <small class="form-hint">Salinan invoice &amp; update status akan dikirim ke email ini.</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                    <div class="form-field-group">
+                                        <label>Jenis Kelamin</label>
+                                        <div class="gender-radio-group">
+                                            <div class="gender-radio-pill">
+                                                <input type="radio" name="gender" id="gender_l" value="L" <?php echo (empty($user['gender']) || $user['gender'] === 'L') ? 'checked' : ''; ?>>
+                                                <label for="gender_l" class="gender-radio-label">
+                                                    <i class="bi bi-gender-male"></i> Laki-laki
+                                                </label>
+                                            </div>
+                                            <div class="gender-radio-pill">
+                                                <input type="radio" name="gender" id="gender_p" value="P" <?php echo (($user['gender'] ?? '') === 'P') ? 'checked' : ''; ?>>
+                                                <label for="gender_p" class="gender-radio-label">
+                                                    <i class="bi bi-gender-female"></i> Perempuan
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-field-group">
+                                        <label>Tanggal Lahir</label>
+                                        <div class="form-input-box">
+                                            <i class="bi bi-calendar-event input-icon"></i>
+                                            <input type="date" name="birth_date" value="<?php echo account_e($user['birth_date'] ?? ''); ?>">
+                                        </div>
+                                        <small class="form-hint">Dapatkan promo &amp; voucher potongan di hari ulang tahun Anda.</small>
+                                    </div>
+                                </div>
+
+                                <hr style="border: 0; border-top: 1px solid #f6e8ef; margin: 10px 0 20px;">
+
+                                <div class="form-grid-2" style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+                                    <div class="form-field-group">
+                                        <label>Kota / Wilayah Pengiriman</label>
+                                        <div class="form-input-box">
+                                            <i class="bi bi-buildings input-icon"></i>
+                                            <input type="text" name="city" value="<?php echo account_e($user['city'] ?? 'Pasuruan'); ?>" placeholder="Contoh: Pasuruan">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-field-group">
+                                        <label>Catatan / Patokan Alamat Pengantaran</label>
+                                        <div class="form-input-box">
+                                            <i class="bi bi-signpost-2 input-icon"></i>
+                                            <input type="text" name="address_note" value="<?php echo account_e($user['address_note'] ?? ''); ?>" placeholder="Contoh: Seberang Masjid Jami, Pagar Hitam">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-field-group">
+                                    <label>Alamat Lengkap Rumah / Kantor / Toko</label>
+                                    <textarea name="address" rows="3" placeholder="Tuliskan nama jalan, nomor rumah, RT/RW, dusun, desa/kelurahan, dan kecamatan secara lengkap..."><?php echo account_e($user['address'] ?? ''); ?></textarea>
+                                    <small class="form-hint">Memudahkan kurir mengantarkan spanduk, banner, undangan, dan paket cetak langsung ke lokasi Anda.</small>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mt-4 pt-2">
+                                    <button type="submit" class="btn-save-profile">
+                                        <i class="bi bi-check2-circle" style="font-size: 18px;"></i> Simpan Perubahan Profil
+                                    </button>
+                                    <a href="<?php echo page_url('produk.php'); ?>" style="color: #8c7f88; text-decoration: none; font-size: 13.5px; font-weight: 700;">
+                                        Batal &amp; Lanjut Belanja
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="profile-card" style="background: linear-gradient(135deg, #18243a 0%, #2a1f28 100%); color: #ffffff; border: 0; box-shadow: 0 12px 35px rgba(24, 36, 58, 0.2);">
+                            <div class="d-flex justify-content-between align-items-start mb-4">
+                                <div>
+                                    <small style="color: #f472b6; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">KARTU MEMBER DIGITAL</small>
+                                    <h3 style="color: #ffffff; font-size: 18px; font-weight: 800; margin: 3px 0 0;">Rosa Indah Printing</h3>
+                                </div>
+                                <i class="bi bi-qr-code" style="font-size: 28px; color: #fff;"></i>
+                            </div>
+
+                            <div style="margin: 25px 0;">
+                                <div style="font-size: 16px; font-weight: 800; letter-spacing: 1.5px; font-family: monospace;">
+                                    RIP-MEMBER-<?php echo str_pad((string)($user['id'] ?? 1), 5, '0', STR_PAD_LEFT); ?>
+                                </div>
+                                <div style="font-size: 14px; color: #e2d9df; margin-top: 4px;">
+                                    <?php echo account_e($user['name'] ?? 'Member'); ?>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-end pt-3" style="border-top: 1px solid rgba(255,255,255,0.15);">
+                                <div>
+                                    <small style="color: #b5a9b2; font-size: 10.5px; display: block;">STATUS MEMBER</small>
+                                    <strong style="color: #38ef7d; font-size: 13px;"><i class="bi bi-shield-fill-check"></i> Terverifikasi</strong>
+                                </div>
+                                <div class="text-end">
+                                    <small style="color: #b5a9b2; font-size: 10.5px; display: block;">SALDO POIN</small>
+                                    <strong style="color: #ffd700; font-size: 15px;"><i class="bi bi-star-fill"></i> <?php echo (int)($user['points'] ?? 150); ?> Poin</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-card" style="background: #fff9fc; border-color: #f2d1e0;">
+                            <h4 style="font-size: 14px; font-weight: 800; color: #18243a; margin-bottom: 10px; display: flex; align-items: center; gap: 7px;">
+                                <i class="bi bi-lightbulb-fill text-warning"></i> Tips Akun Member:
+                            </h4>
+                            <ul style="padding-left: 18px; margin: 0; font-size: 12.5px; color: #6f626b; line-height: 1.7;">
+                                <li>Pastikan <b>nomor WhatsApp</b> benar karena file revisi desain cetak dikirim via WA.</li>
+                                <li>Kumpulkan <b>poin belanja</b> setiap pesanan cetak dan tukarkan dengan voucher potongan.</li>
+                                <li>Gunakan patokan alamat yang jelas untuk mempermudah kurir saat kirim banner/undangan.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- =========================================================
+                 4. TAB CONTENT: PESANAN SAYA
+                 ========================================================= -->
+            <?php if ($tab === 'pesanan'): ?>
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <div>
+                            <h2><i class="bi bi-receipt text-rosa"></i> Riwayat &amp; Status Pesanan</h2>
+                            <p>Pantau status produksi, cetak nota, dan cek tracking pesanan cetak Anda.</p>
+                        </div>
+                        <a href="<?php echo page_url('lacak-pesanan.php'); ?>" style="color: #e11d64; font-size: 12.5px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="bi bi-search"></i> Lacak Nomor Lain
+                        </a>
+                    </div>
+
+                    <?php if (empty($orders)): ?>
+                        <div style="text-align: center; padding: 50px 20px;">
+                            <i class="bi bi-inbox" style="font-size: 48px; color: #d0c0c9;"></i>
+                            <h4 style="margin: 14px 0 6px; font-size: 17px; font-weight: 800; color: #18243a;">Belum Ada Riwayat Pesanan</h4>
+                            <p style="color: #8c7e87; font-size: 13px; max-width: 420px; margin: 0 auto 18px;">Pesanan yang Anda buat melalui website akan otomatis tercatat dan dapat dipantau di sini.</p>
+                            <a href="<?php echo page_url('produk.php'); ?>" class="btn-save-profile" style="padding: 10px 22px; font-size: 13.5px;">
+                                <i class="bi bi-bag"></i> Mulai Belanja Cetak
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div>
+                            <?php
+                            $statusMap = [
+                                'pending'    => ['label' => 'Pesanan Baru', 'bg' => '#fff0f6', 'color' => '#e11d64'],
+                                'confirmed'  => ['label' => 'Dikonfirmasi', 'bg' => '#e8f4fd', 'color' => '#0d6efd'],
+                                'processing' => ['label' => 'Sedang Didesain / Cetak', 'bg' => '#fff9df', 'color' => '#b27b00'],
+                                'printed'    => ['label' => 'Selesai Cetak', 'bg' => '#e3f7fc', 'color' => '#0288d1'],
+                                'completed'  => ['label' => 'Selesai Diambil / Kirim', 'bg' => '#e8f8ef', 'color' => '#1e7e46'],
+                                'cancelled'  => ['label' => 'Dibatalkan', 'bg' => '#fbe9eb', 'color' => '#dc3545'],
+                            ];
+                            foreach ($orders as $o):
+                                $stKey = $o['status'] ?? 'pending';
+                                $st = $statusMap[$stKey] ?? ['label' => $stKey, 'bg' => '#f0f0f0', 'color' => '#555'];
+                                $isPaid = (($o['payment_status'] ?? '') === 'paid');
+                            ?>
+                                <div class="profile-order-card">
+                                    <div class="profile-order-header">
+                                        <div>
+                                            <strong style="color: #18243a; font-size: 14.5px;"><?php echo account_e($o['order_code'] ?? ''); ?></strong>
+                                            <small style="color: #8c7e87; display: block; font-size: 11.5px; margin-top: 2px;">
+                                                <i class="bi bi-clock"></i> <?php echo account_e($o['created_at'] ?? ''); ?> WIB
+                                            </small>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span style="background: <?php echo $st['bg']; ?>; color: <?php echo $st['color']; ?>; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px;">
+                                                <?php echo account_e($st['label']); ?>
+                                            </span>
+                                            <span style="background: <?php echo $isPaid ? '#e8f8ef' : '#fff0f0'; ?>; color: <?php echo $isPaid ? '#1e7e46' : '#d63031'; ?>; font-size: 11.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px;">
+                                                <?php echo $isPaid ? 'Lunas' : 'Belum Lunas'; ?>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin: 12px 0;">
+                                        <?php if (!empty($o['items'])): ?>
+                                            <?php foreach ($o['items'] as $item): ?>
+                                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px;">
+                                                    <div style="color: #3b333a; font-weight: 700;">
+                                                        <i class="bi bi-box-seam text-rosa me-1"></i> <?php echo account_e($item['product_name'] ?? 'Produk Cetak'); ?>
+                                                        <span style="color: #8c7e87; font-weight: 500;">x <?php echo (int)($item['quantity'] ?? 1); ?> <?php echo account_e($item['unit'] ?? 'pcs'); ?></span>
+                                                    </div>
+                                                    <div style="color: #635761; font-variant-numeric: tabular-nums;">
+                                                        <?php echo format_rupiah($item['subtotal'] ?? ((float)($item['unit_price'] ?? 0) * (int)($item['quantity'] ?? 1))); ?>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <div style="font-size: 13px; color: #635761;">Pesanan Cetak Custom</div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="profile-order-footer d-flex justify-content-between align-items-center pt-3" style="border-top: 1px dashed #f0dce6;">
+                                        <div>
+                                            <small style="font-size: 11px; color: #8c7f88; display: block;">Total Pembayaran:</small>
+                                            <strong style="font-size: 17px; font-weight: 800; color: #e11d64;">
+                                                <?php echo format_rupiah($o['total_estimate'] ?? 0); ?>
+                                            </strong>
+                                        </div>
+
+                                        <div class="profile-order-actions d-flex gap-2 flex-wrap">
+                                            <a href="<?php echo page_url('lacak-pesanan.php?code=' . urlencode((string)($o['order_code'] ?? '')) . '&phone=' . urlencode((string)($user['phone'] ?? ''))); ?>" style="border: 1px solid #e11d64; color: #e11d64; background: #fff; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                                                <i class="bi bi-geo-alt"></i> Lacak
+                                            </a>
+
+                                            <a href="<?php echo page_url('invoice.php?code=' . urlencode((string)($o['order_code'] ?? '')) . '&phone=' . urlencode((string)($user['phone'] ?? ''))); ?>" target="_blank" style="background: #18243a; color: #ffffff; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                                                <i class="bi bi-printer"></i> Nota PDF
+                                            </a>
+
+                                            <?php if (!$isPaid): ?>
+                                                <a href="<?php echo page_url('lacak-pesanan.php?code=' . urlencode((string)($o['order_code'] ?? '')) . '&phone=' . urlencode((string)($user['phone'] ?? ''))); ?>" style="background: #25d366; color: #ffffff; padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                                                    <i class="bi bi-cash-stack"></i> Bayar
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- =========================================================
+                 5. TAB CONTENT: POIN & VOUCHER MEMBER
+                 ========================================================= -->
+            <?php if ($tab === 'poin'): ?>
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="profile-card" style="background: linear-gradient(135deg, #fffcf5 0%, #fff7dc 100%); border-color: #fce8a6;">
+                            <h2 style="font-size: 17px; font-weight: 800; color: #8f6500; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-stars" style="font-size: 22px;"></i> Saldo Poin Saya
+                            </h2>
+                            <div style="font-size: 38px; font-weight: 800; color: #d67a00; font-variant-numeric: tabular-nums;">
+                                <?php echo (int)($user['points'] ?? 150); ?> <span style="font-size: 16px; font-weight: 700; color: #8f6500;">Poin</span>
+                            </div>
+                            <p style="font-size: 12.5px; color: #7f6629; margin: 10px 0 16px; line-height: 1.6;">
+                                Kumpulkan poin setiap pemesanan cetak di Rosa Indah Printing. Setiap kelipatan belanja Rp10.000 otomatis mendapatkan 1 Poin reward.
+                            </p>
+                            <a href="<?php echo page_url('produk.php'); ?>" class="btn-save-profile" style="padding: 10px 20px; font-size: 13px;">
+                                <i class="bi bi-cart-plus"></i> Belanja Tambah Poin
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="profile-card">
+                            <div class="profile-card-header">
+                                <div>
+                                    <h2><i class="bi bi-ticket-perforated text-rosa"></i> Kupon &amp; Voucher Siap Pakai</h2>
+                                    <p>Gunakan kode voucher saat checkout untuk mendapatkan potongan harga langsung.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; gap: 12px;">
+                                <?php foreach ($vouchers as $v): ?>
+                                    <div style="border: 1.5px dashed #f2bad0; background: #fffafc; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                        <div>
+                                            <div style="display: inline-block; background: #e11d64; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; margin-bottom: 5px;">
+                                                <?php echo account_e($v['code']); ?>
+                                            </div>
+                                            <strong style="display: block; color: #18243a; font-size: 14px;"><?php echo account_e($v['name']); ?></strong>
+                                            <small style="color: #796c76; font-size: 11.5px;">
+                                                Min. Order <?php echo format_rupiah($v['min_order']); ?> • Diskon <?php echo ($v['discount_type'] === 'percent') ? $v['discount_value'] . '%' : format_rupiah($v['discount_value']); ?>
+                                            </small>
+                                        </div>
+                                        <button type="button" onclick="navigator.clipboard.writeText('<?php echo account_e($v['code']); ?>'); this.innerText='Tersalin!'; setTimeout(() => this.innerText='Salin Kode', 2000);" style="border: 1px solid #e11d64; background: #fff; color: #e11d64; padding: 7px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                                            Salin Kode
+                                        </button>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- =========================================================
+                 6. TAB CONTENT: ALAMAT PENGIRIMAN
+                 ========================================================= -->
+            <?php if ($tab === 'alamat'): ?>
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <div>
+                            <h2><i class="bi bi-geo-alt text-rosa"></i> Alamat Pengiriman Utama</h2>
+                            <p>Alamat tujuan untuk kurir dan pengiriman hasil pesanan percetakan Anda.</p>
+                        </div>
+                        <a href="<?php echo page_url('akun.php?tab=profil'); ?>" class="btn-save-profile" style="padding: 8px 16px; font-size: 12.5px;">
+                            <i class="bi bi-pencil"></i> Ubah Alamat
+                        </a>
+                    </div>
+
+                    <div style="border: 1.5px solid #f2dce7; background: #fffcfd; border-radius: 16px; padding: 20px;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 6px;">ALAMAT UTAMA</span>
+                            <strong style="color: #18243a; font-size: 15px;"><?php echo account_e($user['name'] ?? 'Member'); ?></strong>
+                            <span style="color: #8c7e87; font-size: 13px;">(<?php echo account_e($user['phone'] ?? ''); ?>)</span>
+                        </div>
+
+                        <p style="color: #4b4149; font-size: 14px; line-height: 1.6; margin: 8px 0 10px;">
+                            <?php echo !empty($user['address']) ? account_e($user['address']) : 'Alamat lengkap belum diisi. Silakan lengkapi pada tab Biodata Diri.'; ?>
+                        </p>
+
+                        <?php if (!empty($user['city'])): ?>
+                            <div style="font-size: 13px; color: #6d616a; margin-bottom: 6px;">
+                                <i class="bi bi-buildings text-rosa me-1"></i> Kota / Kecamatan: <b><?php echo account_e($user['city']); ?></b>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($user['address_note'])): ?>
+                            <div style="background: #fff0f6; border-left: 3px solid #e11d64; padding: 8px 12px; border-radius: 4px; font-size: 12.5px; color: #87254e;">
+                                <i class="bi bi-info-circle-fill me-1"></i> Patokan Kurir: <?php echo account_e($user['address_note']); ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const avatarInput = document.getElementById('avatarInput');
+        const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        const avatarSelectedInfo = document.getElementById('avatarSelectedInfo');
+        const avatarFileName = document.getElementById('avatarFileName');
+        const btnUploadLabel = document.getElementById('btnUploadLabel');
+        const btnRemoveAvatar = document.getElementById('btnRemoveAvatar');
+        const removeAvatarInput = document.getElementById('removeAvatarInput');
+
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function() {
+                const file = this.files && this.files[0];
+                if (file) {
+                    if (file.size > 4 * 1024 * 1024) {
+                        alert('Ukuran foto terlalu besar. Maksimal ukuran foto adalah 4 MB.');
+                        this.value = '';
+                        return;
+                    }
+                    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+                    if (!validTypes.includes(file.type.toLowerCase())) {
+                        alert('Format file tidak didukung. Harap pilih gambar dengan format JPG, PNG, atau WEBP.');
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (avatarPreviewImg) {
+                            avatarPreviewImg.src = e.target.result;
+                            avatarPreviewImg.style.display = 'block';
+                        }
+                        if (avatarPlaceholder) {
+                            avatarPlaceholder.style.display = 'none';
+                        }
+                        if (avatarFileName) {
+                            avatarFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB) siap disimpan';
+                        }
+                        if (avatarSelectedInfo) {
+                            avatarSelectedInfo.style.display = 'block';
+                        }
+                        if (btnUploadLabel) {
+                            btnUploadLabel.textContent = 'Ganti Foto Lain';
+                        }
+                        if (btnRemoveAvatar) {
+                            btnRemoveAvatar.style.display = 'inline-flex';
+                        }
+                        if (removeAvatarInput) {
+                            removeAvatarInput.value = '0';
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (btnRemoveAvatar) {
+            btnRemoveAvatar.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (avatarInput) avatarInput.value = '';
+                if (avatarPreviewImg) avatarPreviewImg.style.display = 'none';
+                if (avatarPlaceholder) avatarPlaceholder.style.display = 'flex';
+                if (removeAvatarInput) removeAvatarInput.value = '1';
+                if (btnUploadLabel) btnUploadLabel.textContent = 'Unggah Foto Baru';
+                btnRemoveAvatar.style.display = 'none';
+                if (avatarSelectedInfo) {
+                    avatarSelectedInfo.style.display = 'block';
+                    if (avatarFileName) {
+                        avatarFileName.textContent = 'Foto profil akan dihapus saat Anda klik Simpan';
+                    }
+                }
+            });
+        }
+    });
+</script>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>
