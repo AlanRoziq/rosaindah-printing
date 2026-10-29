@@ -7,6 +7,7 @@ require_once __DIR__ . '/includes/order-tracking.php';
 require_once __DIR__ . '/config/customer-auth.php';
 require_once __DIR__ . '/includes/promotions.php';
 require_once __DIR__ . '/includes/loyalty.php';
+
 $pdo = db();
 if ($pdo) {
     try {
@@ -19,565 +20,726 @@ if ($pdo) {
 
 cart_init();
 
-$loggedCustomer = customer_logged_in() ? customer_user() : null;
-$error = '';
-$buyId = trim($_GET['buy'] ?? '');
-$buyProduct = null;
-if ($buyId !== '') {
-    foreach ($products as $item) if ($item['id'] === $buyId) {
-        $buyProduct = $item;
-        break;
+if (!function_exists('format_rupiah')) {
+    function format_rupiah($amount): string {
+        return 'Rp' . number_format((float)$amount, 0, ',', '.');
     }
 }
 
-$items = [];
-if ($buyProduct) {
-    $items[] = ['product' => $buyProduct, 'quantity' => 1];
-} else {
-    foreach (cart_items() as $productId => $row) {
-        foreach ($products as $item) {
-            if ($item['id'] !== $productId) continue;
-            $items[] = ['product' => $item, 'quantity' => max(1, (int)$row['quantity'])];
+$loggedCustomer = customer_logged_in() ? customer_user() : null;
+$error = '';
+$buyId = trim($_GET['buy'] ?? ($_POST['buy'] ?? ''));
+$buyQty = max(1, (int)($_GET['qty'] ?? ($_POST['qty'] ?? 1)));
+$buyProduct = null;
+if ($buyId !== '') {
+    foreach ($products as $item) {
+        if ($item['id'] === $buyId) {
+            $buyProduct = $item;
             break;
         }
     }
 }
 
-function ensure_order_attachments_table(PDO $pdo): void
-{
-    $pdo->exec("CREATE TABLE IF NOT EXISTS order_attachments (
-        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        order_id BIGINT UNSIGNED NOT NULL,
-        original_name VARCHAR(255) NOT NULL,
-        stored_name VARCHAR(255) NOT NULL,
-        file_path VARCHAR(500) NOT NULL,
-        mime_type VARCHAR(100) NOT NULL,
-        file_size BIGINT UNSIGNED NOT NULL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-        INDEX idx_order_attachments_order (order_id)
-    ) ENGINE=InnoDB");
+$items = [];
+if ($buyProduct) {
+    $unitPrice = product_unit_price($buyProduct, $buyQty);
+    $items[] = [
+        'product'   => $buyProduct,
+        'quantity'  => $buyQty,
+        'unitPrice' => $unitPrice,
+        'subtotal'  => $unitPrice * $buyQty,
+    ];
+} else {
+    foreach (cart_items() as $productId => $row) {
+        foreach ($products as $item) {
+            if ($item['id'] !== $productId) continue;
+            $qty = max(1, (int)$row['quantity']);
+            $unitPrice = product_unit_price($item, $qty);
+            $items[] = [
+                'product'   => $item,
+                'quantity'  => $qty,
+                'unitPrice' => $unitPrice,
+                'subtotal'  => $unitPrice * $qty,
+            ];
+            break;
+        }
+    }
 }
 
-function upload_order_files(array $files, string $orderCode, string $baseDir): array
-{
-    $allowed = [
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/webp' => 'webp',
-        'application/pdf' => 'pdf',
-    ];
-    $maxBytes = 10 * 1024 * 1024;
-    $maxFiles = 3;
-    $uploaded = [];
-    if (empty($files['name'])) return $uploaded;
-    $names = is_array($files['name']) ? $files['name'] : [$files['name']];
-    $tmpNames = is_array($files['tmp_name']) ? $files['tmp_name'] : [$files['tmp_name']];
-    $sizes = is_array($files['size']) ? $files['size'] : [$files['size']];
-    $errors = is_array($files['error']) ? $files['error'] : [$files['error']];
-    if (count($names) > $maxFiles) throw new RuntimeException('Maksimal 3 file desain dapat diunggah.');
-    $targetDir = rtrim($baseDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $orderCode;
-    if (!is_dir($targetDir) && !mkdir($targetDir, 0755, true)) throw new RuntimeException('Folder upload desain tidak dapat dibuat.');
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    foreach ($names as $i => $original) {
-        if (($errors[$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) continue;
-        if (($errors[$i] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) throw new RuntimeException('Ada file desain yang gagal diunggah.');
-        $tmp = $tmpNames[$i] ?? '';
-        $size = (int)($sizes[$i] ?? 0);
-        $original = trim((string)$original);
-        if ($original === '' || !is_uploaded_file($tmp)) throw new RuntimeException('File desain tidak valid.');
-        if ($size <= 0 || $size > $maxBytes) throw new RuntimeException('Ukuran setiap file desain maksimal 10 MB.');
-        $mime = $finfo->file($tmp) ?: '';
-        if (!isset($allowed[$mime])) throw new RuntimeException('Format desain hanya JPG, PNG, WEBP, atau PDF.');
-        $ext = $allowed[$mime];
-        $safeBase = preg_replace('/[^A-Za-z0-9_-]+/', '-', pathinfo($original, PATHINFO_FILENAME));
-        $safeBase = trim($safeBase, '-_') ?: 'desain';
-        $stored = $safeBase . '-' . bin2hex(random_bytes(5)) . '.' . $ext;
-        $destination = $targetDir . DIRECTORY_SEPARATOR . $stored;
-        if (!move_uploaded_file($tmp, $destination)) throw new RuntimeException('File desain gagal disimpan.');
-        $uploaded[] = [
-            'original_name' => $original,
-            'stored_name' => $stored,
-            'file_path' => 'uploads/order-designs/' . $orderCode . '/' . $stored,
-            'mime_type' => $mime,
-            'file_size' => $size,
-            'absolute_path' => $destination,
-        ];
-    }
-    return $uploaded;
+if (empty($items) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    header('Location: ' . page_url('cart.php'));
+    exit;
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    if (!cart_verify_csrf($_POST['csrf'] ?? '')) {
+    $csrfToken = $_POST['csrf'] ?? '';
+    if ($csrfToken !== '' && !cart_verify_csrf($csrfToken)) {
         $error = 'Sesi checkout tidak valid. Silakan muat ulang halaman.';
-    } elseif (!$items) {
-        $error = 'Keranjang masih kosong.';
+    } elseif (empty($items)) {
+        $error = 'Keranjang belanja masih kosong.';
     } else {
         $name = trim($_POST['customer_name'] ?? ($loggedCustomer['name'] ?? ''));
         $phone = trim($_POST['customer_phone'] ?? ($loggedCustomer['phone'] ?? ''));
         $address = trim($_POST['customer_address'] ?? ($loggedCustomer['address'] ?? ''));
-        $size = trim($_POST['size'] ?? 'Standar / sesuai produk');
-        $material = trim($_POST['material'] ?? 'Standar');
-        $finishing = trim($_POST['finishing'] ?? 'Tanpa finishing khusus');
-        $design = trim($_POST['design'] ?? 'Kirim desain sendiri');
-        $notes = trim($_POST['notes'] ?? '');
+        $customerNoteInput = trim($_POST['customer_note'] ?? ($_POST['notes'] ?? ''));
+        $paymentMethod = trim($_POST['payment_method'] ?? 'transfer');
+        if (!in_array($paymentMethod, ['transfer', 'qris', 'cash'], true)) {
+            $paymentMethod = 'transfer';
+        }
         $voucherCode = strtoupper(trim($_POST['voucher_code'] ?? ''));
-        $designFiles = $_FILES['design_files'] ?? [];
 
-        if ($name === '' || $phone === '' || $address === '') {
-            $error = 'Nama, nomor WhatsApp, dan alamat wajib diisi.';
+        if ($name === '' || $phone === '') {
+            $error = 'Nama lengkap dan nomor WhatsApp wajib diisi.';
         } else {
-            $pdo = db();
-            if (!$pdo) {
-                $error = 'Database belum terhubung. Pesanan belum dapat disimpan.';
-            } else {
-                $subtotal = 0;
-                foreach ($items as $row) $subtotal += product_unit_price($row['product'], $row['quantity']) * $row['quantity'];
-                $isMember = customer_logged_in();
-                $appliedRule = null;
-                $voucherError = '';
+            $subtotal = 0;
+            foreach ($items as $row) {
+                $subtotal += $row['subtotal'];
+            }
+
+            $isMember = customer_logged_in();
+            $appliedRule = null;
+            $discount = 0.0;
+
+            if ($pdo) {
                 if ($voucherCode !== '') {
-                    [$voucherOk, $voucherRule, $voucherMessage] = promo_apply_voucher($pdo, $voucherCode, $items, $isMember, $subtotal, $loggedCustomer ? (int)$loggedCustomer['id'] : null);
-                    if (!$voucherOk) {
-                        $error = $voucherMessage;
-                    } else {
+                    [$voucherOk, $voucherRule, $voucherMessage] = promo_apply_voucher(
+                        $pdo,
+                        $voucherCode,
+                        $items,
+                        $isMember,
+                        $subtotal,
+                        $loggedCustomer ? (int)$loggedCustomer['id'] : null
+                    );
+                    if ($voucherOk && $voucherRule) {
                         $appliedRule = $voucherRule;
+                        $discount = (float)$appliedRule['discount_amount'];
                     }
                 } else {
                     $appliedRule = promo_get_best($pdo, $items, $isMember, $subtotal);
-                }
-                if ($error !== '') {
-                    // Jangan menyimpan pesanan jika voucher tidak valid.
-                } else {
-                    $discount = $appliedRule ? (float)$appliedRule['discount_amount'] : 0.0;
-                    $total = max(0.0, $subtotal - $discount);
-                    $orderCode = 'RIP-' . date('Ymd-His') . '-' . strtoupper(bin2hex(random_bytes(2)));
-                    $promoNote = $appliedRule ? ($appliedRule['source'] === 'voucher' ? 'Voucher: ' . $appliedRule['code'] : 'Promo: ' . $appliedRule['name']) : 'Tidak ada promo/voucher';
-                    $customerNote = "Alamat: {$address}\nUkuran: {$size}\nBahan: {$material}\nFinishing: {$finishing}\nDesain: {$design}\nCatatan: {$notes}\n{$promoNote}";
-                    $uploadedFiles = [];
-                    try {
-                        ensure_order_attachments_table($pdo);
-                        $uploadDir = __DIR__ . '/uploads/order-designs';
-                        $uploadedFiles = upload_order_files($designFiles, $orderCode, $uploadDir);
-                        $pdo->beginTransaction();
-                        $stmt = $pdo->prepare('INSERT INTO orders (customer_id, order_code, customer_name, customer_phone, customer_note, subtotal_before_discount, discount_amount, voucher_code, promotion_id, total_estimate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-                        $stmt->execute([$loggedCustomer['id'] ?? null, $orderCode, $name, $phone, $customerNote, $subtotal, $discount, $appliedRule && $appliedRule['source'] === 'voucher' ? $appliedRule['code'] : null, $appliedRule && $appliedRule['source'] === 'promotion' ? (int)$appliedRule['id'] : null, $total, 'pending']);
-                        $orderId = (int)$pdo->lastInsertId();
-                        $itemStmt = $pdo->prepare('INSERT INTO order_items (order_id, product_id, product_name, quantity, unit, variant_data, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-                        foreach ($items as $row) {
-                            $p = $row['product'];
-                            $qty = $row['quantity'];
-                            $price = product_unit_price($p, $qty);
-                            $variantData = json_encode(['ukuran' => $size, 'bahan' => $material, 'finishing' => $finishing, 'desain' => $design], JSON_UNESCAPED_UNICODE);
-                            $itemStmt->execute([$orderId, $p['id'], $p['name'], $qty, $p['unit'], $variantData, $price, $price * $qty]);
-                        }
-                        if ($uploadedFiles) {
-                            $attachStmt = $pdo->prepare('INSERT INTO order_attachments (order_id, original_name, stored_name, file_path, mime_type, file_size) VALUES (?, ?, ?, ?, ?, ?)');
-                            foreach ($uploadedFiles as $file) {
-                                $attachStmt->execute([$orderId, $file['original_name'], $file['stored_name'], $file['file_path'], $file['mime_type'], $file['file_size']]);
-                            }
-                        }
-                        if ($appliedRule) {
-                            if ($appliedRule['source'] === 'voucher') {
-                                $u = $pdo->prepare('UPDATE vouchers SET usage_count=usage_count+1 WHERE id=? AND (quota IS NULL OR usage_count < quota)');
-                                $u->execute([(int)$appliedRule['id']]);
-                                if ($u->rowCount() !== 1) throw new RuntimeException('Kuota voucher baru saja habis. Silakan coba lagi.');
-                                $r = $pdo->prepare('INSERT INTO voucher_redemptions (voucher_id, customer_id, order_id, code, discount_amount) VALUES (?,?,?,?,?)');
-                                $r->execute([(int)$appliedRule['id'], $loggedCustomer['id'] ?? null, $orderId, $appliedRule['code'], $discount]);
-                            } else {
-                                $u = $pdo->prepare('UPDATE promotions SET usage_count=usage_count+1 WHERE id=? AND (quota IS NULL OR usage_count < quota)');
-                                $u->execute([(int)$appliedRule['id']]);
-                                if ($u->rowCount() !== 1) throw new RuntimeException('Kuota promo baru saja habis. Silakan coba lagi.');
-                            }
-                        }
-                        $pdo->commit();
-                        try {
-                            order_record_status($pdo, $orderId, 'pending');
-                        } catch (Throwable $e) {
-                        }
-
-                        $lines = [];
-                        $lines[] = 'Halo Admin Rosa Indah Printing 👋';
-                        $lines[] = '';
-                        $lines[] = '*PESANAN BARU*';
-                        $lines[] = 'No. Pesanan: ' . $orderCode;
-                        $lines[] = '';
-                        $lines[] = '*DETAIL PESANAN*';
-                        foreach ($items as $row) {
-                            $p = $row['product'];
-                            $qty = $row['quantity'];
-                            $linePrice = product_unit_price($p, $qty);
-                            $lines[] = '• ' . $p['name'] . ' — ' . $qty . ' ' . $p['unit'];
-                            $lines[] = '  Rp' . number_format($linePrice * $qty, 0, ',', '.');
-                        }
-                        $lines[] = '';
-                        $lines[] = 'Ukuran: ' . $size;
-                        $lines[] = 'Bahan: ' . $material;
-                        $lines[] = 'Finishing: ' . $finishing;
-                        $lines[] = 'Desain: ' . $design;
-                        $lines[] = 'File desain: ' . (count($uploadedFiles) ? count($uploadedFiles) . ' file terlampir di sistem Admin' : 'Tidak ada');
-                        $lines[] = 'Subtotal: Rp' . number_format($subtotal, 0, ',', '.');
-                        if ($discount > 0) $lines[] = ($appliedRule['source'] === 'voucher' ? 'Voucher ' . $appliedRule['code'] : 'Promo ' . $appliedRule['name']) . ': -Rp' . number_format($discount, 0, ',', '.');
-                        $lines[] = 'Estimasi Total: Rp' . number_format($total, 0, ',', '.');
-                        $lines[] = '';
-                        $lines[] = '*DATA PEMESAN*';
-                        $lines[] = 'Nama: ' . $name;
-                        $lines[] = 'No. WhatsApp: ' . $phone;
-                        $lines[] = 'Alamat: ' . $address;
-                        $lines[] = 'Catatan: ' . ($notes ?: '-');
-                        $lines[] = '';
-                        $lines[] = 'Lacak pesanan: ' . page_url('lacak-pesanan.php?code=' . urlencode($orderCode) . '&phone=' . urlencode($phone));
-                        $lines[] = 'Konfirmasi pembayaran: ' . page_url('pembayaran.php?code=' . urlencode($orderCode));
-                        $lines[] = '';
-                        $lines[] = 'Mohon dibantu konfirmasi harga final dan proses pesanannya. Terima kasih 🙏';
-                        cart_clear();
-                        $waUrl = 'https://wa.me/' . WHATSAPP_NUMBER . '?text=' . rawurlencode(implode("\n", $lines));
-                        header('Location: ' . $waUrl);
-                        exit;
-                    } catch (Throwable $e) {
-                        if ($pdo->inTransaction()) $pdo->rollBack();
-                        foreach ($uploadedFiles as $file) {
-                            if (!empty($file['absolute_path']) && is_file($file['absolute_path'])) @unlink($file['absolute_path']);
-                        }
-                        $error = $e instanceof RuntimeException ? $e->getMessage() : 'Pesanan gagal disimpan. Silakan coba lagi.';
+                    if ($appliedRule) {
+                        $discount = (float)$appliedRule['discount_amount'];
                     }
                 }
             }
+
+            if ($discount <= 0 && $voucherCode !== '') {
+                if ($voucherCode === 'ROSAHEMAT10' && $subtotal >= 100000) {
+                    $discount = min(round($subtotal * 0.10), 50000);
+                } elseif ($voucherCode === 'MEMBERBARU' && $subtotal >= 75000) {
+                    $discount = 15000;
+                }
+            }
+
+            $finalTotal = max(0.0, $subtotal - $discount);
+            $orderCode = 'RIP-' . date('Ymd') . '-' . rand(1000, 9999);
+            $combinedNote = '';
+            if ($address !== '') {
+                $combinedNote .= "Alamat: {$address}\n";
+            } else {
+                $combinedNote .= "Pengambilan: Ambil sendiri di Workshop Rosa Indah Printing\n";
+            }
+            if ($customerNoteInput !== '') {
+                $combinedNote .= "Catatan: {$customerNoteInput}\n";
+            }
+            if ($voucherCode !== '' && $discount > 0) {
+                $combinedNote .= "Voucher: {$voucherCode} (-" . format_rupiah($discount) . ")";
+            }
+            $combinedNote = trim($combinedNote);
+
+            if ($pdo) {
+                try {
+                    // Pastikan kolom payment_method tersedia jika tabel lama
+                    try {
+                        $cols = $pdo->query("SHOW COLUMNS FROM orders")->fetchAll(PDO::FETCH_COLUMN);
+                        if (!in_array('payment_status', $cols, true)) {
+                            $pdo->exec("ALTER TABLE orders ADD payment_status VARCHAR(20) NOT NULL DEFAULT 'unpaid' AFTER status");
+                        }
+                        if (!in_array('payment_method', $cols, true)) {
+                            $pdo->exec("ALTER TABLE orders ADD payment_method VARCHAR(30) NULL AFTER payment_status");
+                        }
+                    } catch (Throwable $e) {}
+
+                    $pdo->beginTransaction();
+                    $stmt = $pdo->prepare('INSERT INTO orders (customer_id, order_code, customer_name, customer_phone, customer_note, subtotal_before_discount, discount_amount, voucher_code, promotion_id, total_estimate, status, payment_status, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                    $stmt->execute([
+                        $loggedCustomer['id'] ?? null,
+                        $orderCode,
+                        $name,
+                        $phone,
+                        $combinedNote,
+                        $subtotal,
+                        $discount,
+                        $voucherCode !== '' ? $voucherCode : null,
+                        $appliedRule && ($appliedRule['source'] ?? '') === 'promotion' ? (int)$appliedRule['id'] : null,
+                        $finalTotal,
+                        'pending',
+                        'unpaid',
+                        $paymentMethod,
+                    ]);
+                    $orderId = (int)$pdo->lastInsertId();
+
+                    $itemStmt = $pdo->prepare('INSERT INTO order_items (order_id, product_id, product_name, quantity, unit, variant_data, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+                    foreach ($items as $row) {
+                        $p = $row['product'];
+                        $qty = (int)$row['quantity'];
+                        $price = (float)$row['unitPrice'];
+                        $variantData = json_encode(['catatan' => $customerNoteInput], JSON_UNESCAPED_UNICODE);
+                        $itemStmt->execute([$orderId, $p['id'], $p['name'], $qty, $p['unit'], $variantData, $price, $price * $qty]);
+                    }
+
+                    $pdo->commit();
+                    try {
+                        order_record_status($pdo, $orderId, 'pending');
+                    } catch (Throwable $e) {}
+                } catch (Throwable $e) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                }
+            }
+
+            // Simpan ke sesi sebagai fallback agar langsung dapat dilacak
+            if (session_status() === PHP_SESSION_NONE) {
+                @session_start();
+            }
+            $_SESSION['session_orders'][$orderCode] = [
+                'id'               => time(),
+                'order_code'       => $orderCode,
+                'customer_name'    => $name,
+                'customer_phone'   => $phone,
+                'customer_address' => $address,
+                'customer_note'    => $customerNoteInput,
+                'subtotal'         => $subtotal,
+                'discount_amount'  => $discount,
+                'voucher_code'     => $voucherCode,
+                'total_estimate'   => $finalTotal,
+                'status'           => 'pending',
+                'payment_status'   => 'unpaid',
+                'payment_method'   => $paymentMethod,
+                'paid_amount'      => 0,
+                'payment_proof'    => null,
+                'created_at'       => date('c'),
+                'items'            => array_map(function ($it) {
+                    return [
+                        'product_id'   => $it['product']['id'],
+                        'product_name' => $it['product']['name'],
+                        'quantity'     => $it['quantity'],
+                        'unit'         => $it['product']['unit'],
+                        'unit_price'   => $it['unitPrice'],
+                        'subtotal'     => $it['subtotal'],
+                    ];
+                }, $items),
+                'status_history'   => [
+                    [
+                        'status'     => 'pending',
+                        'note'       => 'Pesanan berhasil dibuat oleh pelanggan.',
+                        'created_at' => date('c'),
+                    ],
+                ],
+            ];
+
+            if (!$buyProduct) {
+                cart_clear();
+            }
+
+            header('Location: ' . page_url('lacak-pesanan.php?code=' . urlencode($orderCode) . '&phone=' . urlencode($phone) . '&new=1'));
+            exit;
         }
     }
 }
 
 $total = 0;
-foreach ($items as $row) $total += product_unit_price($row['product'], $row['quantity']) * $row['quantity'];
+foreach ($items as $row) {
+    $total += $row['subtotal'];
+}
+
+$pageTitle = 'Checkout Pesanan';
 include __DIR__ . '/includes/header.php';
 ?>
+
+<style>
+/* Sinkronisasi Desain Checkout Pesanan */
+.checkout-page {
+    background: #fbf8fa !important;
+    min-height: 75vh;
+}
+.checkout-page-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #18243a;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+}
+.checkout-page-subtitle {
+    font-size: 13.5px;
+    color: #6e656d;
+    margin-bottom: 0;
+}
+.checkout-card,
+.checkout-summary-card {
+    border: 1px solid #f2dce7 !important;
+    border-radius: 18px !important;
+}
+.checkout-icon-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #fff0f6;
+    color: #e11d64;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+}
+.checkout-label {
+    font-size: 13px;
+    color: #374151;
+    margin-bottom: 5px;
+}
+.checkout-input {
+    border: 1px solid #ebdbe4;
+    border-radius: 10px;
+    padding: 9px 13px;
+    font-size: 13.5px;
+    color: #1f2937;
+    transition: all 0.15s ease;
+}
+.checkout-input:focus {
+    border-color: #e11d64;
+    box-shadow: 0 0 0 3px rgba(225, 29, 100, 0.1);
+}
+.checkout-hint {
+    font-size: 11px;
+    color: #7a7079;
+}
+.payment-card-option {
+    border: 1.5px solid #ebdbe4;
+    border-radius: 13px;
+    padding: 12px 14px;
+    cursor: pointer;
+    background: #ffffff;
+    transition: all 0.18s ease;
+    display: block;
+    user-select: none;
+}
+.payment-card-option:hover {
+    border-color: #f472b6;
+    background: #fffbfe;
+}
+.payment-card-option.selected {
+    border-color: #e11d64;
+    background: #fff5f8;
+    box-shadow: 0 2px 8px rgba(225, 29, 100, 0.08);
+}
+.payment-radio:checked {
+    background-color: #e11d64;
+    border-color: #e11d64;
+}
+.payment-title {
+    font-size: 13px;
+    color: #18243a;
+}
+.payment-chip {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+.payment-desc {
+    font-size: 11px;
+    line-height: 1.4;
+}
+.checkout-item-name {
+    font-size: 13px;
+}
+.checkout-item-qty {
+    font-size: 11.5px;
+}
+.checkout-item-subtotal {
+    font-size: 13.5px;
+}
+.checkout-voucher-box {
+    background: #fff8fb;
+    border: 1px solid #f2dce7;
+}
+.checkout-voucher-input {
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+.btn-apply-voucher {
+    font-size: 11.5px;
+    font-weight: 700;
+}
+.btn-voucher-chip {
+    border: 1px dashed #e11d64;
+    background: #fff0f6;
+    color: #e11d64;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.btn-voucher-chip:hover {
+    background: #e11d64;
+    color: #ffffff;
+}
+.checkout-total-val {
+    font-size: 20px;
+    color: #e11d64;
+}
+.btn-submit-checkout {
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    font-size: 14.5px;
+    box-shadow: 0 4px 15px rgba(225, 29, 100, 0.28) !important;
+    transition: all 0.2s ease;
+}
+.btn-submit-checkout:hover {
+    background: linear-gradient(90deg, #be124f 0%, #e11d64 50%, #f43f7e 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(225, 29, 100, 0.35) !important;
+    color: #ffffff !important;
+}
+.checkout-terms {
+    font-size: 11px;
+}
+@media (max-width: 767.98px) {
+    .checkout-page {
+        padding-top: 14px !important;
+        padding-bottom: 85px !important;
+    }
+    .checkout-page-title {
+        font-size: 18px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 4px !important;
+    }
+    .checkout-page-subtitle {
+        font-size: 11px !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0 !important;
+    }
+    .checkout-header {
+        margin-bottom: 14px !important;
+    }
+    .checkout-card,
+    .checkout-summary-card {
+        padding: 14px !important;
+        border-radius: 14px !important;
+        border-color: #f2dce7 !important;
+    }
+    .checkout-card-title {
+        font-size: 14px !important;
+    }
+    .checkout-total-val {
+        font-size: 17px !important;
+    }
+    .btn-submit-checkout {
+        font-size: 13px !important;
+        padding: 10px 14px !important;
+        border-radius: 10px !important;
+    }
+    .checkout-card-header {
+        margin-bottom: 12px !important;
+        padding-bottom: 8px !important;
+    }
+    .checkout-icon-badge {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 13px !important;
+    }
+    .checkout-label {
+        font-size: 11.5px !important;
+        margin-bottom: 4px !important;
+    }
+    .checkout-input {
+        font-size: 12.5px !important;
+        padding: 8px 11px !important;
+        border-radius: 9px !important;
+    }
+    .checkout-hint {
+        font-size: 10px !important;
+        line-height: 1.35 !important;
+    }
+    .payment-card-option {
+        padding: 10px 11px !important;
+        border-radius: 11px !important;
+    }
+    .payment-title {
+        font-size: 12px !important;
+    }
+    .payment-chip {
+        font-size: 9px !important;
+        padding: 2px 6px !important;
+    }
+    .payment-desc {
+        font-size: 10px !important;
+    }
+    .checkout-item-name {
+        font-size: 12px !important;
+    }
+    .checkout-item-qty {
+        font-size: 10px !important;
+    }
+    .checkout-item-subtotal {
+        font-size: 12px !important;
+    }
+    .btn-voucher-chip {
+        font-size: 9.5px !important;
+        padding: 2px 6px !important;
+    }
+}
+@media (max-width: 575.98px) {
+    .checkout-page-title {
+        font-size: 17.5px !important;
+    }
+    .checkout-summary-card {
+        position: static !important;
+        top: auto !important;
+    }
+}
+</style>
+
 <header class="main-header">
     <?php include __DIR__ . '/includes/topbar.php'; ?>
     <?php include __DIR__ . '/includes/navbar.php'; ?>
 </header>
-<main class="checkout-page">
+
+<main class="checkout-page py-3 py-md-4">
     <div class="container">
-        <div class="catalog-breadcrumb detail-breadcrumb"><a href="<?php echo page_url('index.php'); ?>">Home</a><i class="bi bi-chevron-right"></i><a href="<?php echo page_url('cart.php'); ?>">Keranjang</a><i class="bi bi-chevron-right"></i><span>Checkout</span></div>
-        <?php if (!$items): ?>
-            <section class="checkout-empty"><i class="bi bi-bag-x"></i>
-                <h1>Belum ada produk</h1>
-                <p>Tambahkan produk ke keranjang sebelum checkout.</p><a class="catalog-primary-btn" href="<?php echo page_url('produk.php'); ?>">Lihat Produk</a>
-            </section>
-        <?php else: ?>
-            <section class="checkout-heading"><span class="small-title">CHECKOUT PESANAN</span>
-                <h1>Lengkapi Detail <span>Pesanan Anda</span></h1>
-                <p>Pesanan akan disimpan ke sistem dan setelah berhasil Anda akan diarahkan ke WhatsApp Admin Rosa Indah Printing.</p>
-            </section>
-            <?php if ($error): ?><div class="cart-alert error"><i class="bi bi-exclamation-circle"></i><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-            <?php if ($loggedCustomer): ?><div class="account-checkout-note"><i class="bi bi-person-check"></i> Anda login sebagai <strong><?php echo htmlspecialchars($loggedCustomer['name'], ENT_QUOTES, 'UTF-8'); ?></strong>. Data profil sudah diisi otomatis.</div><?php endif; ?>
-            <form method="post" enctype="multipart/form-data" class="checkout-grid" autocomplete="on">
-                <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(cart_csrf()); ?>">
-                <div class="checkout-main-card">
-                    <div class="checkout-section-title"><span>01</span>
-                        <div>
-                            <h2>Produk yang Dipilih</h2>
-                            <p>Periksa produk sebelum melanjutkan.</p>
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb mb-3 mb-md-4">
+            <a href="<?php echo page_url('index.php'); ?>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="<?php echo page_url('cart.php'); ?>">Keranjang</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Checkout</span>
+        </div>
+
+        <div class="checkout-header mb-3 mb-md-4">
+            <h1 class="checkout-page-title">Konfirmasi & Checkout Pesanan</h1>
+            <p class="checkout-page-subtitle">Isi data pemesan dan alamat pengiriman dengan lengkap untuk memproses pesanan cetak Anda.</p>
+        </div>
+
+        <?php if ($error): ?>
+            <div class="alert alert-danger alert-dismissible fade show checkout-alert mb-3 mb-md-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <?php echo htmlspecialchars($error); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
+        <form action="<?php echo page_url('checkout.php' . ($buyProduct ? '?buy=' . urlencode($buyProduct['id']) . '&qty=' . $buyQty : '')); ?>" method="POST" id="checkoutForm">
+            <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(cart_csrf()); ?>">
+            <?php if ($buyProduct): ?>
+                <input type="hidden" name="buy" value="<?php echo htmlspecialchars($buyProduct['id']); ?>">
+                <input type="hidden" name="qty" value="<?php echo (int)$buyQty; ?>">
+            <?php endif; ?>
+            <div class="row g-3 g-md-4">
+                <!-- Customer Details & Payment Options (Left Column) -->
+                <div class="col-lg-7">
+                    <!-- Data Pemesan Card -->
+                    <div class="checkout-card bg-white p-3 p-md-4 rounded-4 shadow-sm mb-3 mb-md-4">
+                        <div class="checkout-card-header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <span class="checkout-icon-badge">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </span>
+                            <h2 class="checkout-card-title h5 fw-bold mb-0">Data Pemesan</h2>
                         </div>
-                    </div>
-                    <div class="checkout-items-preview">
-                        <?php foreach ($items as $row): $p = $row['product']; ?>
-                            <div class="checkout-product"><img src="<?php echo product_image_url($p['image']); ?>" alt="<?php echo htmlspecialchars($p['name']); ?>">
-                                <div><span class="detail-category"><?php echo htmlspecialchars($p['category']); ?></span>
-                                    <h3><?php echo htmlspecialchars($p['name']); ?></h3><small><?php echo $row['quantity']; ?> <?php echo htmlspecialchars($p['unit']); ?> × Rp<?php echo number_format(product_unit_price($p, $row['quantity']), 0, ',', '.'); ?></small>
-                                </div><strong>Rp<?php echo number_format(product_unit_price($p, $row['quantity']) * $row['quantity'], 0, ',', '.'); ?></strong>
+
+                        <div class="mb-3">
+                            <label for="customer_name" class="checkout-label form-label fw-semibold">Nama Lengkap <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control checkout-input" id="customer_name" name="customer_name" required placeholder="Contoh: Budi Santoso" value="<?php echo htmlspecialchars($loggedCustomer['name'] ?? ($_POST['customer_name'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="customer_phone" class="checkout-label form-label fw-semibold">Nomor WhatsApp Aktif <span class="text-danger">*</span></label>
+                            <input type="tel" class="form-control checkout-input" id="customer_phone" name="customer_phone" required placeholder="Contoh: 082331035371" value="<?php echo htmlspecialchars($loggedCustomer['phone'] ?? ($_POST['customer_phone'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>">
+                            <div class="form-text checkout-hint mt-1">
+                                <i class="bi bi-info-circle me-1"></i> Status proses cetak & konfirmasi acc file desain akan dikirim ke WhatsApp ini.
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="checkout-section-title"><span>02</span>
-                        <div>
-                            <h2>Spesifikasi Pesanan</h2>
-                            <p>Sesuaikan detail cetakan yang Anda inginkan.</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="customer_address" class="checkout-label form-label fw-semibold">Alamat Lengkap Pengiriman</label>
+                            <textarea class="form-control checkout-input" id="customer_address" name="customer_address" rows="3" placeholder="Nama Jalan, RT/RW, Dusun/Kelurahan, Kecamatan, Kota/Kabupaten"><?php echo htmlspecialchars($loggedCustomer['address'] ?? ($_POST['customer_address'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></textarea>
+                            <div class="form-text checkout-hint mt-1">
+                                Biarkan kosong bila Anda akan mengambil pesanan langsung di workshop Rosa Indah Printing.
+                            </div>
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="customer_note" class="checkout-label form-label fw-semibold">Catatan Pesanan / Spesifikasi Tambahan</label>
+                            <textarea class="form-control checkout-input" id="customer_note" name="customer_note" rows="2" placeholder="Contoh: Finishing mata ayam 4 sudut, teks acara diganti tanggal 25 Mei, atau file siap cetak dikirim via WA."><?php echo htmlspecialchars($_POST['customer_note'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
                         </div>
                     </div>
-                    <div class="checkout-form-grid">
-                        <label>Ukuran<select name="size">
-                                <option>Standar / sesuai produk</option>
-                                <option>A4</option>
-                                <option>A5</option>
-                                <option>F4</option>
-                                <option>Custom</option>
-                            </select></label>
-                        <label>Bahan<select name="material">
-                                <option>Standar / sesuai produk</option>
-                                <option>Art Paper</option>
-                                <option>Art Carton</option>
-                                <option>Ivory</option>
-                                <option>HVS</option>
-                                <option>Vinyl</option>
-                                <option>Flexi</option>
-                                <option>Custom / konsultasi</option>
-                            </select></label>
-                        <label>Finishing<select name="finishing">
-                                <option>Tanpa finishing khusus</option>
-                                <option>Laminasi Glossy</option>
-                                <option>Laminasi Doff</option>
-                                <option>Potong / Cutting</option>
-                                <option>Lipat</option>
-                                <option>Custom / konsultasi</option>
-                            </select></label>
-                        <label>Jenis Desain<select name="design">
-                                <option>Kirim desain sendiri</option>
-                                <option>Belum punya desain, minta dibantu</option>
-                                <option>Revisi desain yang sudah ada</option>
-                            </select></label>
-                        <label class="full">Catatan Pesanan<textarea name="notes" rows="4" placeholder="Nama yang dicetak, warna, deadline, atau permintaan khusus..."></textarea></label>
-                    </div>
-                    <div class="checkout-section-title"><span>03</span>
-                        <div>
-                            <h2>File / Desain</h2>
-                            <p>Opsional — kirim desain yang ingin dicetak.</p>
+
+                    <!-- Metode Pembayaran Card -->
+                    <div class="checkout-card bg-white p-3 p-md-4 rounded-4 shadow-sm">
+                        <div class="checkout-card-header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <span class="checkout-icon-badge">
+                                <i class="bi bi-wallet2"></i>
+                            </span>
+                            <h2 class="checkout-card-title h5 fw-bold mb-0">Metode Pembayaran</h2>
                         </div>
-                    </div>
-                    <div class="checkout-upload-box">
-                        <label class="checkout-upload-label"><i class="bi bi-cloud-arrow-up"></i><span><strong>Pilih file desain</strong><small>JPG, PNG, WEBP atau PDF • maksimal 10 MB per file • maksimal 3 file</small></span><input id="designFiles" type="file" name="design_files[]" accept="image/jpeg,image/png,image/webp,application/pdf,.jpg,.jpeg,.png,.webp,.pdf" multiple></label>
-                        <div id="designPreview" class="checkout-design-preview" aria-live="polite"></div>
-                        <div class="checkout-upload-help"><i class="bi bi-info-circle"></i> Jika belum punya desain, kosongkan bagian ini dan pilih bantuan desain pada spesifikasi.</div>
-                    </div>
-                    <div class="checkout-section-title"><span>04</span>
-                        <div>
-                            <h2>Promo & Voucher Member</h2>
-                            <p>Gunakan voucher atau dapatkan promo otomatis jika memenuhi syarat.</p>
+
+                        <div class="payment-options-grid d-flex flex-column gap-2">
+                            <label class="payment-card-option selected" for="payTransfer">
+                                <div class="d-flex align-items-start gap-3">
+                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payTransfer" value="transfer" checked>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="payment-title fw-bold">Transfer Bank (BCA / BRI / Mandiri)</span>
+                                            <span class="badge bg-light text-dark border payment-chip">Manual Transfer</span>
+                                        </div>
+                                        <p class="payment-desc text-muted mb-0 mt-1">Nomor rekening tujuan transfer ditampilkan di halaman tracking setelah order dibuat.</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-card-option" for="payQris">
+                                <div class="d-flex align-items-start gap-3">
+                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payQris" value="qris">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="payment-title fw-bold">QRIS (Semua E-Wallet & M-Banking)</span>
+                                            <span class="badge bg-light text-success border payment-chip">Instan QR</span>
+                                        </div>
+                                        <p class="payment-desc text-muted mb-0 mt-1">Scan instan barcode via GoPay, OVO, DANA, ShopeePay, LinkAja, atau Mobile Banking.</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-card-option" for="payCash">
+                                <div class="d-flex align-items-start gap-3">
+                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payCash" value="cash">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="payment-title fw-bold">Bayar di Workshop (Cash / Tunai)</span>
+                                            <span class="badge bg-light text-secondary border payment-chip">Ambil Sendiri</span>
+                                        </div>
+                                        <p class="payment-desc text-muted mb-0 mt-1">Bayar langsung secara tunai saat mengambil hasil cetak di workshop Rosa Indah Printing.</p>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
-                    </div>
-                    <?php $checkoutPreviewSubtotal = 0;
-                    foreach ($items as $r) $checkoutPreviewSubtotal += product_unit_price($r['product'], $r['quantity']) * $r['quantity']; ?>
-                    <div class="checkout-promo-box">
-                        <div class="checkout-promo-info"><i class="bi bi-ticket-perforated-fill"></i>
-                            <div><strong>🎁 Promo khusus Member</strong><small>Voucher yang ditandai khusus Member hanya dapat digunakan setelah Login Member.</small></div>
-                        </div>
-                        <div class="checkout-voucher-row"><input type="text" name="voucher_code" maxlength="60" autocomplete="off" placeholder="Masukkan kode voucher (opsional)" value="<?php echo htmlspecialchars($_POST['voucher_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><span class="checkout-voucher-note">Jika kode kosong, sistem otomatis memilih promo aktif terbaik.</span></div>
-                        <?php if ($pdo): $checkoutPromo = promo_get_best($pdo, $items, (bool)$loggedCustomer, $checkoutPreviewSubtotal);
-                            if ($checkoutPromo): ?><div class="checkout-active-promo"><i class="bi bi-stars"></i><span><strong><?php echo htmlspecialchars($checkoutPromo['name']); ?></strong> — <?php echo htmlspecialchars(promo_label($checkoutPromo)); ?>. Promo akan diterapkan otomatis jika Anda tidak memakai voucher.</span></div><?php endif;
-                                                                                                                                                                                                                                                                                                                                    endif; ?>
-                    </div>
-                    <div class="checkout-section-title customer-title"><span>05</span>
-                        <div>
-                            <h2>Data Pemesan</h2>
-                            <p>Data ini digunakan untuk menghubungi Anda.</p>
-                        </div>
-                    </div>
-                    <div class="checkout-form-grid">
-                        <label>Nama Lengkap<input name="customer_name" type="text" required placeholder="Masukkan nama lengkap" value="<?php echo htmlspecialchars($loggedCustomer['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></label>
-                        <label>No. WhatsApp<input name="customer_phone" type="tel" required placeholder="08xxxxxxxxxx" value="<?php echo htmlspecialchars($loggedCustomer['phone'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"></label>
-                        <label class="full">Alamat / Lokasi Pengiriman<textarea name="customer_address" rows="3" required placeholder="Masukkan alamat atau lokasi pengiriman/pengambilan"><?php echo htmlspecialchars($loggedCustomer['address'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea></label>
                     </div>
                 </div>
-                <?php $previewSubtotal = 0;
-                foreach ($items as $r) $previewSubtotal += product_unit_price($r['product'], $r['quantity']) * $r['quantity'];
-                $previewRule = null;
-                $previewDiscount = 0;
-                $previewVoucher = strtoupper(trim($_POST['voucher_code'] ?? ''));
-                if ($pdo) {
-                    if ($previewVoucher !== '') {
-                        [$pvOk, $pvRule, $pvMsg] = promo_apply_voucher($pdo, $previewVoucher, $items, (bool)$loggedCustomer, $previewSubtotal, $loggedCustomer ? (int)$loggedCustomer['id'] : null);
-                        if ($pvOk) $previewRule = $pvRule;
-                    } else {
-                        $previewRule = promo_get_best($pdo, $items, (bool)$loggedCustomer, $previewSubtotal);
-                    }
-                    if ($previewRule) $previewDiscount = (float)$previewRule['discount_amount'];
-                }
-                $previewTotal = max(0, $previewSubtotal - $previewDiscount); ?>
-                <aside class="checkout-summary-card">
-                    <div class="summary-top"><span>RINGKASAN PESANAN</span><i class="bi bi-receipt"></i></div>
-                    <div class="summary-lines">
-                        <div><span>Jumlah item</span><strong><?php echo array_sum(array_column($items, 'quantity')); ?></strong></div>
-                        <div><span>Subtotal</span><strong>Rp<?php echo number_format($previewSubtotal, 0, ',', '.'); ?></strong></div><?php if ($previewDiscount > 0): ?><div class="summary-discount"><span><?php echo $previewRule['source'] === 'voucher' ? 'Voucher ' . $previewRule['code'] : 'Promo ' . htmlspecialchars($previewRule['name']); ?></span><strong>-Rp<?php echo number_format($previewDiscount, 0, ',', '.'); ?></strong></div><?php endif; ?><div class="summary-total"><span>Estimasi total</span><strong>Rp<?php echo number_format($previewTotal, 0, ',', '.'); ?></strong></div>
+
+                <!-- Order Review & Summary (Right Column) -->
+                <div class="col-lg-5">
+                    <div class="checkout-summary-card bg-white p-3 p-md-4 rounded-4 shadow-sm position-sticky" style="top: 85px;">
+                        <div class="checkout-card-header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <span class="checkout-icon-badge">
+                                <i class="bi bi-receipt"></i>
+                            </span>
+                            <h2 class="checkout-card-title h5 fw-bold mb-0">Rincian Pesanan</h2>
+                        </div>
+
+                        <!-- Order Items List -->
+                        <div class="checkout-items-list mb-3">
+                            <?php foreach ($items as $item): ?>
+                                <div class="checkout-item-row d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <div class="checkout-item-main pe-2">
+                                        <span class="checkout-item-name fw-semibold text-dark d-block"><?php echo htmlspecialchars($item['product']['name']); ?></span>
+                                        <span class="checkout-item-qty text-muted small">
+                                            <?php echo (int)$item['quantity']; ?> <?php echo htmlspecialchars($item['product']['unit']); ?> × <?php echo format_rupiah($item['unitPrice']); ?>
+                                        </span>
+                                    </div>
+                                    <div class="checkout-item-subtotal fw-bold text-dark tabular-nums text-nowrap">
+                                        <?php echo format_rupiah($item['subtotal']); ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <!-- Voucher Code Form Field -->
+                        <div class="checkout-voucher-box p-3 rounded-3 mb-3">
+                            <label for="voucher_code" class="form-label checkout-label fw-bold small text-secondary mb-1">
+                                <i class="bi bi-tag-fill text-primary me-1"></i> Kode Promo / Voucher Member:
+                            </label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control text-uppercase checkout-voucher-input" id="voucher_code" name="voucher_code" placeholder="Misal: ROSAHEMAT10" value="<?php echo htmlspecialchars($_POST['voucher_code'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                <button type="button" class="btn btn-outline-primary btn-apply-voucher" id="btnApplyVoucher">Terapkan</button>
+                            </div>
+
+                            <!-- Quick Voucher Suggestion Chips -->
+                            <div class="voucher-chips d-flex align-items-center gap-2 mt-2 flex-wrap">
+                                <span class="small text-muted">Promo:</span>
+                                <button type="button" class="btn-voucher-chip" data-code="ROSAHEMAT10">ROSAHEMAT10</button>
+                                <button type="button" class="btn-voucher-chip" data-code="MEMBERBARU">MEMBERBARU</button>
+                            </div>
+                        </div>
+
+                        <!-- Summary Breakdown -->
+                        <div class="checkout-breakdown mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Subtotal Produk</span>
+                                <span class="fw-semibold tabular-nums small"><?php echo format_rupiah($total); ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Biaya Pengiriman</span>
+                                <span class="text-success fw-semibold small">Dikonfirmasi via WA</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1" id="voucherDiscountRow" style="display: none !important;">
+                                <span class="text-success small">Potongan Voucher</span>
+                                <span class="text-success fw-bold tabular-nums small" id="voucherDiscountVal">-</span>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="checkout-total-row d-flex justify-content-between align-items-baseline mb-4">
+                            <span class="fw-bold">Total Pembayaran</span>
+                            <span class="checkout-total-val fw-bold tabular-nums"><?php echo format_rupiah($total); ?></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-submit-checkout w-100 py-2 py-md-3 fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> Buat Pesanan Sekarang
+                        </button>
+
+                        <div class="text-center mt-3">
+                            <small class="text-muted checkout-terms">
+                                <i class="bi bi-lock-fill me-1"></i> Data Anda terlindungi. Invoice resmi akan langsung diterbitkan setelah order dibuat.
+                            </small>
+                        </div>
                     </div>
-                    <div class="summary-note"><i class="bi bi-info-circle"></i>
-                        <p>Harga merupakan estimasi. Admin akan mengonfirmasi harga final sesuai spesifikasi produksi. Promo/voucher yang berhasil diterapkan dicatat pada pesanan.</p>
-                    </div><button type="submit" class="checkout-wa-btn"><i class="bi bi-whatsapp"></i> Simpan Pesanan & Lanjut WhatsApp</button><a class="summary-back" href="<?php echo page_url('cart.php'); ?>"><i class="bi bi-arrow-left"></i> Kembali ke keranjang</a>
-                </aside>
-            </form>
-        <?php endif; ?>
+                </div>
+            </div>
+        </form>
     </div>
 </main>
 
 <script>
-    (function() {
-        const input = document.getElementById('designFiles');
-        const preview = document.getElementById('designPreview');
-        if (!input || !preview) return;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight active payment card option
+        const paymentCards = document.querySelectorAll('.payment-card-option');
+        const paymentRadios = document.querySelectorAll('.payment-radio');
 
-        const maxFiles = 3;
-        const maxBytes = 10 * 1024 * 1024;
-        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-
-        input.addEventListener('change', function() {
-            preview.innerHTML = '';
-            const files = Array.from(input.files || []);
-            if (!files.length) return;
-
-            if (files.length > maxFiles) {
-                alert('Maksimal 3 file desain.');
-                input.value = '';
-                return;
-            }
-
-            const valid = [];
-            files.forEach(function(file) {
-                if (!allowed.includes(file.type)) {
-                    alert('Format tidak didukung: ' + file.name + '. Gunakan JPG, PNG, WEBP, atau PDF.');
-                    return;
+        paymentRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                paymentCards.forEach(card => card.classList.remove('selected'));
+                if (this.checked) {
+                    const parentCard = this.closest('.payment-card-option');
+                    if (parentCard) parentCard.classList.add('selected');
                 }
-                if (file.size <= 0 || file.size > maxBytes) {
-                    alert('File ' + file.name + ' melebihi batas 10 MB.');
-                    return;
-                }
-                valid.push(file);
-            });
-
-            if (valid.length !== files.length) {
-                input.value = '';
-                preview.innerHTML = '';
-                return;
-            }
-
-            valid.forEach(function(file) {
-                const card = document.createElement('div');
-                card.className = 'checkout-design-preview-item';
-
-                const visual = document.createElement('div');
-                visual.className = 'checkout-design-preview-visual';
-
-                if (file.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.alt = file.name;
-                    img.loading = 'lazy';
-                    const url = URL.createObjectURL(file);
-                    img.src = url;
-                    img.onload = function() {
-                        URL.revokeObjectURL(url);
-                    };
-                    visual.appendChild(img);
-                } else {
-                    const icon = document.createElement('i');
-                    icon.className = 'bi bi-file-earmark-pdf-fill';
-                    visual.appendChild(icon);
-                }
-
-                const info = document.createElement('div');
-                info.className = 'checkout-design-preview-info';
-                const name = document.createElement('strong');
-                name.textContent = file.name;
-                const size = document.createElement('small');
-                size.textContent = (file.size / 1048576).toFixed(2) + ' MB • ' + (file.type === 'application/pdf' ? 'PDF' : 'Gambar');
-                info.appendChild(name);
-                info.appendChild(size);
-
-                const ok = document.createElement('i');
-                ok.className = 'bi bi-check-circle-fill checkout-design-ok';
-                ok.title = 'File siap diunggah';
-
-                card.appendChild(visual);
-                card.appendChild(info);
-                card.appendChild(ok);
-                preview.appendChild(card);
             });
         });
-    })();
+
+        // Quick Voucher Chips click handler
+        const voucherInput = document.getElementById('voucher_code');
+        document.querySelectorAll('.btn-voucher-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                const code = this.getAttribute('data-code');
+                if (voucherInput && code) {
+                    voucherInput.value = code;
+                    voucherInput.focus();
+                }
+            });
+        });
+    });
 </script>
 
-<style>
-    .checkout-promo-box {
-        border: 1px solid #f0d5e2;
-        border-radius: 16px;
-        padding: 16px;
-        background: linear-gradient(135deg, #fff7fb, #fff);
-        display: grid;
-        gap: 12px;
-        margin-bottom: 20px
-    }
-
-    .checkout-promo-info {
-        display: flex;
-        gap: 12px;
-        align-items: center
-    }
-
-    .checkout-promo-info>i {
-        font-size: 24px;
-        color: #d64a8a
-    }
-
-    .checkout-promo-info strong,
-    .checkout-promo-info small {
-        display: block
-    }
-
-    .checkout-promo-info strong {
-        color: #18243a
-    }
-
-    .checkout-promo-info small {
-        color: #7b7279;
-        margin-top: 3px;
-        line-height: 1.45
-    }
-
-    .checkout-voucher-row {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex-wrap: wrap
-    }
-
-    .checkout-voucher-row input {
-        flex: 1;
-        min-width: 220px;
-        border: 1px solid #eadde3;
-        border-radius: 11px;
-        padding: 11px 13px;
-        text-transform: uppercase;
-        box-sizing: border-box
-    }
-
-    .checkout-voucher-note {
-        font-size: 12px;
-        color: #8a8088
-    }
-
-    .checkout-active-promo {
-        display: flex;
-        gap: 9px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: #fff0f7;
-        color: #725d68;
-        font-size: 12px;
-        line-height: 1.45
-    }
-
-    .checkout-active-promo i {
-        color: #d64a8a
-    }
-
-    .summary-discount {
-        color: #2f8a58
-    }
-
-    .summary-discount strong {
-        color: #2f8a58
-    }
-
-    @media(max-width:600px) {
-        .checkout-voucher-row {
-            display: block
-        }
-
-        .checkout-voucher-row input {
-            width: 100%;
-            min-width: 0
-        }
-
-        .checkout-voucher-note {
-            display: block;
-            margin-top: 6px
-        }
-    }
-</style>
 <?php include __DIR__ . '/includes/footer.php'; ?>

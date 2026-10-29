@@ -103,6 +103,37 @@ if ($code !== '') {
         }
     }
 
+    // Cek order sesi (apabila baru dibuat melalui checkout.php tanpa DB)
+    if (!$order && $error === '') {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        if (!empty($_SESSION['session_orders'][$code])) {
+            $sessOrd = $_SESSION['session_orders'][$code];
+            $givenPhone = order_normalize_phone($phone);
+            $savedPhone = order_normalize_phone((string)($sessOrd['customer_phone'] ?? ''));
+            if ($phone !== '' && $givenPhone !== '' && $savedPhone !== '' && $givenPhone !== $savedPhone) {
+                $error = 'Nomor WhatsApp tidak cocok dengan data pesanan.';
+            } else {
+                $order = [
+                    'order_code'      => (string)$sessOrd['order_code'],
+                    'customer_name'   => (string)($sessOrd['customer_name'] ?? 'Pelanggan'),
+                    'customer_phone'  => (string)($sessOrd['customer_phone'] ?? $phone),
+                    'status'          => strtolower((string)($sessOrd['status'] ?? 'pending')),
+                    'payment_status'  => strtolower((string)($sessOrd['payment_status'] ?? 'unpaid')),
+                    'payment_method'  => strtolower((string)($sessOrd['payment_method'] ?? 'transfer')),
+                    'discount_amount' => (float)($sessOrd['discount_amount'] ?? 0),
+                    'voucher_code'    => (string)($sessOrd['voucher_code'] ?? ''),
+                    'total_estimate'  => (float)($sessOrd['total_estimate'] ?? 0),
+                    'customer_note'   => (string)($sessOrd['customer_note'] ?? ''),
+                    'created_at'      => !empty($sessOrd['created_at']) ? date('d M Y, H:i', strtotime((string)$sessOrd['created_at'])) : date('d M Y, H:i'),
+                    'items'           => $sessOrd['items'] ?? [],
+                    'history'         => $sessOrd['status_history'] ?? [],
+                ];
+            }
+        }
+    }
+
     // Fallback order demo (RIP-20260320-1045) agar sama persis dengan /lacak-pesanan
     if (!$order && $error === '') {
         if ($code === 'RIP-20260320-1045') {

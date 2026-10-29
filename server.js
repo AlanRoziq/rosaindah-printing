@@ -121,7 +121,15 @@ app.use((req, res, next) => {
   const cartCount = cartItems.reduce((sum, item) => sum + (parseInt(item.quantity, 10) || 1), 0);
 
   res.locals.asset_url = (rel) => '/assets/' + String(rel || '').replace(/^\/+/, '');
-  res.locals.page_url = (rel) => '/' + String(rel || '').replace(/^\/+/, '');
+  res.locals.page_url = (rel) => {
+    const raw = String(rel || '').replace(/^\/+/, '');
+    if (!raw || raw === 'index' || raw === 'index.php') return '/index.php';
+    const qIdx = raw.indexOf('?');
+    const pathPart = qIdx >= 0 ? raw.slice(0, qIdx) : raw;
+    const queryPart = qIdx >= 0 ? raw.slice(qIdx) : '';
+    const cleanPath = pathPart.endsWith('.php') ? pathPart : pathPart + '.php';
+    return '/' + cleanPath + queryPart;
+  };
   res.locals.product_image_url = (img) => {
     const clean = String(img || '').replace(/\\/g, '/').replace(/^\/+/, '');
     if (clean.startsWith('uploads/')) return '/' + clean;
@@ -254,7 +262,7 @@ const handleCartPost = (req, res) => {
     } else {
       req.session.cart.push({ product_id: productId, quantity });
     }
-    return res.redirect('/cart?added=1');
+    return res.redirect('/cart.php?added=1');
   }
 
   if (action === 'update') {
@@ -262,29 +270,47 @@ const handleCartPost = (req, res) => {
     if (existing) {
       existing.quantity = quantity;
     }
-    return res.redirect('/cart?updated=1');
+    return res.redirect('/cart.php?updated=1');
   }
 
   if (action === 'remove') {
     req.session.cart = req.session.cart.filter(item => item.product_id !== productId);
-    return res.redirect('/cart?removed=1');
+    return res.redirect('/cart.php?removed=1');
   }
 
   if (action === 'clear') {
     req.session.cart = [];
-    return res.redirect('/cart?cleared=1');
+    return res.redirect('/cart.php?cleared=1');
   }
 
-  res.redirect('/cart');
+  res.redirect('/cart.php');
 };
 app.post('/cart', handleCartPost);
 app.post('/cart.php', handleCartPost);
 
 // Checkout
 const handleCheckoutGet = (req, res) => {
-  const { items, total } = getCartDetails(req.session.cart);
+  const buyId = (req.query.buy || '').trim();
+  const buyQty = Math.max(1, parseInt(req.query.qty, 10) || 1);
+  let items = [];
+  let total = 0;
+
+  if (buyId) {
+    const product = store.getProductById(buyId);
+    if (product) {
+      const unitPrice = store.getUnitPrice(product, buyQty);
+      const subtotal = unitPrice * buyQty;
+      items = [{ product, quantity: buyQty, unitPrice, subtotal }];
+      total = subtotal;
+    }
+  } else {
+    const cartDetails = getCartDetails(req.session.cart);
+    items = cartDetails.items;
+    total = cartDetails.total;
+  }
+
   if (items.length === 0) {
-    return res.redirect('/cart');
+    return res.redirect('/cart.php');
   }
   res.render('checkout', {
     items,
@@ -300,7 +326,7 @@ const handleCheckoutPost = (req, res) => {
   const { items, total } = getCartDetails(req.session.cart);
 
   if (!customer_name || !customer_phone) {
-    return res.redirect('/checkout?error=' + encodeURIComponent('Nama dan nomor WhatsApp wajib diisi'));
+    return res.redirect('/checkout.php?error=' + encodeURIComponent('Nama dan nomor WhatsApp wajib diisi'));
   }
 
   let discount = 0;
@@ -342,7 +368,7 @@ const handleCheckoutPost = (req, res) => {
   req.session.cart = [];
 
   // Redirect to track page
-  res.redirect(`/lacak-pesanan?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
+  res.redirect(`/lacak-pesanan.php?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
 };
 app.post('/checkout', handleCheckoutPost);
 app.post('/checkout.php', handleCheckoutPost);
@@ -378,15 +404,16 @@ app.get('/lacak', handleLacakPesanan);
 app.get('/lacak.php', handleLacakPesanan);
 
 // Payment proof submission
-app.post('/pembayaran', (req, res) => {
+const handlePembayaranPost = (req, res) => {
   const orderCode = req.body.order_code;
   const phone = req.body.customer_phone || '';
   if (orderCode) {
     store.uploadPaymentProof(orderCode, 'bukti-bayar-upload.jpg');
   }
-  res.redirect(`/lacak-pesanan?code=${encodeURIComponent(orderCode)}&phone=${encodeURIComponent(phone)}&uploaded=1`);
-});
-app.post('/pembayaran.php', (req, res) => res.redirect('/lacak-pesanan'));
+  res.redirect(`/lacak-pesanan.php?code=${encodeURIComponent(orderCode)}&phone=${encodeURIComponent(phone)}&uploaded=1`);
+};
+app.post('/pembayaran', handlePembayaranPost);
+app.post('/pembayaran.php', handlePembayaranPost);
 
 // Portfolio
 const handlePortfolio = (req, res) => {
@@ -430,44 +457,49 @@ app.get('/promo.php', handlePromo);
 // Static Pages
 app.get('/tentang', (req, res) => res.render('tentang'));
 app.get('/tentang.php', (req, res) => res.render('tentang'));
+app.get('/tentang-kami', (req, res) => res.render('tentang'));
+app.get('/tentang-kami.php', (req, res) => res.render('tentang'));
 
 app.get('/cara-pemesanan', (req, res) => res.render('cara-pemesanan'));
 app.get('/cara-pemesanan.php', (req, res) => res.render('cara-pemesanan'));
 
 app.get('/kontak', (req, res) => res.render('kontak', { success: req.query.sent }));
 app.get('/kontak.php', (req, res) => res.render('kontak', { success: req.query.sent }));
-app.post('/kontak', (req, res) => res.redirect('/kontak?sent=1'));
+app.post('/kontak', (req, res) => res.redirect('/kontak.php?sent=1'));
+app.post('/kontak.php', (req, res) => res.redirect('/kontak.php?sent=1'));
 
 // Customer Auth
 app.get('/login', (req, res) => res.render('login', { error: req.query.error || '' }));
 app.get('/login.php', (req, res) => res.render('login', { error: req.query.error || '' }));
 
-app.post('/login', (req, res) => {
+const handleCustomerLoginPost = (req, res) => {
   const { phone, password } = req.body;
   const user = store.getCustomerByPhone(phone);
   if (user) {
     req.session.customer = user;
-    return res.redirect('/akun');
+    return res.redirect('/akun.php');
   }
-  // Allow login with test account
   const defaultUser = { id: 10, name: 'Member Pelanggan', phone: phone || '081234567890', points: 50 };
   req.session.customer = defaultUser;
-  res.redirect('/akun');
-});
-app.post('/login.php', (req, res) => res.redirect('/akun'));
+  res.redirect('/akun.php');
+};
+app.post('/login', handleCustomerLoginPost);
+app.post('/login.php', handleCustomerLoginPost);
 
 app.get('/daftar', (req, res) => res.render('daftar', { error: '' }));
 app.get('/daftar.php', (req, res) => res.render('daftar', { error: '' }));
 
-app.post('/daftar', (req, res) => {
+const handleCustomerDaftarPost = (req, res) => {
   const { name, phone, email, address } = req.body;
   if (!name || !phone) return res.render('daftar', { error: 'Nama dan nomor telepon wajib diisi' });
   const user = store.createCustomer({ name, phone, email, address });
   req.session.customer = user;
-  res.redirect('/akun');
-});
+  res.redirect('/akun.php');
+};
+app.post('/daftar', handleCustomerDaftarPost);
+app.post('/daftar.php', handleCustomerDaftarPost);
 
-app.get('/akun', (req, res) => {
+const handleAkunGet = (req, res) => {
   const user = req.session.customer || null;
   const orders = user
     ? (store.getCustomerOrders ? store.getCustomerOrders(user.phone || user.id) : store.getOrders())
@@ -495,34 +527,34 @@ app.get('/akun', (req, res) => {
     notice,
     error
   });
-});
-app.get('/akun.php', (req, res) => {
-  const query = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
-  res.redirect('/akun' + query);
-});
+};
+app.get('/akun', handleAkunGet);
+app.get('/akun.php', handleAkunGet);
 
-app.post('/akun', (req, res, next) => {
+const handleAkunPostMiddleware = (req, res, next) => {
   if (!req.session.customer) {
-    return res.redirect('/login');
+    return res.redirect('/login.php');
   }
   uploadAvatar.single('avatar')(req, res, function(err) {
     if (err) {
-      return res.redirect('/akun?tab=profil&error=' + encodeURIComponent(err.message || 'Gagal mengunggah foto profil.'));
+      return res.redirect('/akun.php?tab=profil&error=' + encodeURIComponent(err.message || 'Gagal mengunggah foto profil.'));
     }
     next();
   });
-}, (req, res) => {
+};
+
+const handleAkunPost = (req, res) => {
   if (!req.session.customer) {
-    return res.redirect('/login');
+    return res.redirect('/login.php');
   }
   const current = req.session.customer;
   const { name, username, phone, email, gender, birth_date, city, address, address_note, remove_avatar } = req.body;
 
   if (!name || name.trim().length < 2) {
-    return res.redirect('/akun?tab=profil&error=' + encodeURIComponent('Nama lengkap minimal 2 karakter.'));
+    return res.redirect('/akun.php?tab=profil&error=' + encodeURIComponent('Nama lengkap minimal 2 karakter.'));
   }
   if (!phone || phone.trim().length < 8) {
-    return res.redirect('/akun?tab=profil&error=' + encodeURIComponent('Nomor WhatsApp valid wajib diisi.'));
+    return res.redirect('/akun.php?tab=profil&error=' + encodeURIComponent('Nomor WhatsApp valid wajib diisi.'));
   }
 
   const updateData = {
@@ -554,24 +586,25 @@ app.post('/akun', (req, res, next) => {
     };
   }
 
-  res.redirect('/akun?tab=profil&notice=' + encodeURIComponent('Foto profil dan data biodata diri berhasil disimpan!'));
-});
-app.post('/akun.php', (req, res) => res.redirect(307, '/akun'));
+  res.redirect('/akun.php?tab=profil&notice=' + encodeURIComponent('Foto profil dan data biodata diri berhasil disimpan!'));
+};
+app.post('/akun', handleAkunPostMiddleware, handleAkunPost);
+app.post('/akun.php', handleAkunPostMiddleware, handleAkunPost);
 
 app.get('/logout', (req, res) => {
   req.session.customer = null;
-  res.redirect('/');
+  res.redirect('/index.php');
 });
 app.get('/logout.php', (req, res) => {
   req.session.customer = null;
-  res.redirect('/');
+  res.redirect('/index.php');
 });
 
 // Member points and notifications
-app.get('/poin-member', (req, res) => res.redirect('/akun'));
-app.get('/poin-member.php', (req, res) => res.redirect('/akun'));
-app.get('/notifikasi-member', (req, res) => res.redirect('/akun'));
-app.get('/notifikasi-member.php', (req, res) => res.redirect('/akun'));
+app.get('/poin-member', (req, res) => res.redirect('/akun.php'));
+app.get('/poin-member.php', (req, res) => res.redirect('/akun.php'));
+app.get('/notifikasi-member', (req, res) => res.redirect('/akun.php'));
+app.get('/notifikasi-member.php', (req, res) => res.redirect('/akun.php'));
 
 // ==========================================
 // ADMIN ROUTES

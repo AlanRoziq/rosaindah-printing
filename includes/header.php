@@ -24,8 +24,8 @@
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 
     <!-- CSS Website -->
-    <link rel="stylesheet" href="<?php echo asset_url('css/style.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/style.css') ?: '20261031'; ?>">
-    <link rel="stylesheet" href="<?php echo asset_url('css/responsive.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/responsive.css') ?: '20261031'; ?>">
+    <link rel="stylesheet" href="<?php echo asset_url('css/style.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/style.css') ?: '20261032'; ?>">
+    <link rel="stylesheet" href="<?php echo asset_url('css/responsive.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/responsive.css') ?: '20261032'; ?>">
 
 </head>
 

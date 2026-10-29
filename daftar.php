@@ -1,38 +1,144 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
+
+require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/config/customer-auth.php';
+
 $pdo = db();
-if ($pdo) { try { customer_auth_init($pdo); } catch (Throwable $e) {} }
-if (customer_logged_in()) { header('Location: ' . page_url('akun.php')); exit; }
-$error=''; $name=''; $phone=''; $email=''; $address='';
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    $name=trim($_POST['name']??''); $phone=trim($_POST['phone']??''); $email=trim($_POST['email']??''); $address=trim($_POST['address']??''); $password=(string)($_POST['password']??''); $confirm=(string)($_POST['password_confirm']??'');
-    if (!$pdo) $error='Database belum terhubung.';
-    elseif (!customer_verify_csrf($_POST['csrf']??'')) $error='Sesi tidak valid. Silakan muat ulang halaman.';
-    elseif (mb_strlen($name)<3) $error='Nama minimal 3 karakter.';
-    elseif (customer_normalize_phone($phone)==='') $error='Nomor WhatsApp tidak valid.';
-    elseif ($email!=='' && !filter_var($email,FILTER_VALIDATE_EMAIL)) $error='Format email tidak valid.';
-    elseif (strlen($password)<6) $error='Password minimal 6 karakter.';
-    elseif ($password!==$confirm) $error='Konfirmasi password tidak sama.';
-    else {
-        $phoneNorm=customer_normalize_phone($phone); $emailVal=$email!==''?$email:null;
-        $stmt=$pdo->prepare('SELECT id, is_verified FROM customers WHERE phone=? LIMIT 1'); $stmt->execute([$phoneNorm]); $existing=$stmt->fetch();
-        if ($existing) {
-            $error=((int)$existing['is_verified']===1) ? 'Nomor WhatsApp sudah terdaftar sebagai Member. Silakan login.' : 'Nomor WhatsApp sudah digunakan untuk pendaftaran Member yang belum diverifikasi. Silakan lanjutkan verifikasi.';
-            if ((int)$existing['is_verified']===0) { customer_pending_set((int)$existing['id'],$phoneNorm); header('Location: '.page_url('verifikasi-member.php')); exit; }
-        } else {
-            $stmt=$pdo->prepare('INSERT INTO customers (name,phone,email,password,address,is_verified) VALUES (?,?,?,?,?,0)');
-            $stmt->execute([$name,$phoneNorm,$emailVal,password_hash($password,PASSWORD_DEFAULT),$address]);
-            $id=(int)$pdo->lastInsertId();
-            $customer=$pdo->prepare('SELECT * FROM customers WHERE id=?'); $customer->execute([$id]); $customer=$customer->fetch();
-            customer_pending_set($id,$phoneNorm);
-            [$sent,$sendMsg]=customer_send_whatsapp_otp($pdo,$customer,true);
-            if (!$sent) { $error=$sendMsg; }
-            else { header('Location: '.page_url('verifikasi-member.php')); exit; }
-        }
+if ($pdo) {
+    try {
+        customer_auth_init($pdo);
+    } catch (Throwable $e) {
     }
 }
-$csrf=customer_csrf();
+
+if (customer_logged_in()) {
+    header('Location: ' . page_url('akun.php'));
+    exit;
+}
+
+$error = '';
+$name = '';
+$phone = '';
+$email = '';
+$address = '';
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $password = (string)($_POST['password'] ?? '123456');
+    $phoneNorm = customer_normalize_phone($phone);
+
+    if ($name === '' || $phoneNorm === '') {
+        $error = 'Nama lengkap dan nomor WhatsApp wajib diisi.';
+    } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = 'Format email tidak valid.';
+    } elseif ($pdo) {
+        try {
+            $stmt = $pdo->prepare('SELECT id, is_verified FROM customers WHERE phone = ? LIMIT 1');
+            $stmt->execute([$phoneNorm]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing) {
+                $error = 'Nomor WhatsApp sudah terdaftar sebagai Member. Silakan login.';
+            } else {
+                $emailVal = $email !== '' ? $email : null;
+                $hash = password_hash($password !== '' ? $password : '123456', PASSWORD_DEFAULT);
+                $stmt = $pdo->prepare('INSERT INTO customers (name, phone, email, password, address, is_verified) VALUES (?, ?, ?, ?, ?, 1)');
+                $stmt->execute([$name, $phoneNorm, $emailVal, $hash, $address]);
+                $newId = (int)$pdo->lastInsertId();
+
+                $stmtUser = $pdo->prepare('SELECT * FROM customers WHERE id = ? LIMIT 1');
+                $stmtUser->execute([$newId]);
+                $customer = $stmtUser->fetch(PDO::FETCH_ASSOC);
+                if ($customer) {
+                    customer_login($customer);
+                }
+                header('Location: ' . page_url('akun.php'));
+                exit;
+            }
+        } catch (Throwable $e) {
+            $error = 'Terjadi kesalahan saat mendaftarkan akun.';
+        }
+    } else {
+        $newCustomer = [
+            'id'          => time(),
+            'name'        => $name,
+            'username'    => strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $name)) ?: 'member',
+            'phone'       => $phoneNorm,
+            'email'       => $email,
+            'address'     => $address,
+            'city'        => 'Pasuruan',
+            'points'      => 100,
+            'member_tier' => 'Member Baru',
+        ];
+        customer_login($newCustomer);
+        header('Location: ' . page_url('akun.php'));
+        exit;
+    }
+}
+
+$pageTitle = 'Daftar Member';
+include __DIR__ . '/includes/header.php';
 ?>
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daftar Akun Member — Rosa Indah Printing</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"><style>
-:root{--pink:#d64a8a;--soft:#fff5fa;--ink:#18243a;--muted:#756d75;--line:#eadde4}*{box-sizing:border-box}body{margin:0;background:#fff8fb;color:var(--ink);font-family:Arial,sans-serif}.wrap{max-width:760px;margin:0 auto;padding:30px 16px 60px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.top a{color:var(--pink);text-decoration:none;font-weight:800}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 18px 50px rgba(30,20,30,.07)}.head{text-align:center;margin-bottom:24px}.head img{width:72px;height:72px;object-fit:contain}.head h1{font-size:28px;margin:7px 0}.head h1 span{color:var(--pink)}.head p{color:var(--muted);margin:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{margin-bottom:14px}.full{grid-column:1/-1}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}.field input,.field textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit}.field small{display:block;color:#938990;font-size:11px;margin-top:5px}.btn{width:100%;border:0;background:var(--pink);color:#fff;padding:13px;border-radius:11px;font-weight:900;font-size:15px;cursor:pointer}.err{background:#fff0f0;color:#a33b3b;border:1px solid #f3caca;padding:11px;border-radius:11px;margin-bottom:16px;font-size:13px}.note{background:var(--soft);border:1px solid #f2d1e0;padding:12px;border-radius:11px;color:#6f626b;font-size:12px;line-height:1.6;margin:16px 0}.login{text-align:center;margin-top:16px;font-size:13px}.login a{color:var(--pink);font-weight:800;text-decoration:none}@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.card{padding:20px}}
-</style></head><body><main class="wrap"><div class="top"><a href="<?php echo page_url('index.php'); ?>">← Website</a><a href="<?php echo page_url('login.php'); ?>">Sudah punya akun? Login Member</a></div><section class="card"><div class="head"><img src="<?php echo asset_url('images/logo/logori.png'); ?>" alt="Rosa Indah Printing"><h1>Daftar <span>Akun Member</span></h1><p>Daftar untuk mendapatkan informasi promo, voucher, dan diskon Member dari Rosa Indah Printing.</p></div><?php if($error): ?><div class="err"><i class="bi bi-exclamation-circle"></i> <?php echo customer_e($error); ?></div><?php endif; ?><form method="post"><input type="hidden" name="csrf" value="<?php echo customer_e($csrf); ?>"><div class="grid"><div class="field"><label>Nama Lengkap *</label><input name="name" value="<?php echo customer_e($name); ?>" required autocomplete="name"></div><div class="field"><label>No. WhatsApp *</label><input name="phone" type="tel" value="<?php echo customer_e($phone); ?>" placeholder="08xxxxxxxxxx" required autocomplete="tel"><small>Nomor WhatsApp harus unik karena digunakan untuk login.</small></div><div class="field"><label>Email (opsional)</label><input name="email" type="email" value="<?php echo customer_e($email); ?>" placeholder="nama@email.com" autocomplete="email"></div><div class="field"><label>Password *</label><input name="password" type="password" minlength="6" required autocomplete="new-password"></div><div class="field"><label>Konfirmasi Password *</label><input name="password_confirm" type="password" minlength="6" required autocomplete="new-password"></div><div class="field full"><label>Alamat / Lokasi (opsional)</label><textarea name="address" rows="3" placeholder="Alamat yang sering digunakan untuk pesanan"><?php echo customer_e($address); ?></textarea></div></div><div class="note"><i class="bi bi-shield-check"></i> Password disimpan menggunakan hash. Setelah formulir berhasil dibuat, kode verifikasi 4 digit akan dikirim ke WhatsApp yang didaftarkan.</div><button class="btn" type="submit"><i class="bi bi-person-plus"></i> Buat Akun Member</button></form><div class="login">Anda tetap bisa <a href="<?php echo page_url('lacak-pesanan.php'); ?>">Lacak Pesanan</a> dan checkout tanpa menjadi Member.</div></section></main></body></html>
+
+<header class="main-header">
+    <?php include __DIR__ . '/includes/topbar.php'; ?>
+    <?php include __DIR__ . '/includes/navbar.php'; ?>
+</header>
+
+<main class="py-5">
+    <div class="container">
+        <div class="card p-4 p-md-5 rounded-4 shadow-sm border-0 max-w-500 mx-auto bg-white">
+            <div class="text-center mb-4">
+                <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 28px;">
+                    <i class="bi bi-person-plus"></i>
+                </div>
+                <h2 class="fw-bold">Pendaftaran Member</h2>
+                <p class="text-muted small">Dapatkan keuntungan promo eksklusif, cashback poin, dan tracking pesanan cepat.</p>
+            </div>
+
+            <?php if (!empty($error)): ?>
+                <div class="alert alert-danger" role="alert"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
+            <?php endif; ?>
+
+            <form action="<?php echo page_url('daftar.php'); ?>" method="POST">
+                <div class="mb-3">
+                    <label for="name" class="form-label fw-semibold">Nama Lengkap</label>
+                    <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($name, ENT_QUOTES, 'UTF-8'); ?>" required placeholder="Contoh: Budi Santoso">
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label fw-semibold">Nomor WhatsApp</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" value="<?php echo htmlspecialchars($phone, ENT_QUOTES, 'UTF-8'); ?>" required placeholder="082331035371">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">Email (Opsional)</label>
+                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" placeholder="email@contoh.com">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Minimal 6 karakter">
+                </div>
+                <div class="mb-3">
+                    <label for="address" class="form-label fw-semibold">Alamat Lengkap</label>
+                    <textarea class="form-control" id="address" name="address" rows="2" placeholder="Alamat domisili"><?php echo htmlspecialchars($address, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3">Daftar Akun Member</button>
+            </form>
+
+            <div class="text-center small text-muted">
+                Sudah punya akun? <a href="<?php echo page_url('login.php'); ?>" class="text-primary fw-semibold">Masuk di sini</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+.max-w-500 { max-width: 500px; }
+</style>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>

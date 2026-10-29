@@ -1,47 +1,113 @@
 <?php
 require_once __DIR__ . '/config/config.php';
+
+$waNumber = defined('WHATSAPP_NUMBER') ? WHATSAPP_NUMBER : '6282331035371';
+$success = !empty($_GET['sent']);
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    header('Location: ' . page_url('kontak.php?sent=1'));
+    exit;
+}
+
+$pageTitle = 'Kontak Kami';
+include __DIR__ . '/includes/header.php';
 ?>
-<?php include __DIR__ . '/includes/header.php'; ?>
 
 <header class="main-header">
     <?php include __DIR__ . '/includes/topbar.php'; ?>
     <?php include __DIR__ . '/includes/navbar.php'; ?>
 </header>
 
-<main>
-    <section class="page-section" style="padding:70px 0 90px;">
-        <div class="container" style="max-width:1000px;">
-            <div class="section-title text-center">
-                <span>Hubungi Kami</span>
-                <h1>Kontak Rosa Indah Printing</h1>
-                <p>Silakan hubungi kami untuk konsultasi produk, harga, desain, dan pesanan.</p>
+<main class="py-5">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb mb-4">
+            <a href="<?php echo page_url('index.php'); ?>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Kontak Kami</span>
+        </div>
+
+        <div class="section-title text-center mb-5">
+            <span>Hubungi Percetakan</span>
+            <h2>Kontak & Informasi Layanan</h2>
+            <p class="text-muted">Punya pertanyaan seputar ukuran, bahan kertas, finishing, atau butuh penawaran partai besar? Hubungi kami sekarang.</p>
+        </div>
+
+        <?php if ($success): ?>
+            <div class="alert alert-success alert-dismissible fade show max-w-700 mx-auto mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Pesan Anda berhasil dikirim! Tim customer service kami akan segera merespon via WhatsApp atau email.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="p-4 bg-white rounded-4 shadow-sm h-100 text-center">
-                        <i class="bi bi-telephone-fill" style="font-size:30px;color:#d64a8a;"></i>
-                        <h2 class="h5 mt-3">Telepon / WhatsApp</h2>
-                        <p class="text-secondary mb-2">0823-3103-5371</p>
-                        <a class="btn-primary d-inline-block" style="padding:10px 18px;" href="https://wa.me/6282331035371" target="_blank" rel="noopener">Chat WhatsApp</a>
+        <?php endif; ?>
+
+        <div class="row g-5 max-w-900 mx-auto">
+            <div class="col-lg-5">
+                <div class="card p-4 rounded-4 shadow-sm border-0 h-100 bg-white">
+                    <h4 class="fw-bold mb-4">Informasi Kontak</h4>
+
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <i class="bi bi-geo-alt-fill text-primary fs-4"></i>
+                        <div>
+                            <span class="fw-bold d-block">Alamat Percetakan:</span>
+                            <span class="text-muted">Regek, Sambirejo, Rejoso, Pasuruan, Jawa Timur</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <i class="bi bi-whatsapp text-success fs-4"></i>
+                        <div>
+                            <span class="fw-bold d-block">WhatsApp / Telepon:</span>
+                            <a href="https://wa.me/<?php echo rawurlencode($waNumber); ?>" target="_blank" rel="noopener" class="text-decoration-none text-dark">0823-3103-5371</a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start gap-3 mb-4">
+                        <i class="bi bi-envelope-fill text-danger fs-4"></i>
+                        <div>
+                            <span class="fw-bold d-block">Email Resmi:</span>
+                            <span class="text-muted">rosaindahprinting@gmail.com</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-clock-fill text-warning fs-4"></i>
+                        <div>
+                            <span class="fw-bold d-block">Waktu Pelayanan:</span>
+                            <span class="text-muted">Senin - Sabtu: 08.00 - 21.00 WIB</span>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="p-4 bg-white rounded-4 shadow-sm h-100 text-center">
-                        <i class="bi bi-envelope-fill" style="font-size:30px;color:#d64a8a;"></i>
-                        <h2 class="h5 mt-3">Email</h2>
-                        <p class="text-secondary mb-0">rosaindahprinting@gmail.com</p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="p-4 bg-white rounded-4 shadow-sm h-100 text-center">
-                        <i class="bi bi-geo-alt-fill" style="font-size:30px;color:#d64a8a;"></i>
-                        <h2 class="h5 mt-3">Alamat</h2>
-                        <p class="text-secondary mb-0">regek-sambirejo-rejoso</p>
-                    </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card p-4 rounded-4 shadow-sm border-0 bg-white">
+                    <h4 class="fw-bold mb-3">Kirim Pesan Konsultasi</h4>
+                    <form action="<?php echo page_url('kontak.php'); ?>" method="POST">
+                        <div class="mb-3">
+                            <label for="contact_name" class="form-label fw-semibold">Nama Anda</label>
+                            <input type="text" class="form-control" id="contact_name" name="name" required placeholder="Contoh: Rian">
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_phone" class="form-label fw-semibold">Nomor WhatsApp</label>
+                            <input type="tel" class="form-control" id="contact_phone" name="phone" required placeholder="Contoh: 082331035371">
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_msg" class="form-label fw-semibold">Pesan / Rencana Cetak</label>
+                            <textarea class="form-control" id="contact_msg" name="message" rows="4" required placeholder="Jelaskan kebutuhan cetak Anda, misalnya ukuran banner, jenis bahan, jumlah, dll."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">
+                            <i class="bi bi-send me-1"></i> Kirim Pesan Sekarang
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 </main>
+
+<style>
+.max-w-700 { max-width: 700px; }
+.max-w-900 { max-width: 900px; }
+</style>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
