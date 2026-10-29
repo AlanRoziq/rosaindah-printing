@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Rosa Indah Printing</title>
+    <title><?php echo isset($pageTitle) && $pageTitle !== '' ? htmlspecialchars($pageTitle) . ' — Rosa Indah Printing' : 'Rosa Indah Printing'; ?></title>
 
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,8 +24,8 @@
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 
     <!-- CSS Website -->
-    <link rel="stylesheet" href="<?php echo asset_url('css/style.css'); ?>?v=<?php echo filemtime(__DIR__ . '/../assets/css/style.css'); ?>">
-    <link rel="stylesheet" href="<?php echo asset_url('css/responsive.css'); ?>?v=<?php echo filemtime(__DIR__ . '/../assets/css/responsive.css'); ?>">
+    <link rel="stylesheet" href="<?php echo asset_url('css/style.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/style.css') ?: '2026'; ?>">
+    <link rel="stylesheet" href="<?php echo asset_url('css/responsive.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/responsive.css') ?: '2026'; ?>">
 
 </head>
 
