@@ -1,639 +1,558 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/includes/products-data.php';
+require_once __DIR__ . '/includes/product-categories.php';
 
-// Inisialisasi keranjang jika belum ada
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
+$selectedCategory = trim($_GET['kategori'] ?? '');
+$searchQuery = trim($_GET['q'] ?? '');
+$currentSort = trim($_GET['sort'] ?? 'rekomendasi');
+if ($currentSort === '') {
+    $currentSort = 'rekomendasi';
 }
 
-// Data Produk Percetakan Rosa Indah Printing
-$daftar_produk = [
-    [
-        'id' => 1,
-        'nama' => 'Spanduk / Banner Outdoor Flexi',
-        'kategori' => 'banner',
-        'kategori_label' => 'Spanduk & Banner',
-        'harga' => 18000,
-        'satuan' => 'm²',
-        'harga_coret' => 25000,
-        'rating' => 4.9,
-        'terjual' => '2.4k',
-        'badge' => 'Terlaris',
-        'gambar' => 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Cetak banner & spanduk outdoor tahan cuaca, warna tajam, bahan Flexi standar hingga tebal (Korchin/Korea). Cocok untuk promosi toko, event, dan warung.',
-        'pilihan_bahan' => ['Flexi Standar 280gr', 'Flexi Medium 340gr', 'Flexi Korchin 440gr (High Res)'],
-        'finishing' => ['Mata Ayam (Plong Sudut)', 'Lipat Lem Saja', 'Lebihan Putih', 'Slongsong Bambu']
-    ],
-    [
-        'id' => 2,
-        'nama' => 'Stiker Vinyl Custom (Kiss Cut / Die Cut)',
-        'kategori' => 'stiker',
-        'kategori_label' => 'Stiker & Label',
-        'harga' => 12000,
-        'satuan' => 'lembar A3+',
-        'harga_coret' => 15000,
-        'rating' => 4.9,
-        'terjual' => '5.8k',
-        'badge' => 'Diskon 20%',
-        'gambar' => 'https://images.unsplash.com/photo-1572375992501-4b0892d50c69?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Stiker label kemasan botol, toples, makanan, & merchandise. Tahan air, anti sobek, sudah dipotong sesuai pola (Kiss cut tinggal lepas).',
-        'pilihan_bahan' => ['Vinyl Glossy Anti Air', 'Vinyl Doff / Matte', 'Stiker Transparan', 'Chromo Ekonomis'],
-        'finishing' => ['Kiss Cut (Potong Setengah)', 'Die Cut (Potong Putus)', 'Laminasi Dingin Glossy', 'Laminasi Doff']
-    ],
-    [
-        'id' => 3,
-        'nama' => 'Brosur & Flyer Promosi Full Color',
-        'kategori' => 'brosur',
-        'kategori_label' => 'Brosur & Flyer',
-        'harga' => 175000,
-        'satuan' => 'rim (500 lbr)',
-        'harga_coret' => 220000,
-        'rating' => 4.8,
-        'terjual' => '1.1k',
-        'badge' => 'Promo Rim',
-        'gambar' => 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Cetak brosur full colour 1 sisi atau 2 sisi. Menggunakan kertas Art Paper berkualitas tinggi, cetakan tajam tidak luntur.',
-        'pilihan_bahan' => ['Art Paper 120gr', 'Art Paper 150gr', 'HVS 80gr (Hemat)'],
-        'finishing' => ['Tanpa Lipat', 'Lipat 2 (Bifold)', 'Lipat 3 (Trifold)']
-    ],
-    [
-        'id' => 4,
-        'nama' => 'Kartu Nama Premium (1 Box isi 100)',
-        'kategori' => 'kartu_nama',
-        'kategori_label' => 'Kartu Nama',
-        'harga' => 35000,
-        'satuan' => 'box',
-        'harga_coret' => 45000,
-        'rating' => 5.0,
-        'terjual' => '3.2k',
-        'badge' => 'Premium',
-        'gambar' => 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Kartu nama profesional dengan bahan Art Carton tebal 260gr lengkap dengan laminasi doff/glossy dan gratis box mika eksklusif.',
-        'pilihan_bahan' => ['Art Carton 260gr', 'Art Carton 310gr (Ekstra Tebal)', 'BW Linen Bertekstur'],
-        'finishing' => ['Laminasi Doff 2 Sisi', 'Laminasi Glossy 2 Sisi', 'Sudut Bulat (Rounded)', 'Tanpa Laminasi']
-    ],
-    [
-        'id' => 5,
-        'nama' => 'X-Banner & Y-Banner Portable (1 Set)',
-        'kategori' => 'banner',
-        'kategori_label' => 'Spanduk & Banner',
-        'harga' => 65000,
-        'satuan' => 'set',
-        'harga_coret' => 85000,
-        'rating' => 4.8,
-        'terjual' => '940',
-        'badge' => 'Siap Pasang',
-        'gambar' => 'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Stand banner promosi ukuran 60x160 cm, sudah termasuk rangka tiang fiber kokoh dan cetak bahan albatros/fleksi beresolusi tinggi.',
-        'pilihan_bahan' => ['Bahan Albatros + Laminasi Doff (Indoor Halus)', 'Bahan Flexi 340gr (Outdoor)'],
-        'finishing' => ['Rangka X-Banner Standar', 'Rangka Y-Banner Besi', 'Roll Up Banner Aluminium']
-    ],
-    [
-        'id' => 6,
-        'nama' => 'Kaos Custom DTF Sablon Satuan & Lusinan',
-        'kategori' => 'kaos',
-        'kategori_label' => 'Kaos & Sablon',
-        'harga' => 55000,
-        'satuan' => 'pcs',
-        'harga_coret' => 70000,
-        'rating' => 4.9,
-        'terjual' => '1.7k',
-        'badge' => 'Tanpa Min. Order',
-        'gambar' => 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Sablon kaos katun combed 30s premium dengan teknologi cetak DTF full color. Lembut, warna cerah, awet dicuci berkali-kali.',
-        'pilihan_bahan' => ['Cotton Combed 30s Premium', 'Cotton Combed 24s (Lebih Tebal)'],
-        'finishing' => ['Ukuran Desain A4', 'Ukuran Desain A3', 'Sablon Depan Saja', 'Sablon Depan + Belakang']
-    ],
-    [
-        'id' => 7,
-        'nama' => 'Mug Keramik Custom Cetak Sublim',
-        'kategori' => 'merchandise',
-        'kategori_label' => 'Merchandise',
-        'harga' => 20000,
-        'satuan' => 'pcs',
-        'harga_coret' => 28000,
-        'rating' => 4.7,
-        'terjual' => '810',
-        'badge' => 'Souvenir',
-        'gambar' => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Mug keramik putih SNI berkualitas tinggi. Cocok untuk hadiah ulang tahun, souvenir kantor, pernikahan, dan promosi bisnis.',
-        'pilihan_bahan' => ['Mug SNI Putih Polos', 'Mug Bunglon (Berubah Warna saat Panas)'],
-        'finishing' => ['Kemasan Box Putih', 'Box + Pita Souvenir']
-    ],
-    [
-        'id' => 8,
-        'nama' => 'Nota / Surat Jalan / Kwitansi NCR (2 Ply)',
-        'kategori' => 'stationery',
-        'kategori_label' => 'Buku & Nota',
-        'harga' => 135000,
-        'satuan' => 'paket (10 buku)',
-        'harga_coret' => 160000,
-        'rating' => 4.9,
-        'terjual' => '2.1k',
-        'badge' => 'Usaha',
-        'gambar' => 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&auto=format&fit=crop&q=80',
-        'deskripsi' => 'Cetak nota rangkap 2 atau 3 otomatis tembus tanpa karbon. Sudah termasuk porporasi (garis putus) dan nomor urut (numerator).',
-        'pilihan_bahan' => ['NCR 2 Rangkap (Putih - Merah/Kuning)', 'NCR 3 Rangkap (Putih - Merah - Kuning)'],
-        'finishing' => ['Nomor Urut (Numerator)', 'Jilid Lem Porporasi']
-    ]
-];
+$allProducts = is_array($products ?? null) ? $products : [];
+$totalCount = count($allProducts);
+$categories = rosa_product_categories();
 
-// Hitung total item keranjang
-$total_keranjang = 0;
-foreach ($_SESSION['cart'] as $item) {
-    $total_keranjang += (int)($item['qty'] ?? 1);
-}
-?>
-<?php include 'includes/header.php'; ?>
-
-<!-- Integrasi Tailwind & Ikon untuk Katalog Produk Pink Rosa Indah -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<style>
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-    /* Pastikan ikon keranjang di header atas disembunyikan pada tampilan mobile */
-    @media (max-width: 767px) {
-        .main-header a[href*="keranjang"],
-        .main-header .cart-btn,
-        .main-header .header-cart {
-            display: none !important;
+// Filter produk berdasarkan kategori & pencarian
+$filteredProducts = array_values(array_filter($allProducts, function ($p) use ($selectedCategory, $searchQuery) {
+    if ($selectedCategory !== '') {
+        if (strtolower(trim((string)($p['category'] ?? ''))) !== strtolower($selectedCategory)) {
+            return false;
         }
     }
-</style>
+    if ($searchQuery !== '') {
+        $q = strtolower($searchQuery);
+        $name = strtolower((string)($p['name'] ?? ''));
+        $desc = strtolower((string)($p['description'] ?? ''));
+        if (strpos($name, $q) === false && strpos($desc, $q) === false) {
+            return false;
+        }
+    }
+    return true;
+}));
 
-<!-- HEADER UTAMA SAMA PERSIS DENGAN INDEX.PHP -->
+// Urutkan produk sesuai pilihan sort
+if ($currentSort === 'terbaru') {
+    $filteredProducts = array_reverse($filteredProducts);
+} elseif ($currentSort === 'terlama') {
+    // Urutan asli katalog
+} elseif ($currentSort === 'harga_termurah') {
+    usort($filteredProducts, function ($a, $b) {
+        return ((float)($a['price'] ?? 0)) <=> ((float)($b['price'] ?? 0));
+    });
+} elseif ($currentSort === 'harga_termahal') {
+    usort($filteredProducts, function ($a, $b) {
+        return ((float)($b['price'] ?? 0)) <=> ((float)($a['price'] ?? 0));
+    });
+} elseif ($currentSort === 'terlaris') {
+    $bestSellers = ['banner', 'sticker', 'kartu-nama', 'undangan-nikah', 'sablon-dtf', 'mug-custom', 'mug', 'kalender'];
+    usort($filteredProducts, function ($a, $b) use ($bestSellers) {
+        $aIndex = array_search($a['id'] ?? '', $bestSellers, true);
+        $bIndex = array_search($b['id'] ?? '', $bestSellers, true);
+        if ($aIndex !== false && $bIndex !== false) {
+            return $aIndex <=> $bIndex;
+        }
+        if ($aIndex !== false) return -1;
+        if ($bIndex !== false) return 1;
+        return 0;
+    });
+} else {
+    // rekomendasi / default
+    $featuredIds = ['banner', 'undangan-nikah', 'kartu-nama'];
+    usort($filteredProducts, function ($a, $b) use ($featuredIds) {
+        $aFeat = !empty($a['is_featured']) || in_array($a['id'] ?? '', $featuredIds, true) ? 1 : 0;
+        $bFeat = !empty($b['is_featured']) || in_array($b['id'] ?? '', $featuredIds, true) ? 1 : 0;
+        return $bFeat <=> $aFeat;
+    });
+}
+
+$sortLabels = [
+    'rekomendasi' => 'Rekomendasi / Best Seller',
+    'terlaris' => 'Terlaris',
+    'terbaru' => 'Produk Terbaru → Terlama',
+    'terlama' => 'Terlama → Terbaru',
+    'harga_termurah' => 'Harga Termurah → Termahal',
+    'harga_termahal' => 'Termahal → Termurah',
+];
+$activeSortText = $sortLabels[$currentSort] ?? 'Rekomendasi / Best Seller';
+
+$catIcons = [
+    'Undangan Nikah' => 'bi-envelope-heart',
+    'Print Scan Copy' => 'bi-printer',
+    'MUG' => 'bi-cup-hot',
+    'Banner' => 'bi-flag',
+    'Cetak Buku' => 'bi-book',
+    'Lanyard & Id Card' => 'bi-person-badge',
+    'Spanduk' => 'bi-badge-ad',
+    'Kartu Nama' => 'bi-person-vcard',
+    'Sticker' => 'bi-tag',
+    'Undangan Lipat 3' => 'bi-envelope-paper',
+    'Nota / Buku Tabungan' => 'bi-receipt',
+    'Kalender' => 'bi-calendar3',
+    'Sablon DTF' => 'bi-palette',
+    'Cetak Foto' => 'bi-image',
+    'Cetak Pigora' => 'bi-aspect-ratio',
+    'Gantungan Kunci' => 'bi-key',
+];
+
+$sortParam = ($currentSort && $currentSort !== 'rekomendasi') ? '&sort=' . urlencode($currentSort) : '';
+$sortParamAlone = ($currentSort && $currentSort !== 'rekomendasi') ? '?sort=' . urlencode($currentSort) : '';
+
+if (!function_exists('format_rupiah')) {
+    function format_rupiah($amount): string {
+        return 'Rp' . number_format((float)$amount, 0, ',', '.');
+    }
+}
+
+include __DIR__ . '/includes/header.php';
+?>
+
 <header class="main-header">
-
-    <?php include 'includes/topbar.php'; ?>
-
-    <?php include 'includes/navbar.php'; ?>
-
+    <?php include __DIR__ . '/includes/topbar.php'; ?>
+    <?php include __DIR__ . '/includes/navbar.php'; ?>
 </header>
 
-<!-- BANNER JUDUL HALAMAN & FILTER KATEGORI PINK -->
-<section class="bg-gradient-to-r from-pink-600 via-rose-500 to-pink-500 text-white py-8 sm:py-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <span class="inline-block bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-3 py-1 rounded-full mb-2 uppercase tracking-wider">
-                    Rosa Indah Digital Printing
-                </span>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Katalog Produk & Layanan Cetak</h1>
-                <p class="text-pink-100 text-xs sm:text-sm mt-1">Pilih produk percetakan berkualitas tinggi, tentukan spesifikasi, dan pesan langsung</p>
-            </div>
+<main class="catalog-page">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <div class="catalog-breadcrumb">
+            <a href="<?php echo page_url('index.php'); ?>">Home</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Produk</span>
+            <?php if ($selectedCategory !== ''): ?>
+                <i class="bi bi-chevron-right"></i>
+                <span class="active"><?php echo htmlspecialchars($selectedCategory); ?></span>
+            <?php endif; ?>
+        </div>
 
-            <!-- Kolom Pencarian Cepat -->
-            <div class="w-full md:w-80">
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        id="search-input"
-                        placeholder="Cari spanduk, stiker, brosur, nota..." 
-                        class="w-full pl-10 pr-4 py-2.5 text-sm text-slate-800 bg-white rounded-full shadow-md focus:ring-2 focus:ring-pink-300 outline-none"
-                        onkeyup="filterProdukLive()"
-                    >
-                    <i data-lucide="search" class="w-4 h-4 text-pink-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+        <!-- Header & Search (Marketplace Style) -->
+        <div class="marketplace-catalog-header mb-3">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-6 col-12">
+                    <h1 class="marketplace-catalog-title mb-1">Katalog Produk Cetak</h1>
+                    <p class="marketplace-catalog-subtitle mb-0">Solusi cetak cepat beresolusi tinggi dengan harga transparan langsung dari percetakan.</p>
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- BAR FILTER KATEGORI PINK -->
-<div class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-pink-100 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <button onclick="setKategori('semua')" class="filter-btn active whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-pink-600 text-white shadow-sm shadow-pink-200 transition" data-category="semua">
-                Semua Produk
-            </button>
-            <button onclick="setKategori('banner')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="banner">
-                Spanduk & Banner
-            </button>
-            <button onclick="setKategori('stiker')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="stiker">
-                Stiker & Label
-            </button>
-            <button onclick="setKategori('brosur')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="brosur">
-                Brosur & Flyer
-            </button>
-            <button onclick="setKategori('kartu_nama')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="kartu_nama">
-                Kartu Nama
-            </button>
-            <button onclick="setKategori('kaos')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="kaos">
-                Kaos & Sablon
-            </button>
-            <button onclick="setKategori('merchandise')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="merchandise">
-                Merchandise
-            </button>
-            <button onclick="setKategori('stationery')" class="filter-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition" data-category="stationery">
-                Buku & Nota
-            </button>
-        </div>
-
-        <!-- Urutkan & Keranjang Desktop (Disembunyikan di HP: hidden md:flex) -->
-        <div class="hidden md:flex items-center gap-3 flex-shrink-0">
-            <select id="sort-select" onchange="sortProduk()" class="text-xs font-semibold bg-pink-50 border border-pink-200 rounded-full px-3.5 py-1.5 text-pink-700 outline-none focus:border-pink-500 cursor-pointer">
-                <option value="terpopuler">Paling Populer</option>
-                <option value="harga_terendah">Harga Terendah</option>
-                <option value="harga_tertinggi">Harga Tertinggi</option>
-            </select>
-
-            <a href="keranjang.php" class="hidden md:flex relative p-2 rounded-full bg-pink-50 hover:bg-pink-100 text-pink-600 transition items-center justify-center" title="Keranjang Belanja">
-                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
-                <span id="cart-counter-header" class="absolute -top-1 -right-1 bg-pink-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow">
-                    <?= $total_keranjang ?>
-                </span>
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- DAFTAR KARTU PRODUK BERTEMA PINK -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-12">
-    <!-- Sortir di Mobile -->
-    <div class="flex md:hidden items-center justify-between mb-4">
-        <span class="text-xs font-semibold text-slate-500">Menampilkan Katalog Produk</span>
-        <select id="sort-select-mobile" onchange="document.getElementById('sort-select').value=this.value; sortProduk();" class="text-xs font-semibold bg-white border border-pink-200 rounded-lg px-3 py-1.5 text-pink-700 outline-none">
-            <option value="terpopuler">Paling Populer</option>
-            <option value="harga_terendah">Harga Terendah</option>
-            <option value="harga_tertinggi">Harga Tertinggi</option>
-        </select>
-    </div>
-
-    <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
-        <?php foreach ($daftar_produk as $item): ?>
-            <div class="product-card group bg-white rounded-2xl border border-pink-100 hover:border-pink-400 overflow-hidden shadow-sm hover:shadow-lg hover:shadow-pink-100/60 transition-all duration-300 flex flex-col justify-between"
-                 data-id="<?= $item['id'] ?>"
-                 data-kategori="<?= $item['kategori'] ?>"
-                 data-nama="<?= strtolower($item['nama']) ?>"
-                 data-harga="<?= $item['harga'] ?>">
-                
-                <div>
-                    <!-- Gambar Produk -->
-                    <div class="relative aspect-square w-full overflow-hidden bg-pink-50/40 cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
-                        <img 
-                            src="<?= htmlspecialchars($item['gambar']) ?>" 
-                            alt="<?= htmlspecialchars($item['nama']) ?>" 
-                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                        >
-                        <!-- Badge Pink -->
-                        <span class="absolute top-2.5 left-2.5 bg-gradient-to-r from-pink-600 to-rose-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
-                            <?= htmlspecialchars($item['badge']) ?>
-                        </span>
-
-                        <!-- Rating -->
-                        <div class="absolute bottom-2 right-2 bg-black/65 backdrop-blur-sm text-white text-[11px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
-                            <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i>
-                            <span><?= $item['rating'] ?></span>
-                        </div>
-                    </div>
-
-                    <!-- Detail Card -->
-                    <div class="p-3.5 sm:p-4">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-pink-600">
-                            <?= htmlspecialchars($item['kategori_label']) ?>
-                        </span>
-                        
-                        <h3 class="font-bold text-slate-800 text-xs sm:text-sm line-clamp-2 mt-1 leading-snug group-hover:text-pink-600 transition cursor-pointer" onclick="openDetailModal(<?= $item['id'] ?>)">
-                            <?= htmlspecialchars($item['nama']) ?>
-                        </h3>
-
-                        <div class="mt-2.5 flex items-baseline gap-1.5 flex-wrap">
-                            <span class="text-sm sm:text-base font-extrabold text-pink-600">
-                                Rp <?= number_format($item['harga'], 0, ',', '.') ?>
-                            </span>
-                            <span class="text-[11px] text-slate-400">/ <?= htmlspecialchars($item['satuan']) ?></span>
-                        </div>
-
-                        <?php if ($item['harga_coret']): ?>
-                            <div class="text-[10px] text-slate-400 line-through">
-                                Rp <?= number_format($item['harga_coret'], 0, ',', '.') ?>
-                            </div>
+                <div class="col-lg-6 col-12">
+                    <!-- Marketplace Search Bar -->
+                    <form action="<?php echo page_url('produk.php'); ?>" method="GET" class="marketplace-search-form">
+                        <?php if ($selectedCategory !== ''): ?>
+                            <input type="hidden" name="kategori" value="<?php echo htmlspecialchars($selectedCategory); ?>">
                         <?php endif; ?>
-
-                        <div class="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-                            <i data-lucide="check-circle" class="w-3 h-3 text-pink-500"></i>
-                            <span>Terjual <?= htmlspecialchars($item['terjual']) ?>+</span>
+                        <?php if ($currentSort && $currentSort !== 'rekomendasi'): ?>
+                            <input type="hidden" name="sort" value="<?php echo htmlspecialchars($currentSort); ?>">
+                        <?php endif; ?>
+                        <div class="marketplace-search-box">
+                            <i class="bi bi-search marketplace-search-icon"></i>
+                            <input type="text" name="q" class="marketplace-search-input" placeholder="Cari nama produk, spanduk, mug..." value="<?php echo htmlspecialchars($searchQuery); ?>">
+                            <?php if ($searchQuery !== ''): ?>
+                                <?php
+                                $clearUrl = 'produk.php';
+                                if ($selectedCategory !== '') {
+                                    $clearUrl .= '?kategori=' . urlencode($selectedCategory);
+                                    if ($currentSort && $currentSort !== 'rekomendasi') {
+                                        $clearUrl .= '&sort=' . urlencode($currentSort);
+                                    }
+                                } elseif ($currentSort && $currentSort !== 'rekomendasi') {
+                                    $clearUrl .= '?sort=' . urlencode($currentSort);
+                                }
+                                ?>
+                                <a href="<?php echo page_url($clearUrl); ?>" class="marketplace-clear-btn" title="Hapus pencarian">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </a>
+                            <?php endif; ?>
+                            <button class="marketplace-search-btn" type="submit">Cari</button>
                         </div>
+                    </form>
+
+                    <!-- Tombol Filter di Bawah Tombol Cari Produk -->
+                    <div class="marketplace-search-subbar d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
+                        <div class="filter-count-label text-muted small">
+                            <i class="bi bi-box-seam text-rosa me-1"></i>
+                            <span>Menampilkan <strong><?php echo count($filteredProducts); ?></strong> Produk</span>
+                        </div>
+                        <button type="button" class="btn-filter-popup" id="openFilterModalBtn">
+                            <i class="bi bi-sliders2-vertical"></i>
+                            <span class="btn-filter-text">Filter: <strong><?php echo htmlspecialchars($activeSortText); ?></strong></span>
+                            <i class="bi bi-chevron-down ms-1 icon-chevron"></i>
+                        </button>
                     </div>
                 </div>
-
-                <!-- Tombol Aksi Card Pink -->
-                <div class="p-3.5 sm:p-4 pt-0">
-                    <button 
-                        onclick="openDetailModal(<?= $item['id'] ?>)"
-                        class="w-full py-2.5 px-3 bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm shadow-pink-200 active:scale-95"
-                    >
-                        <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
-                        <span>Pesan Sekarang</span>
-                    </button>
-                </div>
             </div>
-        <?php endforeach; ?>
-    </div>
-
-    <!-- State Kosong Jika Tidak Ditemukan -->
-    <div id="empty-state" class="hidden text-center py-16">
-        <div class="w-16 h-16 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-3 text-pink-500">
-            <i data-lucide="search-x" class="w-8 h-8"></i>
         </div>
-        <h3 class="font-bold text-slate-700">Produk Tidak Ditemukan</h3>
-        <p class="text-xs text-slate-400 mt-1">Coba gunakan kata kunci lain atau pilih kategori 'Semua Produk'</p>
+
+        <!-- Marketplace Category Scroll Strip (Shopee / Tokopedia Style) -->
+        <div class="marketplace-filter-wrapper mb-4">
+            <button type="button" class="category-scroll-btn prev" id="catScrollPrev" aria-label="Geser Kategori Kiri">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <div class="marketplace-category-strip" id="catStrip" role="tablist" aria-label="Kategori Produk">
+                <a href="<?php echo page_url('produk.php' . ($searchQuery !== '' ? '?q=' . urlencode($searchQuery) . $sortParam : $sortParamAlone)); ?>" 
+                   class="market-chip <?php echo $selectedCategory === '' ? 'active' : ''; ?>">
+                    <i class="bi bi-grid-fill"></i>
+                    <span>Semua Kategori</span>
+                    <span class="chip-count"><?php echo $totalCount; ?></span>
+                </a>
+                <?php foreach ($categories as $cat): 
+                    $iconClass = $catIcons[$cat] ?? 'bi-box-seam';
+                ?>
+                    <a href="<?php echo page_url('produk.php?kategori=' . urlencode($cat) . ($searchQuery !== '' ? '&q=' . urlencode($searchQuery) : '') . $sortParam); ?>" 
+                       class="market-chip <?php echo $selectedCategory === $cat ? 'active' : ''; ?>">
+                        <i class="bi <?php echo htmlspecialchars($iconClass); ?>"></i>
+                        <span><?php echo htmlspecialchars($cat); ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="category-scroll-btn next" id="catScrollNext" aria-label="Geser Kategori Kanan">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+
+            <?php if ($selectedCategory !== '' || $searchQuery !== '' || ($currentSort && $currentSort !== 'rekomendasi')): ?>
+                <div class="marketplace-active-filter-bar mt-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="active-filter-text">
+                        <span class="text-secondary small">Filter aktif:</span>
+                        <?php if ($selectedCategory !== ''): ?>
+                            <span class="active-tag"><i class="bi bi-tag-fill me-1"></i><?php echo htmlspecialchars($selectedCategory); ?></span>
+                        <?php endif; ?>
+                        <?php if ($searchQuery !== ''): ?>
+                            <span class="active-tag"><i class="bi bi-search me-1"></i>"<?php echo htmlspecialchars($searchQuery); ?>"</span>
+                        <?php endif; ?>
+                        <?php if ($currentSort && $currentSort !== 'rekomendasi'): ?>
+                            <span class="active-tag"><i class="bi bi-sliders2-vertical me-1"></i><?php echo htmlspecialchars($activeSortText); ?></span>
+                        <?php endif; ?>
+                        <span class="text-muted small ms-1">(<?php echo count($filteredProducts); ?> produk ditemukan)</span>
+                    </div>
+                    <a href="<?php echo page_url('produk.php'); ?>" class="btn-reset-filter">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset Semua
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Products Grid -->
+        <?php if (empty($filteredProducts)): ?>
+            <div class="empty-products p-5 text-center bg-white rounded-3 shadow-sm my-4">
+                <i class="bi bi-search display-3 text-muted"></i>
+                <h3 class="mt-3">Produk Tidak Ditemukan</h3>
+                <p class="text-muted">Tidak ada produk yang sesuai dengan pencarian atau filter kategori yang dipilih.</p>
+                <a href="<?php echo page_url('produk.php'); ?>" class="btn btn-primary mt-2">Tampilkan Semua Produk</a>
+            </div>
+        <?php else: ?>
+            <div class="product-grid">
+                <?php foreach ($filteredProducts as $item): ?>
+                    <article class="catalog-card">
+                        <a href="<?php echo page_url('detail-produk.php?id=' . urlencode($item['id'])); ?>" class="catalog-card-image">
+                            <img src="<?php echo product_image_url($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" loading="lazy">
+                            <span class="catalog-badge"><?php echo htmlspecialchars($item['category']); ?></span>
+                        </a>
+                        <div class="catalog-card-body">
+                            <div class="catalog-rating"><i class="bi bi-star-fill"></i> 5.0 <span>•</span> Kualitas Terjamin</div>
+                            <h3><?php echo htmlspecialchars($item['name']); ?></h3>
+                            <p><?php echo htmlspecialchars($item['description']); ?></p>
+                            <div class="catalog-card-bottom">
+                                <div>
+                                    <small>Mulai dari</small>
+                                    <strong><?php echo format_rupiah($item['price']); ?> <em>/ <?php echo htmlspecialchars($item['unit']); ?></em></strong>
+                                </div>
+                                <a href="<?php echo page_url('detail-produk.php?id=' . urlencode($item['id'])); ?>" class="catalog-arrow" aria-label="Detail <?php echo htmlspecialchars($item['name']); ?>">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </main>
 
-<!-- MODAL POPUP SPESIFIKASI & ORDER (TEMA PINK) -->
-<div id="detail-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-pink-100">
-        <!-- Header Gambar Modal -->
-        <div class="relative bg-pink-50 aspect-video w-full">
-            <img id="modal-img" src="" alt="Detail Produk" class="w-full h-full object-cover">
-            <button onclick="closeModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white hover:bg-pink-600 flex items-center justify-center transition">
-                <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
-            <div class="absolute bottom-3 left-3">
-                <span id="modal-badge" class="bg-pink-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow"></span>
-            </div>
-        </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const strip = document.getElementById('catStrip');
+    const prevBtn = document.getElementById('catScrollPrev');
+    const nextBtn = document.getElementById('catScrollNext');
+    if (!strip) return;
 
-        <!-- Isi Modal -->
-        <div class="p-5 sm:p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-            <div>
-                <span id="modal-kategori" class="text-[11px] font-bold text-pink-600 uppercase tracking-wider"></span>
-                <h2 id="modal-nama" class="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5"></h2>
-                <p id="modal-deskripsi" class="text-xs text-slate-500 mt-1.5 leading-relaxed"></p>
-            </div>
+    function updateScrollArrows() {
+        if (!prevBtn || !nextBtn) return;
+        const maxScroll = strip.scrollWidth - strip.clientWidth;
+        if (maxScroll <= 5) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            return;
+        }
+        prevBtn.style.display = strip.scrollLeft > 10 ? 'flex' : 'none';
+        nextBtn.style.display = strip.scrollLeft < (maxScroll - 10) ? 'flex' : 'none';
+    }
 
-            <!-- Pilihan Bahan -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Pilihan Bahan</label>
-                <div id="modal-bahan-container" class="grid grid-cols-1 gap-2"></div>
-            </div>
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            strip.scrollBy({ left: -220, behavior: 'smooth' });
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            strip.scrollBy({ left: 220, behavior: 'smooth' });
+        });
+    }
 
-            <!-- Pilihan Finishing -->
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Finishing / Opsi</label>
-                <div id="modal-finishing-container" class="grid grid-cols-1 gap-2"></div>
-            </div>
+    strip.addEventListener('wheel', function(e) {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            e.preventDefault();
+            strip.scrollLeft += e.deltaY;
+            updateScrollArrows();
+        }
+    }, { passive: false });
 
-            <!-- Jumlah / Kuantitas -->
-            <div class="flex items-center justify-between p-3 bg-pink-50/60 rounded-2xl border border-pink-100">
+    let isDown = false;
+    let startX = 0;
+    let startScrollLeft = 0;
+    let hasDragged = false;
+
+    strip.addEventListener('mousedown', function(e) {
+        isDown = true;
+        hasDragged = false;
+        strip.classList.add('is-dragging');
+        startX = e.pageX - strip.offsetLeft;
+        startScrollLeft = strip.scrollLeft;
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (isDown) {
+            isDown = false;
+            strip.classList.remove('is-dragging');
+        }
+    });
+
+    strip.addEventListener('mousemove', function(e) {
+        if (!isDown) return;
+        const x = e.pageX - strip.offsetLeft;
+        const walk = (x - startX) * 1.4;
+        if (Math.abs(walk) > 4) {
+            hasDragged = true;
+        }
+        strip.scrollLeft = startScrollLeft - walk;
+        updateScrollArrows();
+    });
+
+    strip.querySelectorAll('.market-chip').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            if (hasDragged) {
+                e.preventDefault();
+                hasDragged = false;
+            }
+        });
+    });
+
+    const activeChip = strip.querySelector('.market-chip.active');
+    if (activeChip) {
+        setTimeout(function() {
+            const stripWidth = strip.clientWidth;
+            const chipLeft = activeChip.offsetLeft;
+            const chipWidth = activeChip.clientWidth;
+            strip.scrollTo({
+                left: chipLeft - (stripWidth / 2) + (chipWidth / 2),
+                behavior: 'smooth'
+            });
+            updateScrollArrows();
+        }, 120);
+    }
+
+    strip.addEventListener('scroll', updateScrollArrows, { passive: true });
+    window.addEventListener('resize', updateScrollArrows, { passive: true });
+    updateScrollArrows();
+
+    const openModalBtn = document.getElementById('openFilterModalBtn');
+    const modalOverlay = document.getElementById('filterModalOverlay');
+    const closeModalBtn = document.getElementById('closeFilterModalBtn');
+    const modalBackdrop = document.getElementById('filterModalBackdrop');
+    const applyFilterBtn = document.getElementById('applyFilterSortBtn');
+    const resetFilterBtn = document.getElementById('resetFilterSortBtn');
+    const optionCards = document.querySelectorAll('.filter-option-card');
+
+    function openFilterModal() {
+        if (!modalOverlay) return;
+        modalOverlay.classList.add('active');
+        modalOverlay.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeFilterModal() {
+        if (!modalOverlay) return;
+        modalOverlay.classList.remove('active');
+        modalOverlay.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = '';
+    }
+
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openFilterModal();
+        });
+    }
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeFilterModal();
+        });
+    }
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeFilterModal();
+        });
+    }
+
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modalOverlay && (modalOverlay.classList.contains('active') || modalOverlay.style.display !== 'none')) {
+            closeFilterModal();
+        }
+    });
+
+    optionCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            optionCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+        });
+    });
+
+    function navigateWithSort(newSort) {
+        const url = new URL(window.location.href);
+        if (newSort && newSort !== 'rekomendasi') {
+            url.searchParams.set('sort', newSort);
+        } else {
+            url.searchParams.delete('sort');
+        }
+        window.location.href = url.toString();
+    }
+
+    if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selectedRadio = document.querySelector('input[name="sort_option"]:checked');
+            const sortVal = selectedRadio ? selectedRadio.value : 'rekomendasi';
+            closeFilterModal();
+            navigateWithSort(sortVal);
+        });
+    }
+
+    if (resetFilterBtn) {
+        resetFilterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeFilterModal();
+            navigateWithSort('rekomendasi');
+        });
+    }
+});
+</script>
+
+<!-- POPUP MODAL FILTER & URUTKAN PRODUK -->
+<div class="filter-modal-overlay" id="filterModalOverlay" style="display: none;">
+    <div class="filter-modal-backdrop" id="filterModalBackdrop"></div>
+    <div class="filter-modal-sheet" id="filterModalSheet">
+        <div class="filter-modal-handle d-md-none"></div>
+
+        <div class="filter-modal-header">
+            <div class="d-flex align-items-center gap-2">
+                <div class="filter-header-icon">
+                    <i class="bi bi-sliders2-vertical"></i>
+                </div>
                 <div>
-                    <span class="text-xs font-bold text-slate-700">Jumlah Pesanan</span>
-                    <p class="text-[10px] text-slate-400" id="modal-satuan-label">Per satuan</p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="updateQty(-1)" class="w-8 h-8 rounded-lg bg-white border border-pink-200 font-bold text-pink-600 flex items-center justify-center active:scale-95 shadow-sm">-</button>
-                    <span id="modal-qty" class="text-sm font-extrabold text-slate-900 w-6 text-center">1</span>
-                    <button onclick="updateQty(1)" class="w-8 h-8 rounded-lg bg-pink-600 text-white font-bold flex items-center justify-center active:scale-95 shadow-sm">+</button>
+                    <h5 class="filter-modal-title mb-0">Urutkan &amp; Filter Produk</h5>
+                    <p class="filter-modal-subtitle mb-0">Pilih susunan produk sesuai kebutuhan belanja Anda</p>
                 </div>
             </div>
+            <button type="button" class="filter-modal-close" id="closeFilterModalBtn" aria-label="Tutup Filter">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
 
-            <!-- Total Estimasi -->
-            <div class="flex items-center justify-between pt-2 border-t border-pink-100">
-                <span class="text-xs text-slate-500 font-medium">Total Estimasi:</span>
-                <span id="modal-total-harga" class="text-lg font-black text-pink-600">Rp 0</span>
+        <div class="filter-modal-body">
+            <div class="filter-options-list">
+                <?php
+                $filterItems = [
+                    [
+                        'key' => 'terbaru',
+                        'title' => 'Produk Terbaru → Terlama',
+                        'desc' => 'Urutkan dari produk cetak yang paling baru dirilis',
+                        'icon' => 'bi-clock-history',
+                        'color' => 'text-primary',
+                    ],
+                    [
+                        'key' => 'terlama',
+                        'title' => 'Terlama → Terbaru',
+                        'desc' => 'Urutkan dari produk cetak pertama di katalog',
+                        'icon' => 'bi-hourglass-split',
+                        'color' => 'text-secondary',
+                    ],
+                    [
+                        'key' => 'harga_termurah',
+                        'title' => 'Harga Termurah → Termahal',
+                        'desc' => 'Temukan pilihan harga paling hemat dan ekonomis',
+                        'icon' => 'bi-sort-numeric-down',
+                        'color' => 'text-success',
+                    ],
+                    [
+                        'key' => 'harga_termahal',
+                        'title' => 'Termahal → Termurah',
+                        'desc' => 'Lihat paket cetak terlengkap dan bernilai tinggi',
+                        'icon' => 'bi-sort-numeric-down-alt',
+                        'color' => 'text-warning',
+                    ],
+                    [
+                        'key' => 'terlaris',
+                        'title' => 'Terlaris',
+                        'desc' => 'Paling sering dipesan oleh pelanggan & pelaku UMKM',
+                        'icon' => 'bi-fire',
+                        'color' => 'text-danger',
+                    ],
+                    [
+                        'key' => 'rekomendasi',
+                        'title' => 'Rekomendasi / Best Seller',
+                        'desc' => 'Pilihan produk unggulan & paling direkomendasikan',
+                        'icon' => 'bi-stars',
+                        'color' => 'text-rosa',
+                    ],
+                ];
+
+                foreach ($filterItems as $item):
+                    $isSelected = ($currentSort === $item['key']);
+                ?>
+                    <label class="filter-option-card <?php echo $isSelected ? 'selected' : ''; ?>" for="filter_<?php echo htmlspecialchars($item['key']); ?>">
+                        <div class="filter-option-left">
+                            <span class="filter-option-icon <?php echo htmlspecialchars($item['color']); ?>">
+                                <i class="bi <?php echo htmlspecialchars($item['icon']); ?>"></i>
+                            </span>
+                            <div class="filter-option-info">
+                                <span class="filter-option-title"><?php echo htmlspecialchars($item['title']); ?></span>
+                                <span class="filter-option-desc"><?php echo htmlspecialchars($item['desc']); ?></span>
+                            </div>
+                        </div>
+                        <div class="filter-option-radio">
+                            <input type="radio" name="sort_option" id="filter_<?php echo htmlspecialchars($item['key']); ?>" value="<?php echo htmlspecialchars($item['key']); ?>" <?php echo $isSelected ? 'checked' : ''; ?>>
+                            <span class="custom-radio-circle">
+                                <i class="bi bi-check"></i>
+                            </span>
+                        </div>
+                    </label>
+                <?php endforeach; ?>
             </div>
         </div>
 
-        <!-- Tombol Bawah Modal -->
-        <div class="p-4 sm:p-5 bg-pink-50/40 border-t border-pink-100 flex gap-2.5">
-            <button onclick="tambahKeKeranjangModal()" class="flex-1 py-3 bg-pink-600 hover:bg-pink-700 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95 shadow-sm shadow-pink-200">
-                <i data-lucide="shopping-bag" class="w-4 h-4"></i>
-                <span>+ Keranjang</span>
+        <div class="filter-modal-footer">
+            <button type="button" class="btn-filter-reset" id="resetFilterSortBtn">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Default
             </button>
-            <button onclick="pesanWhatsAppModal()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-2xl flex items-center justify-center gap-2 transition active:scale-95 shadow-sm">
-                <i data-lucide="message-circle" class="w-4 h-4"></i>
-                <span>Pesan via WA</span>
+            <button type="button" class="btn-filter-apply" id="applyFilterSortBtn">
+                <i class="bi bi-check2-circle me-1"></i> Terapkan Filter
             </button>
         </div>
     </div>
 </div>
 
-<!-- BOTTOM NAVIGATION KHUSUS MOBILE (Keranjang Tampil di Sini untuk HP) -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-pink-100 px-3 py-1.5 shadow-[0_-4px_20px_rgba(236,72,153,0.08)]">
-    <div class="flex items-center justify-around">
-        <a href="index.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-pink-600 transition">
-            <i data-lucide="home" class="w-5 h-5"></i>
-            <span class="text-[10px] font-medium">Beranda</span>
-        </a>
-
-        <a href="produk.php" class="flex flex-col items-center gap-1 py-1 px-3 text-pink-600 font-bold">
-            <div class="relative">
-                <i data-lucide="grid" class="w-5 h-5"></i>
-                <span class="absolute -top-1 -right-1 w-2 h-2 bg-pink-600 rounded-full"></span>
-            </div>
-            <span class="text-[10px]">Produk</span>
-        </a>
-
-        <a href="keranjang.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-500 hover:text-pink-600 transition relative">
-            <div class="relative">
-                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
-                <span id="cart-counter-bottom" class="absolute -top-1.5 -right-2.5 bg-pink-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                    <?= $total_keranjang ?>
-                </span>
-            </div>
-            <span class="text-[10px] font-medium">Keranjang</span>
-        </a>
-
-        <a href="pesanan.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-pink-600 transition">
-            <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-            <span class="text-[10px] font-medium">Pesanan</span>
-        </a>
-
-        <a href="login.php" class="flex flex-col items-center gap-1 py-1 px-3 text-slate-400 hover:text-pink-600 transition">
-            <i data-lucide="user" class="w-5 h-5"></i>
-            <span class="text-[10px] font-medium">Akun</span>
-        </a>
-    </div>
-</nav>
-
-<?php include 'includes/cta.php'; ?>
-
-<?php include 'includes/footer.php'; ?>
-
-<script>
-    const produkData = <?= json_encode($daftar_produk) ?>;
-    let selectedProduct = null;
-    let currentQty = 1;
-    let selectedBahan = '';
-    let selectedFinishing = '';
-
-    lucide.createIcons();
-
-    function setKategori(kat) {
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            if (btn.dataset.category === kat) {
-                btn.classList.add('bg-pink-600', 'text-white', 'shadow-sm', 'shadow-pink-200');
-                btn.classList.remove('bg-pink-50', 'text-pink-700');
-            } else {
-                btn.classList.remove('bg-pink-600', 'text-white', 'shadow-sm', 'shadow-pink-200');
-                btn.classList.add('bg-pink-50', 'text-pink-700');
-            }
-        });
-
-        const cards = document.querySelectorAll('.product-card');
-        let visibleCount = 0;
-
-        cards.forEach(card => {
-            if (kat === 'semua' || card.dataset.kategori === kat) {
-                card.style.display = 'flex';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-
-        document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
-    }
-
-    function filterProdukLive() {
-        const query = document.getElementById('search-input').value.toLowerCase().trim();
-        const cards = document.querySelectorAll('.product-card');
-        let visibleCount = 0;
-
-        cards.forEach(card => {
-            const nama = card.dataset.nama;
-            if (nama.includes(query)) {
-                card.style.display = 'flex';
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-
-        document.getElementById('empty-state').classList.toggle('hidden', visibleCount > 0);
-    }
-
-    function sortProduk() {
-        const container = document.getElementById('product-grid');
-        const cards = Array.from(document.querySelectorAll('.product-card'));
-        const sortBy = document.getElementById('sort-select').value;
-
-        cards.sort((a, b) => {
-            if (sortBy === 'harga_terendah') {
-                return parseInt(a.dataset.harga) - parseInt(b.dataset.harga);
-            } else if (sortBy === 'harga_tertinggi') {
-                return parseInt(b.dataset.harga) - parseInt(a.dataset.harga);
-            }
-            return parseInt(a.dataset.id) - parseInt(b.dataset.id);
-        });
-
-        cards.forEach(card => container.appendChild(card));
-    }
-
-    function openDetailModal(id) {
-        selectedProduct = produkData.find(p => p.id === id);
-        if (!selectedProduct) return;
-
-        currentQty = 1;
-        selectedBahan = selectedProduct.pilihan_bahan[0];
-        selectedFinishing = selectedProduct.finishing[0];
-
-        document.getElementById('modal-img').src = selectedProduct.gambar;
-        document.getElementById('modal-badge').innerText = selectedProduct.badge;
-        document.getElementById('modal-kategori').innerText = selectedProduct.kategori_label;
-        document.getElementById('modal-nama').innerText = selectedProduct.nama;
-        document.getElementById('modal-deskripsi').innerText = selectedProduct.deskripsi;
-        document.getElementById('modal-satuan-label').innerText = 'Per ' + selectedProduct.satuan;
-        document.getElementById('modal-qty').innerText = currentQty;
-
-        const bahanContainer = document.getElementById('modal-bahan-container');
-        bahanContainer.innerHTML = selectedProduct.pilihan_bahan.map((b, i) => `
-            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-pink-100 hover:border-pink-500 cursor-pointer text-xs font-medium bg-white">
-                <input type="radio" name="pilihan_bahan" value="${b}" ${i === 0 ? 'checked' : ''} onchange="selectedBahan='${b}'; updateModalTotal();" class="accent-pink-600">
-                <span>${b}</span>
-            </label>
-        `).join('');
-
-        const finishingContainer = document.getElementById('modal-finishing-container');
-        finishingContainer.innerHTML = selectedProduct.finishing.map((f, i) => `
-            <label class="flex items-center gap-2 p-2.5 rounded-xl border border-pink-100 hover:border-pink-500 cursor-pointer text-xs font-medium bg-white">
-                <input type="radio" name="pilihan_finishing" value="${f}" ${i === 0 ? 'checked' : ''} onchange="selectedFinishing='${f}';" class="accent-pink-600">
-                <span>${f}</span>
-            </label>
-        `).join('');
-
-        updateModalTotal();
-
-        const modal = document.getElementById('detail-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        lucide.createIcons();
-    }
-
-    function updateQty(delta) {
-        currentQty = Math.max(1, currentQty + delta);
-        document.getElementById('modal-qty').innerText = currentQty;
-        updateModalTotal();
-    }
-
-    function updateModalTotal() {
-        if (!selectedProduct) return;
-        const total = selectedProduct.harga * currentQty;
-        document.getElementById('modal-total-harga').innerText = 'Rp ' + total.toLocaleString('id-ID');
-    }
-
-    function closeModal() {
-        const modal = document.getElementById('detail-modal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    function tambahKeKeranjangModal() {
-        if (!selectedProduct) return;
-
-        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        cart.push({
-            id: selectedProduct.id,
-            nama: selectedProduct.nama,
-            harga: selectedProduct.harga,
-            qty: currentQty,
-            bahan: selectedBahan,
-            finishing: selectedFinishing,
-            satuan: selectedProduct.satuan
-        });
-        localStorage.setItem('cart', JSON.stringify(cart));
-
-        const totalItems = cart.reduce((acc, curr) => acc + curr.qty, 0);
-        const headerBadge = document.getElementById('cart-counter-header');
-        const bottomBadge = document.getElementById('cart-counter-bottom');
-        if (headerBadge) headerBadge.innerText = totalItems;
-        if (bottomBadge) bottomBadge.innerText = totalItems;
-
-        closeModal();
-        alert(`Berhasil menambahkan ${currentQty} ${selectedProduct.nama} ke keranjang!`);
-    }
-
-    function pesanWhatsAppModal() {
-        if (!selectedProduct) return;
-        const noWA = "6281234567890";
-        const total = (selectedProduct.harga * currentQty).toLocaleString('id-ID');
-        const pesan = `Halo Rosa Indah Printing, saya mau pesan:%0A%0A` +
-                      `*Produk:* ${selectedProduct.nama}%0A` +
-                      `*Bahan:* ${selectedBahan}%0A` +
-                      `*Finishing:* ${selectedFinishing}%0A` +
-                      `*Jumlah:* ${currentQty} ${selectedProduct.satuan}%0A` +
-                      `*Estimasi Total:* Rp ${total}%0A%0A` +
-                      `Mohon konfirmasi ketersediaan dan cara kirim filenya. Terima kasih!`;
-        
-        window.location.href = `https://wa.me/${noWA}?text=${pesan}`;
-    }
-
-    window.onclick = function(event) {
-        const modal = document.getElementById('detail-modal');
-        if (event.target === modal) {
-            closeModal();
-        }
-    };
-</script>
+<?php include __DIR__ . '/includes/footer.php'; ?>
