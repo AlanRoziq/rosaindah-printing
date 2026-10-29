@@ -374,6 +374,8 @@ const handleLacakPesanan = (req, res) => {
 };
 app.get('/lacak-pesanan', handleLacakPesanan);
 app.get('/lacak-pesanan.php', handleLacakPesanan);
+app.get('/lacak', handleLacakPesanan);
+app.get('/lacak.php', handleLacakPesanan);
 
 // Payment proof submission
 app.post('/pembayaran', (req, res) => {

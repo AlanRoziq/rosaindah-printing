@@ -77,12 +77,12 @@ $pageTitle = 'Solusi Percetakan Online Terlengkap';
   height: auto !important;
 }
 .custom-navbar {
-  min-height: 76px !important;
+  min-height: 68px !important;
   height: auto !important;
-  padding: 10px 0 !important;
+  padding: 8px 0 !important;
   background: #ffffff !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
-  border-bottom: 1px solid #f6e6ee !important;
+  box-shadow: 0 4px 20px rgba(225, 29, 100, 0.05) !important;
+  border-bottom: 1px solid #f8dce8 !important;
   font-family: 'Poppins', sans-serif !important;
 }
 .custom-navbar > .container {
@@ -96,7 +96,7 @@ $pageTitle = 'Solusi Percetakan Online Terlengkap';
 .custom-navbar .navbar-brand {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 8px !important;
   margin: 0 !important;
   padding: 0 !important;
   text-decoration: none !important;
@@ -105,38 +105,39 @@ $pageTitle = 'Solusi Percetakan Online Terlengkap';
 .custom-navbar .logo-box {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
 }
 .custom-navbar .logo-box img {
-  width: 52px !important;
-  height: 52px !important;
+  width: 38px !important;
+  height: 38px !important;
+  flex: 0 0 38px !important;
   object-fit: contain !important;
 }
 .custom-navbar .brand-text h2 {
-  font-size: 18px !important;
+  font-size: 14.5px !important;
   font-weight: 800 !important;
-  color: #d63f84 !important;
-  letter-spacing: 0.5px !important;
+  color: #e11d64 !important;
+  letter-spacing: 0.4px !important;
   margin: 0 !important;
-  line-height: 1.1 !important;
+  line-height: 1.08 !important;
   white-space: nowrap !important;
 }
 .custom-navbar .brand-text h3 {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  letter-spacing: 3px !important;
-  color: #e05e99 !important;
-  margin: 2px 0 0 !important;
-  line-height: 1.1 !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2.2px !important;
+  color: #e11d64 !important;
+  margin: 1.5px 0 0 !important;
+  line-height: 1.08 !important;
   white-space: nowrap !important;
 }
 .custom-navbar .brand-text p {
-  font-size: 8.5px !important;
+  font-size: 6.5px !important;
   font-weight: 500 !important;
-  color: #888 !important;
-  letter-spacing: 0.8px !important;
-  margin: 2px 0 0 !important;
-  line-height: 1 !important;
+  color: #6b7280 !important;
+  letter-spacing: 0.5px !important;
+  margin: 1.5px 0 0 !important;
+  line-height: 1.05 !important;
   white-space: nowrap !important;
 }
 @media (min-width: 992px) {
@@ -147,12 +148,56 @@ $pageTitle = 'Solusi Percetakan Online Terlengkap';
     align-items: center !important;
   }
   .custom-navbar .nav-link {
-    font-size: 14px !important;
+    font-size: 13.5px !important;
     font-weight: 600 !important;
     color: #374151 !important;
     padding: 8px 6px !important;
     margin: 0 !important;
     white-space: nowrap !important;
+  }
+}
+@media (min-width: 768px) {
+  nav.custom-navbar .right-menu a.cart-nav-btn,
+  .custom-navbar .cart-nav-btn,
+  .custom-navbar .right-menu .cart-nav-btn {
+    display: inline-flex !important;
+  }
+}
+@media (max-width: 767.98px) {
+  .custom-navbar {
+    min-height: 50px !important;
+    padding: 6px 0 !important;
+  }
+  .custom-navbar > .container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+  .custom-navbar .logo-box {
+    gap: 6px !important;
+  }
+  .custom-navbar .logo-box img {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px !important;
+  }
+  .custom-navbar .brand-text h2 {
+    font-size: 11.5px !important;
+    letter-spacing: 0.3px !important;
+  }
+  .custom-navbar .brand-text h3 {
+    font-size: 6.2px !important;
+    letter-spacing: 1.6px !important;
+  }
+  .custom-navbar .brand-text p {
+    font-size: 4.8px !important;
+    letter-spacing: 0.3px !important;
+  }
+  nav.custom-navbar .right-menu a.cart-nav-btn,
+  .custom-navbar .cart-nav-btn,
+  .custom-navbar .right-menu .cart-nav-btn {
+    display: none !important;
   }
 }
 </style>
@@ -247,7 +292,7 @@ $pageTitle = 'Solusi Percetakan Online Terlengkap';
                     <a href="<?php echo page_url('produk.php'); ?>" class="search-btn" aria-label="Cari produk" title="Cari produk">
                         <i class="bi bi-search"></i>
                     </a>
-                    <a href="<?php echo page_url('cart.php'); ?>" class="cart-nav-btn" aria-label="Keranjang belanja" title="Keranjang Belanja">
+                    <a href="<?php echo page_url('cart.php'); ?>" class="cart-nav-btn d-none d-md-inline-flex" aria-label="Keranjang belanja" title="Keranjang Belanja">
                         <i class="bi bi-bag"></i>
                         <?php if (cart_count() > 0): ?><span class="cart-nav-count"><?php echo cart_count(); ?></span><?php endif; ?>
                     </a>

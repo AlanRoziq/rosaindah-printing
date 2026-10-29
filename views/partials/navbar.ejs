@@ -1,3 +1,21 @@
+<style>
+@media (min-width: 768px) {
+  nav.custom-navbar .right-menu a.cart-nav-btn,
+  .custom-navbar .right-menu .cart-nav-btn,
+  .custom-navbar .cart-nav-btn {
+    display: inline-flex !important;
+  }
+}
+@media (max-width: 767.98px) {
+  nav.custom-navbar .right-menu a.cart-nav-btn,
+  .custom-navbar .right-menu .cart-nav-btn,
+  .custom-navbar .cart-nav-btn,
+  .right-menu .cart-nav-btn,
+  .cart-nav-btn {
+    display: none !important;
+  }
+}
+</style>
 <nav class="navbar navbar-expand-lg custom-navbar">
     <div class="container">
         <a class="navbar-brand" href="<%= page_url('') %>">
@@ -45,7 +63,7 @@
             <a href="<%= page_url('produk') %>" class="search-btn" aria-label="Cari produk" title="Cari produk">
                 <i class="bi bi-search"></i>
             </a>
-            <a href="<%= page_url('cart') %>" class="cart-nav-btn" aria-label="Keranjang belanja" title="Keranjang Belanja">
+            <a href="<%= page_url('cart') %>" class="cart-nav-btn d-none d-md-inline-flex" aria-label="Keranjang belanja" title="Keranjang Belanja">
                 <i class="bi bi-bag"></i>
                 <% if (cart_count > 0) { %>
                     <span class="cart-nav-count"><%= cart_count %></span>

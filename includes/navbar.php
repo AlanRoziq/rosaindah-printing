@@ -11,12 +11,12 @@ if ($customerPdo) {
 ?>
 <style>
 .custom-navbar {
-  min-height: 76px !important;
+  min-height: 68px !important;
   height: auto !important;
-  padding: 10px 0 !important;
+  padding: 8px 0 !important;
   background: #ffffff !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
-  border-bottom: 1px solid #f6e6ee !important;
+  box-shadow: 0 4px 20px rgba(225, 29, 100, 0.05) !important;
+  border-bottom: 1px solid #f8dce8 !important;
   font-family: 'Poppins', sans-serif !important;
 }
 .custom-navbar > .container {
@@ -30,7 +30,7 @@ if ($customerPdo) {
 .custom-navbar .navbar-brand {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 8px !important;
   margin: 0 !important;
   padding: 0 !important;
   text-decoration: none !important;
@@ -39,38 +39,39 @@ if ($customerPdo) {
 .custom-navbar .logo-box {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
 }
 .custom-navbar .logo-box img {
-  width: 52px !important;
-  height: 52px !important;
+  width: 38px !important;
+  height: 38px !important;
+  flex: 0 0 38px !important;
   object-fit: contain !important;
 }
 .custom-navbar .brand-text h2 {
-  font-size: 18px !important;
+  font-size: 14.5px !important;
   font-weight: 800 !important;
-  color: #d63f84 !important;
-  letter-spacing: 0.5px !important;
+  color: #e11d64 !important;
+  letter-spacing: 0.4px !important;
   margin: 0 !important;
-  line-height: 1.1 !important;
+  line-height: 1.08 !important;
   white-space: nowrap !important;
 }
 .custom-navbar .brand-text h3 {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  letter-spacing: 3px !important;
-  color: #e05e99 !important;
-  margin: 2px 0 0 !important;
-  line-height: 1.1 !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2.2px !important;
+  color: #e11d64 !important;
+  margin: 1.5px 0 0 !important;
+  line-height: 1.08 !important;
   white-space: nowrap !important;
 }
 .custom-navbar .brand-text p {
-  font-size: 8.5px !important;
+  font-size: 6.5px !important;
   font-weight: 500 !important;
-  color: #888 !important;
-  letter-spacing: 0.8px !important;
-  margin: 2px 0 0 !important;
-  line-height: 1 !important;
+  color: #6b7280 !important;
+  letter-spacing: 0.5px !important;
+  margin: 1.5px 0 0 !important;
+  line-height: 1.05 !important;
   white-space: nowrap !important;
 }
 @media (min-width: 992px) {
@@ -81,7 +82,7 @@ if ($customerPdo) {
     align-items: center !important;
   }
   .custom-navbar .nav-link {
-    font-size: 14px !important;
+    font-size: 13.5px !important;
     font-weight: 600 !important;
     color: #374151 !important;
     padding: 8px 6px !important;
@@ -92,47 +93,49 @@ if ($customerPdo) {
 }
 .custom-navbar .nav-link:hover,
 .custom-navbar .nav-link.active {
-  color: #d64a8a !important;
+  color: #e11d64 !important;
 }
 .custom-navbar .right-menu {
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 10px !important;
   flex-shrink: 0 !important;
 }
 .custom-navbar .search-btn,
 .custom-navbar .cart-nav-btn {
-  width: 42px !important;
-  height: 42px !important;
+  width: 38px !important;
+  height: 38px !important;
+  flex: 0 0 38px !important;
   border-radius: 50% !important;
-  background: #fff1f6 !important;
-  color: #d64a8a !important;
+  background: #fff0f5 !important;
+  color: #e11d64 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 18px !important;
+  font-size: 16px !important;
   text-decoration: none !important;
-  border: 1px solid #fae3ee !important;
+  border: 1px solid #fbcfe8 !important;
   position: relative !important;
   transition: 0.2s ease !important;
   margin: 0 !important;
 }
 .custom-navbar .search-btn:hover,
 .custom-navbar .cart-nav-btn:hover {
-  background: #ffdbe8 !important;
-  color: #b52968 !important;
+  background: #ffe4ed !important;
+  color: #be124f !important;
+  border-color: #f43f7e !important;
 }
 .custom-navbar .cart-nav-count {
   position: absolute !important;
   top: -4px !important;
   right: -4px !important;
-  background: #d64a8a !important;
+  background: #e11d64 !important;
   color: #fff !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   border-radius: 50% !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 19px !important;
+  height: 19px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -142,8 +145,8 @@ if ($customerPdo) {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  padding: 9px 22px !important;
-  font-size: 13.5px !important;
+  padding: 8px 20px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
   border-radius: 30px !important;
   background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%) !important;
@@ -159,39 +162,155 @@ if ($customerPdo) {
   box-shadow: 0 20px 40px -5px rgba(244, 63, 126, 0.45) !important;
   color: #fff !important;
 }
-@media (max-width: 767.98px) {
+@media (max-width: 991.98px) {
   .custom-navbar {
-    min-height: 56px !important;
-    padding: 7px 0 !important;
+    min-height: 54px !important;
+    padding: 6px 0 !important;
   }
   .custom-navbar .logo-box img {
-    width: 42px !important;
-    height: 42px !important;
-  }
-  .custom-navbar .brand-text h2 {
-    font-size: 14.5px !important;
-    letter-spacing: 0.4px !important;
-  }
-  .custom-navbar .brand-text h3 {
-    font-size: 8.5px !important;
-    letter-spacing: 2px !important;
-  }
-  .custom-navbar .brand-text p {
-    font-size: 7px !important;
-  }
-  .custom-navbar .right-menu {
-    gap: 8px !important;
-  }
-  .custom-navbar .search-btn,
-  .custom-navbar .cart-nav-btn {
     width: 34px !important;
     height: 34px !important;
-    font-size: 14px !important;
+    flex: 0 0 34px !important;
   }
-  .custom-navbar .login-btn {
-    padding: 6px 14px !important;
+  .custom-navbar .brand-text h2 {
+    font-size: 13px !important;
+  }
+  .custom-navbar .brand-text h3 {
+    font-size: 7.2px !important;
+    letter-spacing: 1.8px !important;
+  }
+  .custom-navbar .brand-text p {
+    font-size: 5.5px !important;
+  }
+}
+@media (min-width: 768px) {
+  nav.custom-navbar .right-menu a.cart-nav-btn,
+  .custom-navbar .cart-nav-btn,
+  .custom-navbar .right-menu .cart-nav-btn {
+    display: inline-flex !important;
+  }
+}
+@media (max-width: 767.98px) {
+  .custom-navbar {
+    min-height: 50px !important;
+    padding: 6px 0 !important;
+  }
+  .custom-navbar > .container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+  .custom-navbar .navbar-brand {
+    order: 1 !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  .custom-navbar .logo-box {
+    gap: 6px !important;
+  }
+  .custom-navbar .logo-box img {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px !important;
+  }
+  .custom-navbar .brand-text h2 {
     font-size: 11.5px !important;
+    letter-spacing: 0.3px !important;
+    line-height: 1.05 !important;
+  }
+  .custom-navbar .brand-text h3 {
+    font-size: 6.2px !important;
+    letter-spacing: 1.6px !important;
+    line-height: 1.05 !important;
+    margin-top: 1px !important;
+  }
+  .custom-navbar .brand-text p {
+    font-size: 4.8px !important;
+    letter-spacing: 0.3px !important;
+    line-height: 1.05 !important;
+    margin-top: 1px !important;
+  }
+  /* Sembunyikan icon keranjang di header saat mobile karena sudah ada di bottom tab */
+  nav.custom-navbar .right-menu a.cart-nav-btn,
+  .custom-navbar .cart-nav-btn,
+  .custom-navbar .right-menu .cart-nav-btn {
+    display: none !important;
+  }
+  .custom-navbar .right-menu {
+    order: 2 !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+    gap: 6px !important;
+  }
+  .custom-navbar .search-btn,
+  .custom-navbar .right-menu .search-btn {
+    width: 32px !important;
+    height: 32px !important;
+    flex: 0 0 32px !important;
+    font-size: 13.5px !important;
+  }
+  .custom-navbar .login-btn,
+  .custom-navbar .right-menu .login-btn {
+    padding: 6px 11px !important;
+    min-height: 32px !important;
+    font-size: 10px !important;
     gap: 4px !important;
+    border-radius: 999px !important;
+  }
+  .custom-navbar .navbar-toggler {
+    order: 3 !important;
+    width: 32px !important;
+    height: 32px !important;
+    flex: 0 0 32px !important;
+    padding: 4px !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
+    border: 1px solid #fbcfe8 !important;
+  }
+}
+@media (max-width: 390px) {
+  .custom-navbar > .container {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    gap: 4px !important;
+  }
+  .custom-navbar .logo-box img {
+    width: 27px !important;
+    height: 27px !important;
+    flex: 0 0 27px !important;
+  }
+  .custom-navbar .brand-text h2 {
+    font-size: 10.5px !important;
+  }
+  .custom-navbar .brand-text h3 {
+    font-size: 5.6px !important;
+    letter-spacing: 1.4px !important;
+  }
+  .custom-navbar .brand-text p {
+    font-size: 4.3px !important;
+  }
+  .custom-navbar .right-menu {
+    gap: 4px !important;
+  }
+  .custom-navbar .search-btn,
+  .custom-navbar .right-menu .search-btn {
+    width: 29px !important;
+    height: 29px !important;
+    flex: 0 0 29px !important;
+    font-size: 12px !important;
+  }
+  .custom-navbar .login-btn,
+  .custom-navbar .right-menu .login-btn {
+    padding: 5px 9px !important;
+    min-height: 29px !important;
+    font-size: 9px !important;
+  }
+  .custom-navbar .navbar-toggler {
+    width: 29px !important;
+    height: 29px !important;
+    flex: 0 0 29px !important;
   }
 }
 </style>
@@ -242,7 +361,7 @@ if ($customerPdo) {
             <a href="<?php echo page_url('produk.php'); ?>" class="search-btn" aria-label="Cari produk" title="Cari produk">
                 <i class="bi bi-search"></i>
             </a>
-            <a href="<?php echo page_url('cart.php'); ?>" class="cart-nav-btn" aria-label="Keranjang belanja" title="Keranjang Belanja">
+            <a href="<?php echo page_url('cart.php'); ?>" class="cart-nav-btn d-none d-md-inline-flex" aria-label="Keranjang belanja" title="Keranjang Belanja">
                 <i class="bi bi-bag"></i>
                 <?php if (cart_count() > 0): ?><span class="cart-nav-count"><?php echo cart_count(); ?></span><?php endif; ?>
             </a>
