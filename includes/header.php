@@ -8,6 +8,16 @@
 
     <title><?php echo isset($pageTitle) && $pageTitle !== '' ? htmlspecialchars($pageTitle) . ' — Rosa Indah Printing' : 'Rosa Indah Printing'; ?></title>
 
+    <!-- PWA Manifest & Mobile Theme Meta -->
+    <link rel="manifest" href="<?php echo page_url('manifest.json'); ?>">
+    <meta name="theme-color" content="#d81b60">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Rosa Indah">
+    <link rel="apple-touch-icon" href="<?php echo asset_url('images/logo/apple-touch-icon.png'); ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?php echo asset_url('images/logo/icon-192x192.png'); ?>">
+
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,8 +34,8 @@
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 
     <!-- CSS Website -->
-    <link rel="stylesheet" href="<?php echo asset_url('css/style.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/style.css') ?: '20261032'; ?>">
-    <link rel="stylesheet" href="<?php echo asset_url('css/responsive.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/responsive.css') ?: '20261032'; ?>">
+    <link rel="stylesheet" href="<?php echo asset_url('css/style.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/style.css') ?: '20261033'; ?>">
+    <link rel="stylesheet" href="<?php echo asset_url('css/responsive.css'); ?>?v=<?php echo @filemtime(__DIR__ . '/../assets/css/responsive.css') ?: '20261033'; ?>">
 
 </head>
 

@@ -6,6 +6,16 @@
     <title><%= typeof title !== 'undefined' ? title + ' | ' : '' %>Rosa Indah Printing</title>
     <meta name="description" content="Solusi percetakan online terpercaya untuk Banner, Undangan, Brosur, Kartu Nama, Sticker, Kalender, Sablon DTF, Mug Custom di Rosa Indah Printing.">
 
+    <!-- PWA Manifest & Mobile Theme Meta -->
+    <link rel="manifest" href="<%= page_url('manifest.json') %>">
+    <meta name="theme-color" content="#d81b60">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Rosa Indah">
+    <link rel="apple-touch-icon" href="<%= asset_url('images/logo/apple-touch-icon.png') %>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<%= asset_url('images/logo/icon-192x192.png') %>">
+
     <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +29,7 @@
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
 
     <!-- Website Styles -->
-    <link rel="stylesheet" href="<%= asset_url('css/style.css') %>?v=20261031">
-    <link rel="stylesheet" href="<%= asset_url('css/responsive.css') %>?v=20261031">
+    <link rel="stylesheet" href="<%= asset_url('css/style.css') %>?v=20261033">
+    <link rel="stylesheet" href="<%= asset_url('css/responsive.css') %>?v=20261033">
 </head>
 <body>

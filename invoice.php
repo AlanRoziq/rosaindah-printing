@@ -85,6 +85,9 @@ $phoneForm = $phone !== '' ? $phone : '';
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#d81b60">
+<link rel="manifest" href="<?php echo page_url('manifest.json'); ?>">
+<link rel="apple-touch-icon" href="<?php echo asset_url('images/logo/apple-touch-icon.png'); ?>">
 <title><?php echo $order ? 'Nota ' . invoice_e($order['order_code']) : 'Nota Pesanan'; ?> — Rosa Indah Printing</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>

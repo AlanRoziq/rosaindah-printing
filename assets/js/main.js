@@ -466,3 +466,175 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+/* =========================================================
+   PROGRESSIVE WEB APP (PWA) — SERVICE WORKER & BANNER PASANG APLIKASI
+   - Hanya tampil di Mobile & Tablet (<= 991px), tidak tampil di Desktop
+   - Otomatis sembunyi jika sudah diinstal (mode standalone) atau ditutup ('X')
+   - Sinkronisasi real-time dengan website (Network-First Service Worker)
+========================================================= */
+(function () {
+    const DISMISS_KEY = "rip_pwa_banner_dismissed";
+    let deferredPrompt = null;
+
+    // 1. Registrasi Service Worker (sw.js) & auto-sync saat aplikasi dibuka kembali
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+            const swUrl = window.__PWA_SW_URL__ || "/sw.js";
+            navigator.serviceWorker
+                .register(swUrl)
+                .then(function (registration) {
+                    // Periksa pembaruan setiap kali user membuka kembali aplikasi dari layar utama
+                    document.addEventListener("visibilitychange", function () {
+                        if (document.visibilityState === "visible") {
+                            registration.update().catch(function () {});
+                        }
+                    });
+                })
+                .catch(function () {
+                    // Tetap berjalan normal meski gagal registrasi SW
+                });
+        });
+    }
+
+    function isStandaloneApp() {
+        return (
+            (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+            (window.matchMedia && window.matchMedia("(display-mode: fullscreen)").matches) ||
+            window.navigator.standalone === true ||
+            document.referrer.indexOf("android-app://") === 0
+        );
+    }
+
+    function isMobileOrTablet() {
+        return window.innerWidth <= 991;
+    }
+
+    function isDismissed() {
+        try {
+            return sessionStorage.getItem(DISMISS_KEY) === "1";
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function markDismissed() {
+        try {
+            sessionStorage.setItem(DISMISS_KEY, "1");
+        } catch (e) {}
+    }
+
+    function updateBannerVisibility() {
+        const banner = document.getElementById("pwaInstallBanner");
+        if (!banner) return;
+
+        // Sembunyikan jika di desktop (> 991px), sudah mode standalone (terinstal), atau sudah ditutup 'X'
+        if (!isMobileOrTablet() || isStandaloneApp() || isDismissed()) {
+            banner.hidden = true;
+            return;
+        }
+
+        banner.hidden = false;
+    }
+
+    // 2. Tangkap event native browser 'beforeinstallprompt' (Chrome / Edge / Android)
+    window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (typeof deferredPrompt.click !== "function") {
+            deferredPrompt.click = function () {
+                return deferredPrompt.prompt();
+            };
+        }
+        updateBannerVisibility();
+    });
+
+    // 3. Sembunyikan banner otomatis saat aplikasi berhasil diinstal
+    window.addEventListener("appinstalled", function () {
+        deferredPrompt = null;
+        const banner = document.getElementById("pwaInstallBanner");
+        const guideModal = document.getElementById("pwaInstallGuideModal");
+        if (banner) banner.hidden = true;
+        if (guideModal) guideModal.hidden = true;
+    });
+
+    function initPwaBannerUI() {
+        const banner = document.getElementById("pwaInstallBanner");
+        const installBtn = document.getElementById("pwaInstallBtn");
+        const dismissBtn = document.getElementById("pwaDismissBtn");
+        const guideModal = document.getElementById("pwaInstallGuideModal");
+        if (!banner || !installBtn || !dismissBtn) return;
+
+        updateBannerVisibility();
+
+        // Ketika tombol 'Pasang' diklik
+        installBtn.addEventListener("click", async function () {
+            if (deferredPrompt) {
+                try {
+                    // Panggil prompt instalasi native browser
+                    await deferredPrompt.click();
+                    const choiceResult = await deferredPrompt.userChoice;
+                    if (choiceResult && choiceResult.outcome === "accepted") {
+                        banner.hidden = true;
+                    }
+                    deferredPrompt = null;
+                } catch (err) {
+                    deferredPrompt = null;
+                }
+                return;
+            }
+
+            // Fallback untuk iOS Safari atau browser mobile yang membutuhkan instalasi via menu browser
+            if (guideModal) {
+                const ua = (navigator.userAgent || "").toLowerCase();
+                const isIOS = /iphone|ipad|ipod/.test(ua);
+                const iosStep = document.getElementById("pwaGuideIOS");
+                const androidStep = document.getElementById("pwaGuideAndroid");
+                if (iosStep && androidStep) {
+                    if (isIOS) {
+                        iosStep.style.display = "block";
+                        androidStep.style.display = "none";
+                    } else {
+                        iosStep.style.display = "block";
+                        androidStep.style.display = "block";
+                    }
+                }
+                guideModal.hidden = false;
+                guideModal.setAttribute("aria-hidden", "false");
+            }
+        });
+
+        // Ketika tombol 'X' diklik
+        dismissBtn.addEventListener("click", function () {
+            markDismissed();
+            banner.hidden = true;
+        });
+
+        // Tutup modal panduan
+        if (guideModal) {
+            guideModal.querySelectorAll("[data-pwa-guide-close]").forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    guideModal.hidden = true;
+                    guideModal.setAttribute("aria-hidden", "true");
+                });
+            });
+        }
+
+        // Pantau perubahan ukuran layar (agar otomatis hilang di desktop dan muncul di mobile/tablet)
+        window.addEventListener("resize", updateBannerVisibility);
+
+        if (window.matchMedia) {
+            const standaloneQuery = window.matchMedia("(display-mode: standalone)");
+            if (typeof standaloneQuery.addEventListener === "function") {
+                standaloneQuery.addEventListener("change", updateBannerVisibility);
+            }
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initPwaBannerUI);
+    } else {
+        initPwaBannerUI();
+    }
+})();
+

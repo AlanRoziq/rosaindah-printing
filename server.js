@@ -112,6 +112,19 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/rosaindahprinting/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/rosaindahprinting/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// PWA Manifest & Service Worker
+app.get('/manifest.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.sendFile(path.join(__dirname, 'sw.js'));
+});
+
 // Global view variables & helpers
 app.use((req, res, next) => {
   if (!req.session.cart) {
