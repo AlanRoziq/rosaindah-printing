@@ -3,69 +3,541 @@ require_once __DIR__ . '/../config/auth.php';
 require_admin();
 $admin = admin_user();
 $flash = get_admin_flash();
+$current = basename($_SERVER['PHP_SELF'] ?? 'dashboard.php');
 ?>
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?php echo htmlspecialchars($pageTitle ?? 'Admin'); ?> — Rosa Indah Printing</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"><link rel="stylesheet" href="<?php echo asset_url('css/style.css'); ?>"><link rel="stylesheet" href="<?php echo asset_url('css/admin.css'); ?>"><style>
-.admin-shell{min-height:100vh;background:#fdf8fb}.admin-top{background:#fff;border-bottom:1px solid #f2dce7;display:flex;align-items:center;justify-content:space-between;padding:15px 28px;position:sticky;top:0;z-index:20}.admin-brand{font-weight:800;color:#18243a}.admin-brand span{color:#d64a8a}.admin-user{display:flex;align-items:center;gap:15px;color:#6c6670;font-size:14px}.admin-user a{color:#d64a8a;text-decoration:none;font-weight:700}.admin-layout{display:grid;grid-template-columns:245px 1fr;min-height:calc(100vh - 65px)}.admin-side{background:#fff;border-right:1px solid #f2dce7;padding:25px 15px}.admin-side a{display:flex;gap:12px;align-items:center;padding:12px 15px;border-radius:12px;color:#5f5a62;text-decoration:none;margin-bottom:6px}.admin-side a:hover,.admin-side a.active{background:#ffe8f1;color:#d64a8a;font-weight:700}.admin-main{padding:30px;max-width:1400px;width:100%;box-sizing:border-box}.admin-title{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:25px}.admin-title h1{margin:0;color:#18243a;font-size:30px}.admin-btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;background:#d64a8a;color:#fff;padding:11px 17px;text-decoration:none;font-weight:700;cursor:pointer}.admin-btn.secondary{background:#fff;color:#d64a8a;border:1px solid #efc9da}.admin-btn.danger{background:#e05252}.admin-card{background:#fff;border:1px solid #f1dfe8;border-radius:18px;padding:22px;box-shadow:0 10px 30px rgba(31,24,35,.04)}.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:22px}.admin-stat{background:#fff;border:1px solid #f1dfe8;border-radius:18px;padding:20px}.admin-stat i{font-size:24px;color:#d64a8a}.admin-stat strong{display:block;font-size:28px;color:#18243a;margin-top:8px}.admin-stat span{color:#817982;font-size:13px}.admin-table{width:100%;border-collapse:collapse}.admin-table th,.admin-table td{padding:13px 10px;border-bottom:1px solid #f2e7ec;text-align:left;vertical-align:middle}.admin-table th{font-size:12px;color:#8b7f87;text-transform:uppercase}.admin-table td{color:#403b41;font-size:14px}.admin-product-img{width:58px;height:58px;object-fit:cover;border-radius:10px;background:#faf1f5}.admin-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-actions a{padding:7px 10px;border-radius:9px;background:#fff1f6;color:#d64a8a;text-decoration:none;font-size:12px;font-weight:700}.admin-form{display:grid;gap:17px}.admin-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:17px}.admin-field label{display:block;font-size:13px;font-weight:700;color:#4e4850;margin-bottom:7px}.admin-field input,.admin-field select,.admin-field textarea{width:100%;box-sizing:border-box;border:1px solid #eadde3;border-radius:11px;padding:11px 13px;font:inherit;outline:none;background:#fff}.admin-field textarea{min-height:115px;resize:vertical}.admin-field input:focus,.admin-field select:focus,.admin-field textarea:focus{border-color:#d64a8a;box-shadow:0 0 0 3px #ffe8f1}.admin-check{display:flex;gap:10px;align-items:center;color:#5e5860}.admin-alert{padding:12px 15px;border-radius:12px;margin-bottom:18px;background:#eaf8ef;color:#287a47}.admin-alert.error{background:#fff0f0;color:#a33b3b}.admin-login{min-height:100vh;background:linear-gradient(135deg,#fff8fb,#fff);display:flex;align-items:center;justify-content:center;padding:20px}.admin-login-card{width:min(430px,100%);background:#fff;border:1px solid #f0dce7;border-radius:22px;padding:32px;box-shadow:0 20px 50px rgba(214,74,138,.1)}.admin-login-card h1{color:#18243a;margin:0 0 7px}.admin-login-card p{color:#7d747c;margin-bottom:25px}.admin-login-card .logo{width:95px;margin-bottom:20px}.admin-login-note{margin-top:18px;font-size:12px;color:#968d93;background:#fff8fb;padding:10px;border-radius:10px}
-@media(max-width:900px){.admin-layout{grid-template-columns:1fr}.admin-side{border-right:0;border-bottom:1px solid #f2dce7;display:flex;overflow:auto;padding:10px}.admin-side a{white-space:nowrap}.admin-stats{grid-template-columns:1fr 1fr}.admin-grid-2{grid-template-columns:1fr}.admin-main{padding:18px}.admin-top{padding:13px 18px}}
-@media(max-width:550px){.admin-stats{grid-template-columns:1fr}.admin-title{align-items:flex-start;flex-direction:column}.admin-table{min-width:780px}.admin-card{overflow:auto}.admin-user span{display:none}}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($pageTitle ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?> | Admin - Rosa Indah Printing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="<?php echo asset_url('css/admin.css'); ?>">
+    <style>
+        :root {
+            --rosa-pink: #e11d64;
+            --rosa-pink-dark: #be124f;
+            --rosa-pink-soft: #ffe8f1;
+            --rosa-pink-bg: #fff1f6;
+            --rosa-border: #f1dfe8;
+            --rosa-text: #18243a;
+            --rosa-muted: #7d747c;
+        }
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #fdf8fb;
+            color: var(--rosa-text);
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        .admin-shell {
+            min-height: 100vh;
+            background: #fdf8fb;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .admin-top {
+            background: #ffffff;
+            border-bottom: 1px solid #f2dce7;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 26px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 10px rgba(225, 29, 100, 0.04);
+            gap: 12px;
+            min-width: 0;
+        }
+        .admin-brand {
+            font-size: 16px;
+            font-weight: 800;
+            color: #18243a;
+            text-decoration: none;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .admin-brand span {
+            color: #e11d64;
+        }
+        .admin-brand:hover {
+            color: #18243a;
+        }
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #6c6670;
+            font-size: 13px;
+            min-width: 0;
+        }
+        .admin-user span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #4b444d;
+            font-weight: 600;
+        }
+        .admin-user a {
+            color: #e11d64;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .admin-user a:hover {
+            background: #ffe8f1;
+            color: #be124f;
+        }
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 245px 1fr;
+            min-height: calc(100vh - 58px);
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .admin-side {
+            background: #ffffff;
+            border-right: 1px solid #f2dce7;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .admin-side a {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 10px 14px;
+            border-radius: 11px;
+            color: #5f5a62;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+        .admin-side a i {
+            font-size: 16px;
+            color: #9c919a;
+            transition: color 0.15s ease;
+        }
+        .admin-side a:hover,
+        .admin-side a.active {
+            background: #ffe8f1;
+            color: #e11d64;
+            font-weight: 700;
+        }
+        .admin-side a:hover i,
+        .admin-side a.active i {
+            color: #e11d64;
+        }
+        .admin-side-divider {
+            height: 1px;
+            background: #f2dce7;
+            margin: 10px 8px;
+        }
+        .admin-main {
+            padding: 26px 30px;
+            max-width: 1400px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            min-width: 0;
+        }
+        .admin-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+        }
+        .admin-title h1 {
+            margin: 0;
+            color: #18243a;
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .admin-title p {
+            margin: 4px 0 0;
+            color: #7d747c;
+            font-size: 13px;
+        }
+        .admin-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 0;
+            border-radius: 11px;
+            background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+            color: #fff;
+            padding: 9px 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(225, 29, 100, 0.18);
+        }
+        .admin-btn:hover {
+            background: linear-gradient(90deg, #be124f 0%, #e11d64 50%, #f43f7e 100%);
+            transform: translateY(-1px);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(225, 29, 100, 0.25);
+        }
+        .admin-btn.secondary {
+            background: #ffffff;
+            color: #e11d64;
+            border: 1px solid #efc9da;
+            box-shadow: none;
+        }
+        .admin-btn.secondary:hover {
+            background: #fff1f6;
+            border-color: #e11d64;
+            color: #be124f;
+            transform: translateY(-1px);
+        }
+        .admin-btn.danger {
+            background: #e05252;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(224, 82, 82, 0.18);
+        }
+        .admin-btn.danger:hover {
+            background: #c53c3c;
+            color: #fff;
+        }
+        .admin-card {
+            background: #ffffff;
+            border: 1px solid #f1dfe8;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(31, 24, 35, 0.03);
+            margin-bottom: 22px;
+            min-width: 0;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+        .admin-stat {
+            background: #ffffff;
+            border: 1px solid #f1dfe8;
+            border-radius: 16px;
+            padding: 18px 20px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .admin-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(225, 29, 100, 0.06);
+        }
+        .admin-stat i {
+            font-size: 22px;
+            color: #e11d64;
+        }
+        .admin-stat strong {
+            display: block;
+            font-size: 26px;
+            font-weight: 800;
+            color: #18243a;
+            margin-top: 6px;
+            font-variant-numeric: tabular-nums;
+        }
+        .admin-stat span {
+            color: #817982;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .admin-table th, .admin-table td {
+            padding: 12px 14px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid #f2e7ec;
+            font-size: 13px;
+        }
+        .admin-table th {
+            font-size: 11px;
+            color: #8b7f87;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            background: #fff9fc;
+        }
+        .admin-table tbody tr:hover td {
+            background: #fffcfd;
+        }
+        .admin-product-img {
+            width: 52px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #faf1f5;
+            border: 1px solid #f0dce6;
+        }
+        .admin-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .admin-actions a,
+        .admin-actions button {
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: #fff1f6;
+            color: #e11d64;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            border: 0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .admin-actions a:hover,
+        .admin-actions button:hover {
+            background: #ffe8f1;
+            color: #be124f;
+        }
+        .admin-form {
+            display: grid;
+            gap: 16px;
+            min-width: 0;
+        }
+        .admin-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            min-width: 0;
+        }
+        .admin-field {
+            min-width: 0;
+        }
+        .admin-field label,
+        label.admin-field {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #4e4850;
+            margin-bottom: 6px;
+        }
+        .admin-field input,
+        .admin-field select,
+        .admin-field textarea,
+        label.admin-field input,
+        label.admin-field select,
+        label.admin-field textarea {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #eadde3;
+            border-radius: 11px;
+            padding: 10px 13px;
+            font: inherit;
+            font-size: 13.5px;
+            outline: none;
+            background: #ffffff;
+            transition: all 0.15s ease;
+        }
+        .admin-field textarea,
+        label.admin-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .admin-field input:focus,
+        .admin-field select:focus,
+        .admin-field textarea:focus,
+        label.admin-field input:focus,
+        label.admin-field select:focus,
+        label.admin-field textarea:focus {
+            border-color: #e11d64;
+            box-shadow: 0 0 0 3px #ffe8f1;
+        }
+        .admin-check {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: #5e5860;
+        }
+        .admin-alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            background: #eaf8ef;
+            color: #287a47;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #c9ebd4;
+        }
+        .admin-alert.error {
+            background: #fff0f0;
+            color: #a33b3b;
+            border-color: #f7d2d2;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .status-pill-pending { background: #fff4d8; color: #9b6a00; }
+        .status-pill-confirmed { background: #eef2ff; color: #4f67ae; }
+        .status-pill-processing { background: #f3eaff; color: #7d4ca9; }
+        .status-pill-printed { background: #fff0e4; color: #a8611e; }
+        .status-pill-completed { background: #eaf8ef; color: #287a47; }
+        .status-pill-cancelled { background: #fff0f0; color: #a33b3b; }
 
-/* FINAL ADMIN RESPONSIVE POLISH */
-html,body{max-width:100%;overflow-x:hidden}
-.admin-shell,.admin-layout,.admin-main{min-width:0}
-.admin-top{gap:12px;min-width:0}
-.admin-brand{white-space:nowrap}
-.admin-user{min-width:0}
-.admin-main{overflow-x:hidden}
-.admin-card{min-width:0}
-.admin-table{min-width:760px}
-.admin-form,.admin-grid-2{min-width:0}
-.admin-field{min-width:0}
-.admin-field input,.admin-field select,.admin-field textarea{max-width:100%}
-@media(max-width:900px){
-  .admin-top{padding:11px 14px}
-  .admin-brand{font-size:14px}
-  .admin-user{font-size:12px;gap:9px}
-  .admin-layout{display:block}
-  .admin-side{display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;padding:8px 10px;white-space:nowrap;-webkit-overflow-scrolling:touch}
-  .admin-side a{flex:0 0 auto;margin:0;padding:9px 11px;font-size:12px;gap:7px}
-  .admin-main{padding:16px 12px}
-  .admin-title{margin-bottom:17px}
-  .admin-title h1{font-size:25px}
-  .admin-card{padding:16px;border-radius:15px;overflow-x:auto}
-  .admin-stats{gap:10px;margin-bottom:16px}
-  .admin-stat{padding:15px;border-radius:15px}
-  .admin-stat strong{font-size:23px}
-  .admin-btn{padding:10px 13px;font-size:12px}
-}
-@media(max-width:600px){
-  .admin-top{align-items:flex-start}
-  .admin-brand{font-size:13px}
-  .admin-user a{white-space:nowrap}
-  .admin-main{padding:13px 10px}
-  .admin-title{gap:10px}
-  .admin-title h1{font-size:22px}
-  .admin-title p{font-size:12px;line-height:1.55}
-  .admin-stats{grid-template-columns:1fr 1fr}
-  .admin-stat{padding:13px}
-  .admin-stat i{font-size:20px}
-  .admin-stat strong{font-size:20px;margin-top:5px}
-  .admin-stat span{font-size:11px}
-  .admin-card{padding:13px}
-  .admin-table{min-width:720px}
-  .admin-table th,.admin-table td{padding:10px 8px;font-size:12px}
-  .admin-product-img{width:46px;height:46px}
-  .admin-grid-2{grid-template-columns:1fr}
-  .admin-form{gap:13px}
-  .admin-field label{font-size:12px}
-  .admin-field input,.admin-field select,.admin-field textarea{font-size:13px;padding:10px 11px}
-}
-@media(max-width:430px){
-  .admin-brand{font-size:12px}
-  .admin-user span{display:none}
-  .admin-side a{font-size:11px;padding:8px 10px}
-  .admin-stats{grid-template-columns:1fr}
-  .admin-title .admin-btn{width:100%;justify-content:center}
-}
+        @media (max-width: 900px) {
+            .admin-layout {
+                grid-template-columns: 1fr;
+                display: block;
+            }
+            .admin-side {
+                border-right: 0;
+                border-bottom: 1px solid #f2dce7;
+                display: flex;
+                flex-direction: row;
+                gap: 6px;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+                padding: 8px 12px;
+            }
+            .admin-side a {
+                flex: 0 0 auto;
+                margin: 0;
+                padding: 8px 11px;
+                font-size: 12px;
+                gap: 7px;
+            }
+            .admin-side-divider {
+                display: none;
+            }
+            .admin-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            .admin-grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .admin-main {
+                padding: 18px 14px;
+            }
+            .admin-top {
+                padding: 11px 16px;
+            }
+        }
+        @media (max-width: 550px) {
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+            .admin-title {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .admin-title .admin-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .admin-user span {
+                display: none;
+            }
+            .admin-card {
+                padding: 16px;
+                border-radius: 14px;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="admin-shell">
+    <!-- Topbar -->
+    <header class="admin-top">
+        <a class="admin-brand" href="<?php echo page_url('admin/dashboard.php'); ?>">
+            ROSA INDAH <span>PRINTING</span>
+        </a>
+        <div class="admin-user">
+            <span><i class="bi bi-shield-check" style="color: #e11d64;"></i> Halo, <?php echo htmlspecialchars($admin['name'] ?? 'Administrator', ENT_QUOTES, 'UTF-8'); ?></span>
+            <a href="<?php echo page_url('admin/ubah-password.php'); ?>"><i class="bi bi-shield-lock"></i> Ubah Password</a>
+            <a href="<?php echo page_url('admin/logout.php'); ?>"><i class="bi bi-box-arrow-right"></i> Keluar</a>
+        </div>
+    </header>
 
-</style></head><body><div class="admin-shell"><header class="admin-top"><a class="admin-brand" href="<?php echo page_url('admin/dashboard.php'); ?>">ROSA INDAH <span>PRINTING</span></a><div class="admin-user"><span>Halo, <?php echo htmlspecialchars($admin['name']); ?></span><a href="<?php echo page_url('admin/ubah-password.php'); ?>"><i class="bi bi-shield-lock"></i> Ubah Password</a><a href="<?php echo page_url('admin/logout.php'); ?>"><i class="bi bi-box-arrow-right"></i> Keluar</a></div></header><div class="admin-layout"><aside class="admin-side"><?php $current=basename($_SERVER['PHP_SELF']); ?><a class="<?php echo $current==='dashboard.php'?'active':''; ?>" href="<?php echo page_url('admin/dashboard.php'); ?>"><i class="bi bi-speedometer2"></i> Dashboard</a><a class="<?php echo $current==='produk.php'?'active':''; ?>" href="<?php echo page_url('admin/produk.php'); ?>"><i class="bi bi-box-seam"></i> Produk</a><a class="<?php echo $current==='pesanan.php'?'active':''; ?>" href="<?php echo page_url('admin/pesanan.php'); ?>"><i class="bi bi-cart-check"></i> Pesanan</a><a class="<?php echo $current==='pelanggan.php'?'active':''; ?>" href="<?php echo page_url('admin/pelanggan.php'); ?>"><i class="bi bi-people"></i> Member</a><a class="<?php echo $current==='laporan.php'?'active':''; ?>" href="<?php echo page_url('admin/laporan.php'); ?>"><i class="bi bi-bar-chart-line"></i> Laporan</a><a class="<?php echo $current==='member-report.php'?'active':''; ?>" href="<?php echo page_url('admin/member-report.php'); ?>"><i class="bi bi-graph-up-arrow"></i> Laporan Member</a><a class="<?php echo $current==='promo.php'?'active':''; ?>" href="<?php echo page_url('admin/promo.php'); ?>"><i class="bi bi-ticket-perforated"></i> Promo & Voucher</a><a class="<?php echo $current==='loyalty.php'?'active':''; ?>" href="<?php echo page_url('admin/loyalty.php'); ?>"><i class="bi bi-stars"></i> Poin & Reward</a><a class="<?php echo $current==='notifikasi.php'?'active':''; ?>" href="<?php echo page_url('admin/notifikasi.php'); ?>"><i class="bi bi-bell"></i> Notifikasi Member</a><a href="<?php echo page_url('index.php'); ?>"><i class="bi bi-house"></i> Lihat Website</a></aside><main class="admin-main">
-<?php if($flash): ?><div class="admin-alert <?php echo $flash['type']==='error'?'error':''; ?>"><?php echo htmlspecialchars($flash['message']); ?></div><?php endif; ?>
+    <!-- Layout: Sidebar + Main -->
+    <div class="admin-layout">
+        <aside class="admin-side">
+            <a class="<?php echo $current === 'dashboard.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/dashboard.php'); ?>">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a class="<?php echo $current === 'produk.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/produk.php'); ?>">
+                <i class="bi bi-box-seam"></i> Produk
+            </a>
+            <a class="<?php echo $current === 'pesanan.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/pesanan.php'); ?>">
+                <i class="bi bi-cart-check"></i> Pesanan
+            </a>
+            <a class="<?php echo $current === 'nota-manual.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/nota-manual.php'); ?>">
+                <i class="bi bi-receipt"></i> Nota Manual
+            </a>
+            <a class="<?php echo $current === 'pelanggan.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/pelanggan.php'); ?>">
+                <i class="bi bi-people"></i> Member
+            </a>
+            <a class="<?php echo $current === 'laporan.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/laporan.php'); ?>">
+                <i class="bi bi-bar-chart-line"></i> Laporan
+            </a>
+            <a class="<?php echo $current === 'member-report.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/member-report.php'); ?>">
+                <i class="bi bi-graph-up-arrow"></i> Laporan Member
+            </a>
+            <a class="<?php echo $current === 'promo.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/promo.php'); ?>">
+                <i class="bi bi-ticket-perforated"></i> Promo & Voucher
+            </a>
+            <a class="<?php echo $current === 'loyalty.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/loyalty.php'); ?>">
+                <i class="bi bi-stars"></i> Poin & Reward
+            </a>
+            <a class="<?php echo $current === 'notifikasi.php' ? 'active' : ''; ?>" href="<?php echo page_url('admin/notifikasi.php'); ?>">
+                <i class="bi bi-bell"></i> Notifikasi Member
+            </a>
+            <div class="admin-side-divider"></div>
+            <a href="<?php echo page_url('index.php'); ?>" target="_blank" rel="noopener">
+                <i class="bi bi-house"></i> Lihat Website
+            </a>
+        </aside>
+
+        <main class="admin-main">
+            <?php if ($flash): ?>
+                <div class="admin-alert <?php echo ($flash['type'] ?? '') === 'error' ? 'error' : ''; ?>">
+                    <i class="bi <?php echo ($flash['type'] ?? '') === 'error' ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'; ?>"></i>
+                    <span><?php echo htmlspecialchars($flash['message'] ?? '', ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+            <?php endif; ?>

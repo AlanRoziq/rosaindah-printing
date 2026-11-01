@@ -118,8 +118,13 @@ require_once __DIR__ . '/_header.php';
 ?>
 <div class="admin-title admin-orders-heading">
     <div>
-        <h1>Pesanan</h1>
-        <p style="color:#777;margin:7px 0 0">Pantau, konfirmasi, dan kelola seluruh pesanan dari website Rosa Indah Printing.</p>
+        <h1>Manajemen Pesanan</h1>
+        <p style="color:#7d747c;margin:4px 0 0">Pantau, konfirmasi, dan kelola seluruh pesanan dari website maupun kasir Rosa Indah Printing.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="<?php echo page_url('admin/nota-manual.php'); ?>" class="admin-btn">
+            <i class="bi bi-receipt"></i> Buat Nota Manual
+        </a>
     </div>
 </div>
 <?php if ($error): ?><div class="admin-alert error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>

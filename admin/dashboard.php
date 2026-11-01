@@ -1,33 +1,497 @@
 <?php
-$pageTitle='Dashboard'; require_once __DIR__ . '/_header.php';
-$pdo=db();
-$stats=['products'=>0,'active'=>0,'orders'=>0,'customers'=>0,'waiting_payment'=>0,'paid'=>0,'month_sales'=>0,'month_paid'=>0,'month_orders'=>0];
-$orderCounts=['pending'=>0,'confirmed'=>0,'processing'=>0,'printed'=>0,'completed'=>0,'cancelled'=>0];
-$recent=[]; $topProducts=[];
-if($pdo){
-  $stats['products']=(int)$pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
-  $stats['active']=(int)$pdo->query("SELECT COUNT(*) FROM products WHERE status='active'")->fetchColumn();
-  $stats['orders']=(int)$pdo->query('SELECT COUNT(*) FROM orders')->fetchColumn();
-  $stats['customers']=(int)$pdo->query('SELECT COUNT(*) FROM customers WHERE is_verified=1')->fetchColumn();
-  $stats['waiting_payment']=(int)$pdo->query("SELECT COUNT(*) FROM orders WHERE payment_status='waiting'")->fetchColumn();
-  $stats['paid']=(int)$pdo->query("SELECT COUNT(*) FROM orders WHERE payment_status='paid'")->fetchColumn();
-  $m=date('Y-m-01'); $n=date('Y-m-d',strtotime('tomorrow'));
-  $st=$pdo->prepare("SELECT COUNT(*) orders, COALESCE(SUM(total_estimate),0) sales, COALESCE(SUM(paid_amount),0) paid FROM orders WHERE created_at>=? AND created_at<?"); $st->execute([$m,$n]); $mr=$st->fetch() ?: [];
-  $stats['month_orders']=(int)($mr['orders']??0); $stats['month_sales']=(float)($mr['sales']??0); $stats['month_paid']=(float)($mr['paid']??0);
-  $oc=$pdo->query('SELECT status, COUNT(*) total FROM orders GROUP BY status')->fetchAll(); foreach($oc as $r){if(isset($orderCounts[$r['status']]))$orderCounts[$r['status']]=(int)$r['total'];}
-  $recent=$pdo->query("SELECT order_code,customer_name,total_estimate,paid_amount,status,payment_status,created_at FROM orders ORDER BY created_at DESC LIMIT 6")->fetchAll();
-  $topProducts=$pdo->query("SELECT oi.product_name,SUM(oi.quantity) qty,COALESCE(SUM(oi.subtotal),0) revenue FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE o.created_at>=DATE_FORMAT(CURDATE(),'%Y-%m-01') GROUP BY oi.product_id,oi.product_name ORDER BY qty DESC,revenue DESC LIMIT 5")->fetchAll();
+$pageTitle = 'Dashboard';
+require_once __DIR__ . '/_header.php';
+
+$pdo = db();
+$stats = [
+    'products' => 0,
+    'active' => 0,
+    'orders' => 0,
+    'customers' => 0,
+    'waiting_payment' => 0,
+    'paid' => 0,
+    'month_sales' => 0,
+    'month_paid' => 0,
+    'month_orders' => 0,
+];
+$orderCounts = [
+    'pending' => 0,
+    'confirmed' => 0,
+    'processing' => 0,
+    'printed' => 0,
+    'completed' => 0,
+    'cancelled' => 0,
+];
+$recent = [];
+$topProducts = [];
+
+if ($pdo) {
+    try {
+        $stats['products'] = (int)$pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
+        $stats['active'] = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE status='active'")->fetchColumn();
+        $stats['orders'] = (int)$pdo->query('SELECT COUNT(*) FROM orders')->fetchColumn();
+        $stats['customers'] = (int)$pdo->query('SELECT COUNT(*) FROM customers WHERE is_verified=1')->fetchColumn();
+        $stats['waiting_payment'] = (int)$pdo->query("SELECT COUNT(*) FROM orders WHERE payment_status='waiting'")->fetchColumn();
+        $stats['paid'] = (int)$pdo->query("SELECT COUNT(*) FROM orders WHERE payment_status='paid'")->fetchColumn();
+
+        $m = date('Y-m-01');
+        $n = date('Y-m-d', strtotime('tomorrow'));
+        $st = $pdo->prepare("SELECT COUNT(*) orders, COALESCE(SUM(total_estimate),0) sales, COALESCE(SUM(paid_amount),0) paid FROM orders WHERE created_at >= ? AND created_at < ?");
+        $st->execute([$m, $n]);
+        $mr = $st->fetch(PDO::FETCH_ASSOC) ?: [];
+        $stats['month_orders'] = (int)($mr['orders'] ?? 0);
+        $stats['month_sales'] = (float)($mr['sales'] ?? 0);
+        $stats['month_paid'] = (float)($mr['paid'] ?? 0);
+
+        $oc = $pdo->query('SELECT status, COUNT(*) total FROM orders GROUP BY status')->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($oc as $r) {
+            if (isset($orderCounts[$r['status']])) {
+                $orderCounts[$r['status']] = (int)$r['total'];
+            }
+        }
+
+        $recent = $pdo->query("SELECT order_code, customer_name, total_estimate, paid_amount, status, payment_status, created_at FROM orders ORDER BY created_at DESC LIMIT 6")->fetchAll(PDO::FETCH_ASSOC);
+        $topProducts = $pdo->query("SELECT oi.product_name, SUM(oi.quantity) qty, COALESCE(SUM(oi.subtotal),0) revenue FROM order_items oi JOIN orders o ON o.id=oi.order_id WHERE o.created_at >= DATE_FORMAT(CURDATE(),'%Y-%m-01') GROUP BY oi.product_id, oi.product_name ORDER BY qty DESC, revenue DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        // Fallback jika tabel belum lengkap
+    }
 }
-$statusLabels=['pending'=>'Baru','confirmed'=>'Dikonfirmasi','processing'=>'Diproses','printed'=>'Dicetak','completed'=>'Selesai','cancelled'=>'Dibatalkan'];
-$paymentLabels=['unpaid'=>'Belum Bayar','waiting'=>'Menunggu Verifikasi','partial'=>'DP / Sebagian','paid'=>'Lunas','rejected'=>'Ditolak'];
+
+$statusLabels = [
+    'pending' => 'Baru',
+    'confirmed' => 'Dikonfirmasi',
+    'processing' => 'Diproses',
+    'printed' => 'Dicetak',
+    'completed' => 'Selesai',
+    'cancelled' => 'Dibatalkan',
+];
 ?>
-<div class="admin-title"><div><h1>Dashboard</h1><p style="color:#7d747c">Ringkasan operasional Rosa Indah Printing hari ini.</p></div><div style="display:flex;gap:9px;flex-wrap:wrap"><a class="admin-btn secondary" href="<?php echo page_url('admin/laporan.php'); ?>"><i class="bi bi-bar-chart-line"></i> Lihat Laporan</a><a class="admin-btn" href="<?php echo page_url('admin/produk.php?action=create'); ?>"><i class="bi bi-plus-lg"></i> Tambah Produk</a></div></div>
-<div class="admin-stats dashboard-main-stats"><div class="admin-stat"><i class="bi bi-box-seam"></i><strong><?php echo $stats['products']; ?></strong><span>Total produk</span></div><div class="admin-stat"><i class="bi bi-check-circle"></i><strong><?php echo $stats['active']; ?></strong><span>Produk aktif</span></div><div class="admin-stat"><i class="bi bi-cart-check"></i><strong><?php echo $stats['orders']; ?></strong><span>Total pesanan</span></div><div class="admin-stat"><i class="bi bi-people"></i><strong><?php echo $stats['customers']; ?></strong><span>Member terverifikasi</span></div></div>
-<div class="dashboard-highlight-grid"><div class="admin-card dashboard-highlight"><div class="highlight-icon"><i class="bi bi-graph-up-arrow"></i></div><div><span>Penjualan bulan ini</span><strong>Rp<?php echo number_format($stats['month_sales'],0,',','.'); ?></strong><small><?php echo $stats['month_orders']; ?> pesanan · Dibayar Rp<?php echo number_format($stats['month_paid'],0,',','.'); ?></small></div></div><div class="admin-card dashboard-highlight"><div class="highlight-icon"><i class="bi bi-credit-card"></i></div><div><span>Perlu perhatian pembayaran</span><strong><?php echo $stats['waiting_payment']; ?></strong><small>Menunggu verifikasi · <?php echo $stats['paid']; ?> pesanan sudah lunas</small></div><a class="admin-btn secondary" href="<?php echo page_url('admin/pesanan.php?payment=waiting'); ?>">Periksa</a></div></div>
-<div class="admin-card admin-dashboard-orders"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:15px"><div><h2 style="margin:0;color:#18243a">Alur Pesanan</h2><p style="margin:5px 0 0;color:#777">Pantau posisi order saat ini.</p></div><a class="admin-btn secondary" href="<?php echo page_url('admin/pesanan.php'); ?>">Kelola Pesanan <i class="bi bi-arrow-right"></i></a></div><div class="dashboard-order-pills"><span>Baru <b><?php echo $orderCounts['pending']; ?></b></span><span>Dikonfirmasi <b><?php echo $orderCounts['confirmed']; ?></b></span><span>Diproses <b><?php echo $orderCounts['processing']; ?></b></span><span>Dicetak <b><?php echo $orderCounts['printed']; ?></b></span><span>Selesai <b><?php echo $orderCounts['completed']; ?></b></span><span>Dibatalkan <b><?php echo $orderCounts['cancelled']; ?></b></span></div></div>
-<div class="dashboard-two-col"><div class="admin-card"><div class="dashboard-section-head"><div><h2>Pesanan Terbaru</h2><p>6 order terakhir masuk.</p></div><a href="<?php echo page_url('admin/pesanan.php'); ?>">Lihat semua</a></div><div class="dashboard-recent-list"><?php foreach($recent as $r): ?><div class="dashboard-recent-item"><div><strong><?php echo htmlspecialchars($r['order_code']); ?></strong><span><?php echo htmlspecialchars($r['customer_name']); ?> · <?php echo date('d/m H:i',strtotime($r['created_at'])); ?></span></div><div><b>Rp<?php echo number_format($r['total_estimate'],0,',','.'); ?></b><small class="status-pill status-pill-<?php echo htmlspecialchars($r['status']); ?>"><?php echo htmlspecialchars($statusLabels[$r['status']]??$r['status']); ?></small></div></div><?php endforeach; ?><?php if(!$recent): ?><div class="report-empty">Belum ada pesanan.</div><?php endif; ?></div></div><div class="admin-card"><div class="dashboard-section-head"><div><h2>Produk Terlaris</h2><p>Bulan berjalan.</p></div><a href="<?php echo page_url('admin/laporan.php'); ?>">Laporan</a></div><div class="dashboard-top-products"><?php foreach($topProducts as $p): ?><div><strong><?php echo htmlspecialchars($p['product_name']); ?></strong><span><?php echo (int)$p['qty']; ?> item · Rp<?php echo number_format($p['revenue'],0,',','.'); ?></span></div><?php endforeach; ?><?php if(!$topProducts): ?><div class="report-empty">Belum ada penjualan bulan ini.</div><?php endif; ?></div></div></div>
-<div class="admin-card"><div class="dashboard-section-head"><div><h2>Akses Cepat</h2><p>Menu yang sering digunakan Admin.</p></div></div><div class="quick-admin-links"><a href="<?php echo page_url('admin/produk.php'); ?>"><i class="bi bi-box-seam"></i><span>Kelola Produk</span></a><a href="<?php echo page_url('admin/pesanan.php'); ?>"><i class="bi bi-cart-check"></i><span>Kelola Pesanan</span></a><a href="<?php echo page_url('admin/pelanggan.php'); ?>"><i class="bi bi-people"></i><span>Member</span></a><a href="<?php echo page_url('admin/laporan.php'); ?>"><i class="bi bi-bar-chart-line"></i><span>Laporan</span></a></div></div>
+
+<div class="admin-title">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Ringkasan operasional Rosa Indah Printing hari ini.</p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a class="admin-btn secondary" href="<?php echo page_url('admin/nota-manual.php'); ?>">
+            <i class="bi bi-receipt"></i> Buat Nota Manual
+        </a>
+        <a class="admin-btn secondary" href="<?php echo page_url('admin/laporan.php'); ?>">
+            <i class="bi bi-bar-chart-line"></i> Lihat Laporan
+        </a>
+        <a class="admin-btn" href="<?php echo page_url('admin/produk.php?action=create'); ?>">
+            <i class="bi bi-plus-lg"></i> Tambah Produk
+        </a>
+    </div>
+</div>
+
+<!-- Main Stats -->
+<div class="admin-stats">
+    <div class="admin-stat">
+        <i class="bi bi-box-seam"></i>
+        <strong><?php echo $stats['products']; ?></strong>
+        <span>Total Produk Katalog</span>
+    </div>
+    <div class="admin-stat">
+        <i class="bi bi-check-circle"></i>
+        <strong><?php echo $stats['active']; ?></strong>
+        <span>Produk Aktif</span>
+    </div>
+    <div class="admin-stat">
+        <i class="bi bi-cart-check"></i>
+        <strong><?php echo $stats['orders']; ?></strong>
+        <span>Total Pesanan Masuk</span>
+    </div>
+    <div class="admin-stat">
+        <i class="bi bi-people"></i>
+        <strong><?php echo $stats['customers']; ?></strong>
+        <span>Member Terverifikasi</span>
+    </div>
+</div>
+
+<!-- Highlight Row -->
+<div class="dashboard-highlight-grid">
+    <div class="admin-card dashboard-highlight">
+        <div class="highlight-icon">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div>
+            <span>Penjualan Bulan Ini</span>
+            <strong>Rp<?php echo number_format($stats['month_sales'], 0, ',', '.'); ?></strong>
+            <small><?php echo $stats['month_orders']; ?> pesanan · Dibayar Rp<?php echo number_format($stats['month_paid'], 0, ',', '.'); ?></small>
+        </div>
+    </div>
+    <div class="admin-card dashboard-highlight">
+        <div class="highlight-icon">
+            <i class="bi bi-credit-card"></i>
+        </div>
+        <div>
+            <span>Perlu Verifikasi Pembayaran</span>
+            <strong><?php echo $stats['waiting_payment']; ?></strong>
+            <small>Menunggu konfirmasi mutasi · <?php echo $stats['paid']; ?> pesanan sudah lunas</small>
+        </div>
+        <a class="admin-btn secondary" href="<?php echo page_url('admin/pesanan.php?payment=waiting'); ?>" style="margin-left: auto;">
+            Periksa
+        </a>
+    </div>
+</div>
+
+<!-- Order Pipeline -->
+<div class="admin-card admin-dashboard-orders">
+    <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap;">
+        <div>
+            <h2 style="margin: 0; color: #18243a; font-size: 19px; font-weight: 800;">Alur Status Pesanan</h2>
+            <p style="margin: 4px 0 0; color: #7d747c; font-size: 13px;">Pantau posisi order saat ini secara real-time.</p>
+        </div>
+        <a class="admin-btn secondary" href="<?php echo page_url('admin/pesanan.php'); ?>">
+            Kelola Pesanan <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="dashboard-order-pills">
+        <a href="<?php echo page_url('admin/pesanan.php?status=pending'); ?>" class="order-pill-item">
+            <span>Baru Masuk</span> <b><?php echo $orderCounts['pending']; ?></b>
+        </a>
+        <a href="<?php echo page_url('admin/pesanan.php?status=confirmed'); ?>" class="order-pill-item">
+            <span>Dikonfirmasi</span> <b><?php echo $orderCounts['confirmed']; ?></b>
+        </a>
+        <a href="<?php echo page_url('admin/pesanan.php?status=processing'); ?>" class="order-pill-item">
+            <span>Diproses</span> <b><?php echo $orderCounts['processing']; ?></b>
+        </a>
+        <a href="<?php echo page_url('admin/pesanan.php?status=printed'); ?>" class="order-pill-item">
+            <span>Dicetak</span> <b><?php echo $orderCounts['printed']; ?></b>
+        </a>
+        <a href="<?php echo page_url('admin/pesanan.php?status=completed'); ?>" class="order-pill-item">
+            <span>Selesai</span> <b><?php echo $orderCounts['completed']; ?></b>
+        </a>
+        <a href="<?php echo page_url('admin/pesanan.php?status=cancelled'); ?>" class="order-pill-item">
+            <span>Dibatalkan</span> <b><?php echo $orderCounts['cancelled']; ?></b>
+        </a>
+    </div>
+</div>
+
+<!-- Two Columns: Recent Orders & Quick Access -->
+<div class="dashboard-two-col">
+    <!-- Recent Orders -->
+    <div class="admin-card">
+        <div class="dashboard-section-head">
+            <div>
+                <h2>Pesanan Terbaru</h2>
+                <p>6 order terakhir masuk ke sistem.</p>
+            </div>
+            <a href="<?php echo page_url('admin/pesanan.php'); ?>">Lihat semua →</a>
+        </div>
+        <div class="dashboard-recent-list">
+            <?php if (empty($recent)): ?>
+                <div style="text-align: center; padding: 30px 10px; color: #9c919a; font-size: 13px;">
+                    <i class="bi bi-inbox" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
+                    Belum ada pesanan masuk.
+                </div>
+            <?php else: ?>
+                <?php foreach ($recent as $r): ?>
+                    <div class="dashboard-recent-item">
+                        <div>
+                            <strong><?php echo htmlspecialchars($r['order_code'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                            <span><?php echo htmlspecialchars($r['customer_name'], ENT_QUOTES, 'UTF-8'); ?> · <?php echo date('d/m H:i', strtotime($r['created_at'])); ?></span>
+                        </div>
+                        <div style="text-align: right;">
+                            <b>Rp<?php echo number_format((float)$r['total_estimate'], 0, ',', '.'); ?></b>
+                            <div style="display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 4px;">
+                                <span class="status-pill status-pill-<?php echo htmlspecialchars($r['status'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($statusLabels[$r['status']] ?? $r['status'], ENT_QUOTES, 'UTF-8'); ?>
+                                </span>
+                                <a href="<?php echo page_url('invoice.php?code=' . urlencode($r['order_code']) . '&print=1'); ?>" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 2px 7px; background: #fff0f6; border: 1px solid #f2c9db; border-radius: 6px; color: #e11d64; font-weight: 700; text-decoration: none;" title="Cetak Nota">
+                                    <i class="bi bi-printer"></i> Nota
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Quick Access & Top Products -->
+    <div>
+        <div class="admin-card">
+            <div class="dashboard-section-head">
+                <div>
+                    <h2>Akses Cepat Admin</h2>
+                    <p>Navigasi cepat ke modul utama percetakan.</p>
+                </div>
+            </div>
+            <div class="quick-admin-links">
+                <a href="<?php echo page_url('admin/nota-manual.php'); ?>">
+                    <i class="bi bi-receipt"></i>
+                    <div>
+                        <strong>Buat Nota Manual</strong>
+                        <small>Kasir & transaksi walk-in</small>
+                    </div>
+                </a>
+                <a href="<?php echo page_url('admin/produk.php'); ?>">
+                    <i class="bi bi-box-seam"></i>
+                    <div>
+                        <strong>Katalog Produk</strong>
+                        <small>Kelola harga & stok</small>
+                    </div>
+                </a>
+                <a href="<?php echo page_url('admin/pesanan.php'); ?>">
+                    <i class="bi bi-cart-check"></i>
+                    <div>
+                        <strong>Kelola Pesanan</strong>
+                        <small>Update alur cetak</small>
+                    </div>
+                </a>
+                <a href="<?php echo page_url('admin/promo.php'); ?>">
+                    <i class="bi bi-ticket-perforated"></i>
+                    <div>
+                        <strong>Promo & Voucher</strong>
+                        <small>Diskon & kupon</small>
+                    </div>
+                </a>
+                <a href="<?php echo page_url('admin/loyalty.php'); ?>">
+                    <i class="bi bi-stars"></i>
+                    <div>
+                        <strong>Poin & Reward</strong>
+                        <small>Aturan loyalitas</small>
+                    </div>
+                </a>
+                <a href="<?php echo page_url('admin/laporan.php'); ?>">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <div>
+                        <strong>Laporan Omset</strong>
+                        <small>Rekapitulasi transaksi</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="dashboard-section-head">
+                <div>
+                    <h2>Produk Terlaris</h2>
+                    <p>Bulan berjalan.</p>
+                </div>
+                <a href="<?php echo page_url('admin/laporan.php'); ?>">Laporan →</a>
+            </div>
+            <div class="dashboard-top-products">
+                <?php foreach ($topProducts as $p): ?>
+                    <div style="padding: 10px 0; border-bottom: 1px solid #f4e9ee; display: flex; justify-content: space-between; align-items: center;">
+                        <strong style="font-size: 13px; color: #18243a;"><?php echo htmlspecialchars($p['product_name'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <span style="font-size: 12px; color: #8b8087; font-weight: 600;"><?php echo (int)$p['qty']; ?> item · Rp<?php echo number_format((float)$p['revenue'], 0, ',', '.'); ?></span>
+                    </div>
+                <?php endforeach; ?>
+                <?php if (empty($topProducts)): ?>
+                    <div style="color: #8b8087; font-size: 13px;">Belum ada penjualan bulan ini.</div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-.dashboard-highlight-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}.dashboard-highlight{display:flex;align-items:center;gap:15px}.highlight-icon{width:50px;height:50px;border-radius:15px;background:#fff0f6;color:#d64a8a;display:grid;place-items:center;font-size:22px;flex:0 0 50px}.dashboard-highlight span{display:block;color:#817982;font-size:12px}.dashboard-highlight strong{display:block;color:#18243a;font-size:23px;margin:4px 0}.dashboard-highlight small{color:#8a7e86}.dashboard-highlight .admin-btn{margin-left:auto}.dashboard-two-col{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin:18px 0}.dashboard-section-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:15px}.dashboard-section-head h2{margin:0;color:#18243a;font-size:19px}.dashboard-section-head p{margin:5px 0 0;color:#817982;font-size:13px}.dashboard-section-head>a{color:#d64a8a;text-decoration:none;font-weight:700;font-size:12px}.dashboard-recent-list,.dashboard-top-products{display:grid;gap:3px}.dashboard-recent-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #f4e9ee}.dashboard-recent-item:last-child{border-bottom:0}.dashboard-recent-item strong,.dashboard-top-products strong{display:block;color:#3d3840;font-size:13px}.dashboard-recent-item span,.dashboard-top-products span{display:block;color:#8b8087;font-size:11px;margin-top:3px}.dashboard-recent-item>div:last-child{text-align:right}.dashboard-recent-item b{display:block;color:#4c4650;font-size:12px;margin-bottom:4px}.dashboard-top-products>div{padding:13px 0;border-bottom:1px solid #f4e9ee}.dashboard-top-products>div:last-child{border-bottom:0}.quick-admin-links{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.quick-admin-links a{display:flex;align-items:center;gap:10px;padding:15px;border:1px solid #f0dfe7;border-radius:13px;text-decoration:none;color:#514a52;background:#fffafb}.quick-admin-links a i{color:#d64a8a;font-size:20px}.quick-admin-links a span{font-weight:700;font-size:13px}@media(max-width:900px){.dashboard-highlight-grid,.dashboard-two-col{grid-template-columns:1fr}.quick-admin-links{grid-template-columns:1fr 1fr}}@media(max-width:550px){.quick-admin-links{grid-template-columns:1fr}.dashboard-recent-item{align-items:flex-start;flex-direction:column}.dashboard-recent-item>div:last-child{text-align:left}.dashboard-highlight{align-items:flex-start}.dashboard-highlight .admin-btn{margin-left:0}}
+.dashboard-highlight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+.dashboard-highlight {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 0;
+}
+.highlight-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: #fff0f6;
+    color: #e11d64;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    flex: 0 0 52px;
+}
+.dashboard-highlight span {
+    display: block;
+    color: #817982;
+    font-size: 12px;
+    font-weight: 600;
+}
+.dashboard-highlight strong {
+    display: block;
+    color: #18243a;
+    font-size: 22px;
+    font-weight: 800;
+    margin: 4px 0 2px;
+    font-variant-numeric: tabular-nums;
+}
+.dashboard-highlight small {
+    color: #8a7e86;
+    font-size: 11.5px;
+}
+.dashboard-order-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+}
+.order-pill-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 13px;
+    background: #fff8fb;
+    border: 1px solid #f2dce7;
+    border-radius: 11px;
+    color: #5d535e;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.order-pill-item:hover {
+    background: #ffe8f1;
+    border-color: #e11d64;
+    color: #be124f;
+    transform: translateY(-1px);
+}
+.order-pill-item b {
+    color: #e11d64;
+    font-weight: 800;
+    background: #ffffff;
+    padding: 2px 7px;
+    border-radius: 8px;
+    border: 1px solid #f2dce7;
+}
+.dashboard-two-col {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 18px;
+}
+.dashboard-section-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+.dashboard-section-head h2 {
+    margin: 0;
+    color: #18243a;
+    font-size: 18px;
+    font-weight: 800;
+}
+.dashboard-section-head p {
+    margin: 4px 0 0;
+    color: #817982;
+    font-size: 12.5px;
+}
+.dashboard-section-head a {
+    color: #e11d64;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 12.5px;
+}
+.dashboard-section-head a:hover {
+    text-decoration: underline;
+}
+.dashboard-recent-list {
+    display: grid;
+    gap: 0;
+}
+.dashboard-recent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f4e9ee;
+}
+.dashboard-recent-item:last-child {
+    border-bottom: 0;
+}
+.dashboard-recent-item strong {
+    display: block;
+    color: #18243a;
+    font-size: 13.5px;
+}
+.dashboard-recent-item span {
+    display: block;
+    color: #8b8087;
+    font-size: 11.5px;
+    margin-top: 3px;
+}
+.dashboard-recent-item b {
+    display: block;
+    color: #18243a;
+    font-size: 13px;
+    margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+}
+.quick-admin-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.quick-admin-links a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #f0dfe7;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #4e4850;
+    background: #fffafc;
+    transition: all 0.15s ease;
+}
+.quick-admin-links a:hover {
+    background: #ffe8f1;
+    border-color: #e11d64;
+    transform: translateY(-1px);
+}
+.quick-admin-links a i {
+    color: #e11d64;
+    font-size: 20px;
+    flex: 0 0 20px;
+}
+.quick-admin-links a strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #18243a;
+}
+.quick-admin-links a small {
+    display: block;
+    font-size: 11px;
+    color: #887d85;
+}
+@media (max-width: 900px) {
+    .dashboard-highlight-grid,
+    .dashboard-two-col {
+        grid-template-columns: 1fr;
+    }
+    .quick-admin-links {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 550px) {
+    .quick-admin-links {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-highlight {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .dashboard-highlight .admin-btn {
+        margin-left: 0 !important;
+        margin-top: 8px;
+    }
+    .dashboard-order-pills {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
 </style>
-<?php require __DIR__ . '/_footer.php';
+
+<?php require __DIR__ . '/_footer.php'; ?>

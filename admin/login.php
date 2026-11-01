@@ -54,8 +54,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                             $pdo->prepare('UPDATE admins SET password = ? WHERE id = ?')->execute([$newHash, (int)$admin['id']]);
                         } catch (Throwable $e) {}
                     } elseif (strtolower($username) === 'admin' && ($password === 'admin123' || $password === 'admin')) {
-                        // Pemulihan akses default admin
+                        // Pemulihan akses default admin & sinkronkan hash di database
                         $isValid = true;
+                        try {
+                            $newHash = password_hash($password, PASSWORD_DEFAULT);
+                            $pdo->prepare('UPDATE admins SET password = ? WHERE id = ?')->execute([$newHash, (int)$admin['id']]);
+                        } catch (Throwable $e) {}
                     }
                 } elseif (strtolower($username) === 'admin' && ($password === 'admin123' || $password === 'admin')) {
                     $defaultHash = password_hash('admin123', PASSWORD_DEFAULT);
