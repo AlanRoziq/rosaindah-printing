@@ -62,7 +62,7 @@ if ($currentSort === 'terbaru') {
 }
 
 // Pagination: 15 produk per halaman (urutan setelah baris ke-15 produk ke bawah masuk halaman berikutnya)
-$perPage = 15;
+$perPage = 30;
 $totalFiltered = count($filteredProducts);
 $totalPages = max(1, (int)ceil($totalFiltered / $perPage));
 $currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;

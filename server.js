@@ -208,7 +208,7 @@ const handleProduk = (req, res) => {
   const filteredProducts = store.getProducts(category, search, sort);
   const allProducts = store.getProducts();
 
-  const perPage = 15;
+  const perPage = 30;
   const totalFiltered = filteredProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
   let currentPage = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -951,7 +951,7 @@ app.get('/admin/produk', checkAdminAuth, (req, res) => {
   }
 
   // Pertahankan urutan baris 1–15 lalu urutan 16+ ke bawah
-  const perPage = 15;
+  const perPage = 30;
   const totalFilteredRows = rows.length;
   const totalPages = Math.max(1, Math.ceil(totalFilteredRows / perPage));
   let currentPage = Math.max(1, parseInt(req.query.page, 10) || 1);

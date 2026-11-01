@@ -563,7 +563,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $allFilteredRows = $stmt->fetchAll();
 
-$perPage = 15;
+$perPage = 30;
 $totalFilteredRows = count($allFilteredRows);
 $totalPages = max(1, (int)ceil($totalFilteredRows / $perPage));
 $currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
