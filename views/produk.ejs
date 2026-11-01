@@ -59,10 +59,52 @@
                         };
                         const activeSortText = sortLabels[currentSort] || 'Rekomendasi / Best Seller';
                     %>
+                    <%
+                        const totalFilteredCount = typeof totalFiltered !== 'undefined' ? totalFiltered : products.length;
+                        const perPageLimit = typeof perPage !== 'undefined' ? perPage : 15;
+                        const curPage = typeof currentPage !== 'undefined' ? currentPage : 1;
+                        const totPages = typeof totalPages !== 'undefined' ? totalPages : 1;
+                        const fromIdx = typeof showingFrom !== 'undefined' ? showingFrom : (products.length > 0 ? 1 : 0);
+                        const toIdx = typeof showingTo !== 'undefined' ? showingTo : products.length;
+
+                        function buildCatalogPageUrl(targetPage) {
+                            const params = new URLSearchParams();
+                            if (selectedCategory) params.set('kategori', selectedCategory);
+                            if (searchQuery) params.set('q', searchQuery);
+                            if (currentSort && currentSort !== 'rekomendasi') params.set('sort', currentSort);
+                            if (targetPage > 1) params.set('page', String(targetPage));
+                            const qs = params.toString();
+                            return page_url('produk' + (qs ? '?' + qs : ''));
+                        }
+
+                        const paginationItems = [];
+                        if (totPages <= 7) {
+                            for (let i = 1; i <= totPages; i++) paginationItems.push(i);
+                        } else {
+                            paginationItems.push(1);
+                            let startPage = Math.max(2, curPage - 1);
+                            let endPage = Math.min(totPages - 1, curPage + 1);
+                            if (curPage <= 3) {
+                                startPage = 2;
+                                endPage = 4;
+                            } else if (curPage >= totPages - 2) {
+                                startPage = totPages - 3;
+                                endPage = totPages - 1;
+                            }
+                            if (startPage > 2) paginationItems.push('...');
+                            for (let i = startPage; i <= endPage; i++) paginationItems.push(i);
+                            if (endPage < totPages - 1) paginationItems.push('...');
+                            paginationItems.push(totPages);
+                        }
+                    %>
                     <div class="marketplace-search-subbar d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
                         <div class="filter-count-label text-muted small">
                             <i class="bi bi-box-seam text-rosa me-1"></i>
-                            <span>Menampilkan <strong><%= products.length %></strong> Produk</span>
+                            <% if (totalFilteredCount > perPageLimit) { %>
+                                <span>Menampilkan <strong><%= fromIdx %>–<%= toIdx %></strong> dari <strong><%= totalFilteredCount %></strong> Produk</span>
+                            <% } else { %>
+                                <span>Menampilkan <strong><%= totalFilteredCount %></strong> Produk</span>
+                            <% } %>
                         </div>
                         <button type="button" class="btn-filter-popup" id="openFilterModalBtn">
                             <i class="bi bi-sliders2-vertical"></i>
@@ -135,7 +177,7 @@
                         <% if (currentSort && currentSort !== 'rekomendasi') { %>
                             <span class="active-tag"><i class="bi bi-sliders2-vertical me-1"></i><%= activeSortText %></span>
                         <% } %>
-                        <span class="text-muted small ms-1">(<%= products.length %> produk ditemukan)</span>
+                        <span class="text-muted small ms-1">(<%= totalFilteredCount %> produk ditemukan)</span>
                     </div>
                     <a href="<%= page_url('produk') %>" class="btn-reset-filter">
                         <i class="bi bi-arrow-counterclockwise"></i> Reset Semua
@@ -177,6 +219,42 @@
                     </article>
                 <% }); %>
             </div>
+
+            <!-- Pagination Katalog Produk (Urutan setelah baris ke-15 produk ke bawah) -->
+            <nav class="catalog-pagination" aria-label="Navigasi halaman katalog produk">
+                <% if (curPage > 1) { %>
+                    <a class="pagination-btn" href="<%= buildCatalogPageUrl(curPage - 1) %>" aria-label="Halaman sebelumnya" title="Halaman sebelumnya">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                <% } else { %>
+                    <span class="pagination-btn disabled" aria-disabled="true" aria-label="Halaman sebelumnya">
+                        <i class="bi bi-chevron-left"></i>
+                    </span>
+                <% } %>
+
+                <% paginationItems.forEach(function(pageItem) { %>
+                    <% if (pageItem === '...') { %>
+                        <span class="pagination-ellipsis">...</span>
+                    <% } else { %>
+                        <a class="pagination-btn <%= pageItem === curPage ? 'is-active' : '' %>"
+                           href="<%= buildCatalogPageUrl(pageItem) %>"
+                           <%= pageItem === curPage ? 'aria-current="page"' : '' %>
+                           aria-label="Halaman <%= pageItem %>">
+                            <%= pageItem %>
+                        </a>
+                    <% } %>
+                <% }); %>
+
+                <% if (curPage < totPages) { %>
+                    <a class="pagination-btn" href="<%= buildCatalogPageUrl(curPage + 1) %>" aria-label="Halaman berikutnya" title="Halaman berikutnya">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                <% } else { %>
+                    <span class="pagination-btn disabled" aria-disabled="true" aria-label="Halaman berikutnya">
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                <% } %>
+            </nav>
         <% } %>
     </div>
 </main>
@@ -347,6 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             url.searchParams.delete('sort');
         }
+        url.searchParams.delete('page');
         window.location.href = url.toString();
     }
 

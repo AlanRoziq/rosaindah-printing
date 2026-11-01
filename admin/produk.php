@@ -542,10 +542,82 @@ $sql = 'SELECT * FROM products';
 if ($where) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }
-$sql .= ' ORDER BY is_featured DESC, created_at DESC';
+$sql .= " ORDER BY CASE id
+    WHEN 'banner' THEN 1
+    WHEN 'undangan-nikah' THEN 2
+    WHEN 'undangan-lipat-3' THEN 3
+    WHEN 'kartu-nama' THEN 4
+    WHEN 'sticker' THEN 5
+    WHEN 'nota' THEN 6
+    WHEN 'buku' THEN 7
+    WHEN 'kalender' THEN 8
+    WHEN 'sablon-dtf' THEN 9
+    WHEN 'mug-custom' THEN 10
+    WHEN 'lanyard-id-card' THEN 11
+    WHEN 'cetak-foto' THEN 12
+    WHEN 'pigora' THEN 13
+    WHEN 'gantungan-kunci' THEN 14
+    WHEN 'print-scan-copy' THEN 15
+    ELSE 16 END ASC, created_at ASC, id ASC";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
-$rows = $stmt->fetchAll();
+$allFilteredRows = $stmt->fetchAll();
+
+$perPage = 15;
+$totalFilteredRows = count($allFilteredRows);
+$totalPages = max(1, (int)ceil($totalFilteredRows / $perPage));
+$currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+if ($currentPage > $totalPages) {
+    $currentPage = $totalPages;
+}
+$offset = ($currentPage - 1) * $perPage;
+$rows = array_slice($allFilteredRows, $offset, $perPage);
+
+$buildAdminProdukPageUrl = function (int $targetPage) use ($search, $statusFilter, $featuredFilter): string {
+    $qParams = [];
+    if ($search !== '') {
+        $qParams['q'] = $search;
+    }
+    if ($statusFilter !== '' && $statusFilter !== 'all') {
+        $qParams['status'] = $statusFilter;
+    }
+    if ($featuredFilter !== '' && $featuredFilter !== 'all') {
+        $qParams['featured'] = $featuredFilter;
+    }
+    if ($targetPage > 1) {
+        $qParams['page'] = $targetPage;
+    }
+    $qs = !empty($qParams) ? ('?' . http_build_query($qParams)) : '';
+    return page_url('admin/produk.php' . $qs);
+};
+
+$paginationItems = [];
+if ($totalPages <= 7) {
+    for ($i = 1; $i <= $totalPages; $i++) {
+        $paginationItems[] = $i;
+    }
+} else {
+    $paginationItems[] = 1;
+    $startPage = max(2, $currentPage - 1);
+    $endPage = min($totalPages - 1, $currentPage + 1);
+    if ($currentPage <= 3) {
+        $startPage = 2;
+        $endPage = 4;
+    } elseif ($currentPage >= $totalPages - 2) {
+        $startPage = $totalPages - 3;
+        $endPage = $totalPages - 1;
+    }
+    if ($startPage > 2) {
+        $paginationItems[] = '...';
+    }
+    for ($i = $startPage; $i <= $endPage; $i++) {
+        $paginationItems[] = $i;
+    }
+    if ($endPage < $totalPages - 1) {
+        $paginationItems[] = '...';
+    }
+    $paginationItems[] = $totalPages;
+}
 
 $totalProducts = (int)$pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
 $activeProducts = (int)$pdo->query("SELECT COUNT(*) FROM products WHERE status='active'")->fetchColumn();
@@ -596,7 +668,7 @@ $featuredProducts = (int)$pdo->query('SELECT COUNT(*) FROM products WHERE is_fea
 
 <div class="admin-card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px">
-        <div style="font-weight:800;color:#18243a">Daftar Produk <span style="color:#9a8e96;font-weight:500">(<?php echo count($rows); ?> ditampilkan)</span></div>
+        <div style="font-weight:800;color:#18243a">Daftar Produk <span style="color:#9a8e96;font-weight:500">(<?php echo count($rows); ?> dari <?php echo $totalFilteredRows; ?> ditampilkan)</span></div>
         <?php if ($search !== '' || $statusFilter !== 'all' || $featuredFilter !== 'all'): ?>
             <a href="<?php echo page_url('admin/produk.php'); ?>" style="color:#d64a8a;text-decoration:none;font-size:13px;font-weight:700">Reset Filter</a>
         <?php endif; ?>
@@ -675,6 +747,43 @@ $featuredProducts = (int)$pdo->query('SELECT COUNT(*) FROM products WHERE is_fea
         <?php endif; ?>
         </tbody>
     </table>
+
+    <?php if (!empty($rows)): ?>
+        <nav class="catalog-pagination" aria-label="Navigasi halaman daftar produk" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:26px auto 6px;padding:12px 20px;width:fit-content;max-width:100%;background:rgba(255,245,249,0.97);border:1px solid #f1dce6;border-radius:999px;box-shadow:0 10px 24px rgba(33,16,26,0.07);">
+            <?php if ($currentPage > 1): ?>
+                <a class="pagination-btn" href="<?php echo htmlspecialchars($buildAdminProdukPageUrl($currentPage - 1)); ?>" aria-label="Halaman sebelumnya" style="text-decoration:none;width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(214,74,138,0.13);">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            <?php else: ?>
+                <span class="pagination-btn disabled" aria-disabled="true" style="width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;opacity:0.35;pointer-events:none;">
+                    <i class="bi bi-chevron-left"></i>
+                </span>
+            <?php endif; ?>
+
+            <?php foreach ($paginationItems as $pageItem): ?>
+                <?php if ($pageItem === '...'): ?>
+                    <span class="pagination-ellipsis" style="width:26px;text-align:center;color:#d64a8a;font-weight:900;letter-spacing:2px;">...</span>
+                <?php else: ?>
+                    <?php $pNum = (int)$pageItem; $isActive = ($pNum === $currentPage); ?>
+                    <a class="pagination-btn <?php echo $isActive ? 'is-active' : ''; ?>"
+                       href="<?php echo htmlspecialchars($buildAdminProdukPageUrl($pNum)); ?>"
+                       style="text-decoration:none;width:38px;height:38px;border-radius:50%;background:<?php echo $isActive ? '#d64a8a' : '#fff'; ?>;color:<?php echo $isActive ? '#fff' : '#d64a8a'; ?>;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(214,74,138,<?php echo $isActive ? '0.28' : '0.13'; ?>);">
+                        <?php echo $pNum; ?>
+                    </a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+
+            <?php if ($currentPage < $totalPages): ?>
+                <a class="pagination-btn" href="<?php echo htmlspecialchars($buildAdminProdukPageUrl($currentPage + 1)); ?>" aria-label="Halaman berikutnya" style="text-decoration:none;width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(214,74,138,0.13);">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            <?php else: ?>
+                <span class="pagination-btn disabled" aria-disabled="true" style="width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;opacity:0.35;pointer-events:none;">
+                    <i class="bi bi-chevron-right"></i>
+                </span>
+            <?php endif; ?>
+        </nav>
+    <?php endif; ?>
 </div>
 
 <?php require __DIR__ . '/_footer.php'; ?>

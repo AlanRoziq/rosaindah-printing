@@ -204,7 +204,23 @@ function load_products_from_db(): ?array {
     if (!$pdo) return null;
     try {
         ensure_product_price_tiers_table($pdo);
-        $stmt = $pdo->query("SELECT id, name, category, image, price, unit, description, features FROM products WHERE status='active' ORDER BY is_featured DESC, created_at DESC, name ASC");
+        $stmt = $pdo->query("SELECT id, name, category, image, price, unit, description, features, is_featured, created_at FROM products WHERE status='active' ORDER BY CASE id
+            WHEN 'banner' THEN 1
+            WHEN 'undangan-nikah' THEN 2
+            WHEN 'undangan-lipat-3' THEN 3
+            WHEN 'kartu-nama' THEN 4
+            WHEN 'sticker' THEN 5
+            WHEN 'nota' THEN 6
+            WHEN 'buku' THEN 7
+            WHEN 'kalender' THEN 8
+            WHEN 'sablon-dtf' THEN 9
+            WHEN 'mug-custom' THEN 10
+            WHEN 'lanyard-id-card' THEN 11
+            WHEN 'cetak-foto' THEN 12
+            WHEN 'pigora' THEN 13
+            WHEN 'gantungan-kunci' THEN 14
+            WHEN 'print-scan-copy' THEN 15
+            ELSE 16 END ASC, created_at ASC, id ASC");
         $rows = $stmt->fetchAll();
         $tiers = [];
         if ($rows) {
@@ -218,6 +234,7 @@ function load_products_from_db(): ?array {
         }
         foreach ($rows as &$row) {
             $row['price'] = (float)$row['price'];
+            $row['is_featured'] = !empty($row['is_featured']);
             $row['features'] = json_decode($row['features'] ?? '[]', true) ?: [];
             $row['pricing'] = $tiers[$row['id']] ?? [];
         }

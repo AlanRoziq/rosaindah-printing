@@ -58,13 +58,66 @@ if ($currentSort === 'terbaru') {
         return 0;
     });
 } else {
-    // rekomendasi / default
-    $featuredIds = ['banner', 'undangan-nikah', 'kartu-nama'];
-    usort($filteredProducts, function ($a, $b) use ($featuredIds) {
-        $aFeat = !empty($a['is_featured']) || in_array($a['id'] ?? '', $featuredIds, true) ? 1 : 0;
-        $bFeat = !empty($b['is_featured']) || in_array($b['id'] ?? '', $featuredIds, true) ? 1 : 0;
-        return $bFeat <=> $aFeat;
-    });
+    // rekomendasi / default: pertahankan urutan baris 1–15 lalu 16+ ke bawah
+}
+
+// Pagination: 15 produk per halaman (urutan setelah baris ke-15 produk ke bawah masuk halaman berikutnya)
+$perPage = 15;
+$totalFiltered = count($filteredProducts);
+$totalPages = max(1, (int)ceil($totalFiltered / $perPage));
+$currentPage = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+if ($currentPage > $totalPages) {
+    $currentPage = $totalPages;
+}
+$offset = ($currentPage - 1) * $perPage;
+$paginatedProducts = array_slice($filteredProducts, $offset, $perPage);
+$showingFrom = $totalFiltered > 0 ? ($offset + 1) : 0;
+$showingTo = min($totalFiltered, $offset + count($paginatedProducts));
+
+$buildCatalogPageUrl = function (int $targetPage) use ($selectedCategory, $searchQuery, $currentSort): string {
+    $params = [];
+    if ($selectedCategory !== '') {
+        $params['kategori'] = $selectedCategory;
+    }
+    if ($searchQuery !== '') {
+        $params['q'] = $searchQuery;
+    }
+    if ($currentSort !== '' && $currentSort !== 'rekomendasi') {
+        $params['sort'] = $currentSort;
+    }
+    if ($targetPage > 1) {
+        $params['page'] = $targetPage;
+    }
+    $qs = !empty($params) ? ('?' . http_build_query($params)) : '';
+    return page_url('produk.php' . $qs);
+};
+
+$paginationItems = [];
+if ($totalPages <= 7) {
+    for ($i = 1; $i <= $totalPages; $i++) {
+        $paginationItems[] = $i;
+    }
+} else {
+    $paginationItems[] = 1;
+    $startPage = max(2, $currentPage - 1);
+    $endPage = min($totalPages - 1, $currentPage + 1);
+    if ($currentPage <= 3) {
+        $startPage = 2;
+        $endPage = 4;
+    } elseif ($currentPage >= $totalPages - 2) {
+        $startPage = $totalPages - 3;
+        $endPage = $totalPages - 1;
+    }
+    if ($startPage > 2) {
+        $paginationItems[] = '...';
+    }
+    for ($i = $startPage; $i <= $endPage; $i++) {
+        $paginationItems[] = $i;
+    }
+    if ($endPage < $totalPages - 1) {
+        $paginationItems[] = '...';
+    }
+    $paginationItems[] = $totalPages;
 }
 
 $sortLabels = [
@@ -802,6 +855,87 @@ include __DIR__ . '/includes/header.php';
     display: none !important;
   }
 }
+/* Pagination Katalog (Fitur Awalmula) */
+.catalog-pagination {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin: 34px auto 12px !important;
+  padding: 14px 22px !important;
+  width: fit-content !important;
+  max-width: calc(100% - 12px) !important;
+  background: rgba(255, 245, 249, 0.97) !important;
+  border: 1px solid #f1dce6 !important;
+  border-radius: 999px !important;
+  box-shadow: 0 12px 28px rgba(33, 16, 26, 0.08) !important;
+}
+.catalog-pagination .pagination-btn {
+  appearance: none !important;
+  text-decoration: none !important;
+  border: 0 !important;
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 42px !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  color: #d64a8a !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 7px 16px rgba(214, 74, 138, 0.13) !important;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease !important;
+}
+.catalog-pagination .pagination-btn:hover:not(.disabled) {
+  transform: translateY(-2px) !important;
+  background: #fff0f6 !important;
+  color: #d64a8a !important;
+}
+.catalog-pagination .pagination-btn.is-active {
+  background: #d64a8a !important;
+  color: #fff !important;
+  box-shadow: 0 10px 22px rgba(214, 74, 138, 0.28) !important;
+}
+.catalog-pagination .pagination-btn.disabled {
+  opacity: 0.35 !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
+.catalog-pagination .pagination-ellipsis {
+  width: 30px !important;
+  text-align: center !important;
+  color: #d64a8a !important;
+  font-weight: 900 !important;
+  letter-spacing: 2px !important;
+}
+@media (max-width: 650px) {
+  .catalog-pagination {
+    gap: 7px !important;
+    margin-top: 24px !important;
+    padding: 10px 12px !important;
+    width: fit-content !important;
+    max-width: calc(100% - 8px) !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+  .catalog-pagination::-webkit-scrollbar {
+    display: none !important;
+  }
+  .catalog-pagination .pagination-btn {
+    width: 36px !important;
+    height: 36px !important;
+    flex-basis: 36px !important;
+    font-size: 12px !important;
+  }
+  .catalog-pagination .pagination-ellipsis {
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    font-size: 11px !important;
+  }
+}
 </style>
 
 <header class="main-header">
@@ -986,7 +1120,11 @@ include __DIR__ . '/includes/header.php';
                     <div class="marketplace-search-subbar d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
                         <div class="filter-count-label text-muted small">
                             <i class="bi bi-box-seam text-rosa me-1"></i>
-                            <span>Menampilkan <strong><?php echo count($filteredProducts); ?></strong> Produk</span>
+                            <?php if ($totalFiltered > $perPage): ?>
+                                <span>Menampilkan <strong><?php echo $showingFrom; ?>–<?php echo $showingTo; ?></strong> dari <strong><?php echo $totalFiltered; ?></strong> Produk</span>
+                            <?php else: ?>
+                                <span>Menampilkan <strong><?php echo $totalFiltered; ?></strong> Produk</span>
+                            <?php endif; ?>
                         </div>
                         <button type="button" class="btn-filter-popup" id="openFilterModalBtn">
                             <i class="bi bi-sliders2-vertical"></i>
@@ -1047,7 +1185,7 @@ include __DIR__ . '/includes/header.php';
         </div>
 
         <!-- Products Grid -->
-        <?php if (empty($filteredProducts)): ?>
+        <?php if (empty($paginatedProducts)): ?>
             <div class="empty-products p-5 text-center bg-white rounded-3 shadow-sm my-4">
                 <i class="bi bi-search display-3 text-muted"></i>
                 <h3 class="mt-3">Produk Tidak Ditemukan</h3>
@@ -1056,7 +1194,7 @@ include __DIR__ . '/includes/header.php';
             </div>
         <?php else: ?>
             <div class="product-grid">
-                <?php foreach ($filteredProducts as $item): ?>
+                <?php foreach ($paginatedProducts as $item): ?>
                     <article class="catalog-card">
                         <a href="<?php echo page_url('detail-produk.php?id=' . urlencode($item['id'])); ?>" class="catalog-card-image">
                             <img src="<?php echo product_image_url($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" loading="lazy">
@@ -1079,6 +1217,43 @@ include __DIR__ . '/includes/header.php';
                     </article>
                 <?php endforeach; ?>
             </div>
+
+            <!-- Pagination Katalog Produk (Urutan setelah baris ke-15 produk ke bawah) -->
+            <nav class="catalog-pagination" aria-label="Navigasi halaman katalog produk">
+                <?php if ($currentPage > 1): ?>
+                    <a class="pagination-btn" href="<?php echo htmlspecialchars($buildCatalogPageUrl($currentPage - 1)); ?>" aria-label="Halaman sebelumnya" title="Halaman sebelumnya">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                <?php else: ?>
+                    <span class="pagination-btn disabled" aria-disabled="true" aria-label="Halaman sebelumnya">
+                        <i class="bi bi-chevron-left"></i>
+                    </span>
+                <?php endif; ?>
+
+                <?php foreach ($paginationItems as $pageItem): ?>
+                    <?php if ($pageItem === '...'): ?>
+                        <span class="pagination-ellipsis">...</span>
+                    <?php else: ?>
+                        <?php $pNum = (int)$pageItem; ?>
+                        <a class="pagination-btn <?php echo $pNum === $currentPage ? 'is-active' : ''; ?>"
+                           href="<?php echo htmlspecialchars($buildCatalogPageUrl($pNum)); ?>"
+                           <?php echo $pNum === $currentPage ? 'aria-current="page"' : ''; ?>
+                           aria-label="Halaman <?php echo $pNum; ?>">
+                            <?php echo $pNum; ?>
+                        </a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+
+                <?php if ($currentPage < $totalPages): ?>
+                    <a class="pagination-btn" href="<?php echo htmlspecialchars($buildCatalogPageUrl($currentPage + 1)); ?>" aria-label="Halaman berikutnya" title="Halaman berikutnya">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                <?php else: ?>
+                    <span class="pagination-btn disabled" aria-disabled="true" aria-label="Halaman berikutnya">
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                <?php endif; ?>
+            </nav>
         <?php endif; ?>
     </div>
 </main>
@@ -1250,6 +1425,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             url.searchParams.delete('sort');
         }
+        url.searchParams.delete('page');
         window.location.href = url.toString();
     }
 

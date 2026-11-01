@@ -205,11 +205,27 @@ const handleProduk = (req, res) => {
   const category = req.query.kategori || '';
   const search = req.query.q || '';
   const sort = req.query.sort || 'rekomendasi';
-  const products = store.getProducts(category, search, sort);
+  const filteredProducts = store.getProducts(category, search, sort);
   const allProducts = store.getProducts();
+
+  const perPage = 15;
+  const totalFiltered = filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / perPage));
+  let currentPage = Math.max(1, parseInt(req.query.page, 10) || 1);
+  if (currentPage > totalPages) currentPage = totalPages;
+  const offset = (currentPage - 1) * perPage;
+  const products = filteredProducts.slice(offset, offset + perPage);
+  const showingFrom = totalFiltered > 0 ? (offset + 1) : 0;
+  const showingTo = Math.min(totalFiltered, offset + products.length);
 
   res.render('produk', {
     products,
+    totalFiltered,
+    perPage,
+    currentPage,
+    totalPages,
+    showingFrom,
+    showingTo,
     selectedCategory: category,
     searchQuery: search,
     currentSort: sort,
@@ -883,8 +899,14 @@ app.get('/admin/produk', checkAdminAuth, (req, res) => {
     rows = rows.filter(p => !p.is_featured);
   }
 
-  // Sort: featured first
-  rows.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
+  // Pertahankan urutan baris 1–15 lalu urutan 16+ ke bawah
+  const perPage = 15;
+  const totalFilteredRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredRows / perPage));
+  let currentPage = Math.max(1, parseInt(req.query.page, 10) || 1);
+  if (currentPage > totalPages) currentPage = totalPages;
+  const offset = (currentPage - 1) * perPage;
+  const paginatedRows = rows.slice(offset, offset + perPage);
 
   const totalProducts = allProducts.length;
   const activeProducts = allProducts.filter(p => p.status === 'active').length;
@@ -892,7 +914,10 @@ app.get('/admin/produk', checkAdminAuth, (req, res) => {
 
   res.render('admin/produk', {
     action: 'list',
-    products: rows,
+    products: paginatedRows,
+    totalFilteredRows,
+    currentPage,
+    totalPages,
     search: req.query.q || '',
     statusFilter,
     featuredFilter,

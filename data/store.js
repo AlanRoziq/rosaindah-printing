@@ -480,7 +480,7 @@ module.exports = {
         return 0;
       });
     } else if (sort === 'rekomendasi') {
-      list = [...list].sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
+      // Pertahankan urutan baris 1–15 lalu urutan 16+ ke bawah
     }
 
     return list;
@@ -510,7 +510,7 @@ module.exports = {
       is_featured: !!data.is_featured,
       pricing: Array.isArray(data.pricing) ? data.pricing : []
     };
-    products.unshift(newProd);
+    products.push(newProd);
     return newProd;
   },
   updateProduct: (oldId, data) => {

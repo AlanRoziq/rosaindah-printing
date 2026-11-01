@@ -202,9 +202,39 @@
         </form>
     </div>
 
+    <%
+        const totFilteredAdmin = typeof totalFilteredRows !== 'undefined' ? totalFilteredRows : products.length;
+        const curPageAdmin = typeof currentPage !== 'undefined' ? currentPage : 1;
+        const totPagesAdmin = typeof totalPages !== 'undefined' ? totalPages : 1;
+
+        function buildAdminProdukPageUrl(targetPage) {
+            const params = new URLSearchParams();
+            if (search) params.set('q', search);
+            if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+            if (featuredFilter && featuredFilter !== 'all') params.set('featured', featuredFilter);
+            if (targetPage > 1) params.set('page', String(targetPage));
+            const qs = params.toString();
+            return page_url('admin/produk' + (qs ? '?' + qs : ''));
+        }
+
+        const adminPaginationItems = [];
+        if (totPagesAdmin <= 7) {
+            for (let i = 1; i <= totPagesAdmin; i++) adminPaginationItems.push(i);
+        } else {
+            adminPaginationItems.push(1);
+            let sPage = Math.max(2, curPageAdmin - 1);
+            let ePage = Math.min(totPagesAdmin - 1, curPageAdmin + 1);
+            if (curPageAdmin <= 3) { sPage = 2; ePage = 4; }
+            else if (curPageAdmin >= totPagesAdmin - 2) { sPage = totPagesAdmin - 3; ePage = totPagesAdmin - 1; }
+            if (sPage > 2) adminPaginationItems.push('...');
+            for (let i = sPage; i <= ePage; i++) adminPaginationItems.push(i);
+            if (ePage < totPagesAdmin - 1) adminPaginationItems.push('...');
+            adminPaginationItems.push(totPagesAdmin);
+        }
+    %>
     <div class="admin-card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px">
-            <div style="font-weight:800;color:#18243a">Daftar Produk <span style="color:#9a8e96;font-weight:500">(<%= products.length %> ditampilkan)</span></div>
+            <div style="font-weight:800;color:#18243a">Daftar Produk <span style="color:#9a8e96;font-weight:500">(<%= products.length %> dari <%= totFilteredAdmin %> ditampilkan)</span></div>
             <% if (search !== '' || statusFilter !== 'all' || featuredFilter !== 'all') { %>
                 <a href="<%= page_url('admin/produk') %>" style="color:#d64a8a;text-decoration:none;font-size:13px;font-weight:700">Reset Filter</a>
             <% } %>
@@ -292,6 +322,43 @@
                 </tbody>
             </table>
         </div>
+
+        <% if (products && products.length > 0) { %>
+            <nav class="catalog-pagination" aria-label="Navigasi halaman daftar produk" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:26px auto 6px;padding:12px 20px;width:fit-content;max-width:100%;background:rgba(255,245,249,0.97);border:1px solid #f1dce6;border-radius:999px;box-shadow:0 10px 24px rgba(33,16,26,0.07);">
+                <% if (curPageAdmin > 1) { %>
+                    <a class="pagination-btn" href="<%= buildAdminProdukPageUrl(curPageAdmin - 1) %>" aria-label="Halaman sebelumnya" style="text-decoration:none;width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(214,74,138,0.13);">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                <% } else { %>
+                    <span class="pagination-btn disabled" aria-disabled="true" style="width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;opacity:0.35;pointer-events:none;">
+                        <i class="bi bi-chevron-left"></i>
+                    </span>
+                <% } %>
+
+                <% adminPaginationItems.forEach(function(pageItem) { %>
+                    <% if (pageItem === '...') { %>
+                        <span class="pagination-ellipsis" style="width:26px;text-align:center;color:#d64a8a;font-weight:900;letter-spacing:2px;">...</span>
+                    <% } else { %>
+                        <% const isActive = (pageItem === curPageAdmin); %>
+                        <a class="pagination-btn <%= isActive ? 'is-active' : '' %>"
+                           href="<%= buildAdminProdukPageUrl(pageItem) %>"
+                           style="text-decoration:none;width:38px;height:38px;border-radius:50%;background:<%= isActive ? '#d64a8a' : '#fff' %>;color:<%= isActive ? '#fff' : '#d64a8a' %>;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(214,74,138,<%= isActive ? '0.28' : '0.13' %>);">
+                            <%= pageItem %>
+                        </a>
+                    <% } %>
+                <% }); %>
+
+                <% if (curPageAdmin < totPagesAdmin) { %>
+                    <a class="pagination-btn" href="<%= buildAdminProdukPageUrl(curPageAdmin + 1) %>" aria-label="Halaman berikutnya" style="text-decoration:none;width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(214,74,138,0.13);">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                <% } else { %>
+                    <span class="pagination-btn disabled" aria-disabled="true" style="width:38px;height:38px;border-radius:50%;background:#fff;color:#d64a8a;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;opacity:0.35;pointer-events:none;">
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                <% } %>
+            </nav>
+        <% } %>
     </div>
 <% } %>
 
