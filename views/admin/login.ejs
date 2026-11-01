@@ -91,7 +91,10 @@
                 <label for="password" class="form-label fw-bold small text-secondary">Password</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light text-muted border-end-0" style="border-radius: 11px 0 0 11px;"><i class="bi bi-key"></i></span>
-                    <input type="password" class="form-control" id="password" name="password" required placeholder="Masukkan password admin" autocomplete="current-password" style="border-radius: 0 11px 11px 0;">
+                    <input type="password" class="form-control border-end-0" id="password" name="password" required placeholder="Masukkan password admin" autocomplete="current-password">
+                    <button type="button" class="input-group-text bg-white text-muted" style="border-radius: 0 11px 11px 0; cursor: pointer;" onclick="const p=document.getElementById('password'); const i=this.querySelector('i'); if(p.type==='password'){p.type='text';i.className='bi bi-eye-slash';}else{p.type='password';i.className='bi bi-eye';}" aria-label="Lihat password">
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
             </div>
 

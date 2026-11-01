@@ -21,6 +21,7 @@ if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
 
 if (!defined('BASE_URL')) {
     $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+    $scriptDir = preg_replace('#/admin(?:/.*)?$#i', '', $scriptDir) ?? $scriptDir;
     if ($scriptDir === '/' || $scriptDir === '.' || $scriptDir === '') {
         $detectedBase = '';
     } elseif (strpos($scriptDir, '/rosaindahprinting') !== false) {
