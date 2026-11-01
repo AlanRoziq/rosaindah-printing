@@ -498,32 +498,80 @@ app.post('/kontak', (req, res) => res.redirect('/kontak.php?sent=1'));
 app.post('/kontak.php', (req, res) => res.redirect('/kontak.php?sent=1'));
 
 // Customer Auth
-app.get('/login', (req, res) => res.render('login', { error: req.query.error || '' }));
-app.get('/login.php', (req, res) => res.render('login', { error: req.query.error || '' }));
+const handleCustomerLoginGet = (req, res) => {
+  if (req.session.customer) {
+    return res.redirect('/akun.php');
+  }
+  const notice = req.query.registered ? 'Pendaftaran akun Member berhasil! Silakan masuk menggunakan nomor WhatsApp dan password Anda.' : (req.query.notice || '');
+  res.render('login', {
+    error: req.query.error || '',
+    notice,
+    phone: ''
+  });
+};
+app.get('/login', handleCustomerLoginGet);
+app.get('/login.php', handleCustomerLoginGet);
 
 const handleCustomerLoginPost = (req, res) => {
-  const { phone, password } = req.body;
+  const phone = (req.body.phone || '').trim();
+  const password = String(req.body.password || '');
+
+  if (!phone) {
+    return res.render('login', { error: 'Nomor WhatsApp wajib diisi.', notice: '', phone });
+  }
+  if (!password) {
+    return res.render('login', { error: 'Password wajib diisi.', notice: '', phone });
+  }
+
   const user = store.getCustomerByPhone(phone);
   if (user) {
+    if (user.password && user.password !== password) {
+      return res.render('login', { error: 'Password yang Anda masukkan salah.', notice: '', phone });
+    }
     req.session.customer = user;
     return res.redirect('/akun.php');
   }
-  const defaultUser = { id: 10, name: 'Member Pelanggan', phone: phone || '081234567890', points: 50 };
-  req.session.customer = defaultUser;
-  res.redirect('/akun.php');
+
+  return res.render('login', {
+    error: 'Nomor WhatsApp belum terdaftar sebagai Member. Silakan daftar terlebih dahulu.',
+    notice: '',
+    phone
+  });
 };
 app.post('/login', handleCustomerLoginPost);
 app.post('/login.php', handleCustomerLoginPost);
 
-app.get('/daftar', (req, res) => res.render('daftar', { error: '' }));
-app.get('/daftar.php', (req, res) => res.render('daftar', { error: '' }));
+const handleCustomerDaftarGet = (req, res) => {
+  if (req.session.customer) {
+    return res.redirect('/akun.php');
+  }
+  res.render('daftar', { error: '', formData: {} });
+};
+app.get('/daftar', handleCustomerDaftarGet);
+app.get('/daftar.php', handleCustomerDaftarGet);
 
 const handleCustomerDaftarPost = (req, res) => {
-  const { name, phone, email, address } = req.body;
-  if (!name || !phone) return res.render('daftar', { error: 'Nama dan nomor telepon wajib diisi' });
-  const user = store.createCustomer({ name, phone, email, address });
+  const name = (req.body.name || '').trim();
+  const phone = (req.body.phone || '').trim();
+  const email = (req.body.email || '').trim();
+  const password = String(req.body.password || '');
+  const address = (req.body.address || '').trim();
+  const formData = { name, phone, email, address };
+
+  if (!name || !phone) {
+    return res.render('daftar', { error: 'Nama lengkap dan nomor WhatsApp wajib diisi.', formData });
+  }
+  if (password.length < 6) {
+    return res.render('daftar', { error: 'Password minimal terdiri dari 6 karakter.', formData });
+  }
+  const existing = store.getCustomerByPhone(phone);
+  if (existing) {
+    return res.render('daftar', { error: 'Nomor WhatsApp sudah terdaftar sebagai Member. Silakan login menggunakan nomor tersebut.', formData });
+  }
+
+  const user = store.createCustomer({ name, phone, email, password, address });
   req.session.customer = user;
-  res.redirect('/akun.php');
+  res.redirect('/akun.php?welcome=1');
 };
 app.post('/daftar', handleCustomerDaftarPost);
 app.post('/daftar.php', handleCustomerDaftarPost);
@@ -535,7 +583,10 @@ const handleAkunGet = (req, res) => {
     : [];
   const vouchers = store.getVouchers ? store.getVouchers() : [];
   const tab = req.query.tab || 'profil';
-  const notice = req.query.notice || '';
+  let notice = req.query.notice || '';
+  if (!notice && req.query.welcome) {
+    notice = 'Akun Member berhasil didaftarkan. Selamat datang di Rosa Indah Printing!';
+  }
   const error = req.query.error || '';
 
   const totalSpent = orders.reduce((sum, o) => sum + (o.status !== 'cancelled' ? (o.total_estimate || 0) : 0), 0);

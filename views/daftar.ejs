@@ -1,54 +1,200 @@
-<%- include('partials/header', { title: 'Daftar Member' }) %>
+<%- include('partials/header', { title: 'Daftar Member — Rosa Indah Printing' }) %>
+
+<style>
+.auth-member-section {
+    background: linear-gradient(180deg, #fff6fa 0%, #fbf8fa 100%);
+    min-height: 84vh;
+    padding: 36px 0 70px;
+}
+.auth-member-card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1.5px solid #f2dce7;
+    border-radius: 24px;
+    padding: 34px 30px;
+    box-shadow: 0 14px 40px rgba(225, 29, 100, 0.08);
+}
+.auth-icon-circle {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fff0f6 0%, #ffe4ed 100%);
+    color: #e11d64;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin: 0 auto 14px;
+    border: 2px solid #fbcfe8;
+    box-shadow: 0 8px 20px rgba(225, 29, 100, 0.14);
+}
+.auth-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff0f6;
+    color: #e11d64;
+    border: 1px solid #fbcfe8;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.auth-form-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #18243a;
+    margin-bottom: 6px;
+    display: block;
+}
+.auth-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.auth-input-wrap i.field-icon {
+    position: absolute;
+    left: 14px;
+    color: #9ca3af;
+    font-size: 17px;
+    pointer-events: none;
+}
+.auth-input-wrap input,
+.auth-textarea {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    border-radius: 13px;
+    border: 1.5px solid #ead8e1;
+    font-size: 14px;
+    color: #18243a;
+    background: #ffffff;
+    transition: all 0.2s ease;
+    outline: none;
+}
+.auth-textarea {
+    padding: 12px 14px;
+}
+.auth-input-wrap input:focus,
+.auth-textarea:focus {
+    border-color: #e11d64;
+    box-shadow: 0 0 0 3px rgba(225, 29, 100, 0.12);
+}
+.btn-toggle-pass {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: 0;
+    color: #9ca3af;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 17px;
+}
+.btn-auth-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px 22px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e11d64 0%, #f43f7e 50%, #fb71a0 100%);
+    color: #ffffff !important;
+    font-size: 14.5px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 10px 26px -4px rgba(225, 29, 100, 0.4);
+    transition: all 0.25s ease;
+}
+.btn-auth-submit:hover {
+    background: linear-gradient(90deg, #be124f 0%, #e11d64 50%, #f43f7e 100%);
+    transform: translateY(-2px);
+}
+@media (max-width: 575.98px) {
+    .auth-member-section {
+        padding: 20px 0 60px;
+    }
+    .auth-member-card {
+        padding: 26px 20px;
+        border-radius: 20px;
+    }
+}
+</style>
 
 <header class="main-header">
     <%- include('partials/topbar') %>
     <%- include('partials/navbar') %>
 </header>
 
-<main class="py-5">
+<main class="auth-member-section">
     <div class="container">
-        <div class="card p-4 p-md-5 rounded-4 shadow-sm border-0 max-w-500 mx-auto bg-white">
+        <div class="auth-member-card">
             <div class="text-center mb-4">
-                <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 64px; height: 64px; font-size: 28px;">
+                <div class="auth-icon-circle">
                     <i class="bi bi-person-plus"></i>
                 </div>
-                <h2 class="fw-bold">Pendaftaran Member</h2>
-                <p class="text-muted small">Dapatkan keuntungan promo eksklusif, cashback poin, dan tracking pesanan cepat.</p>
+                <span class="auth-badge"><i class="bi bi-stars"></i> Gratis &amp; Bonus 100 Poin</span>
+                <h2 class="fw-bold mb-1" style="color: #18243a; font-size: 23px;">Pendaftaran Member</h2>
+                <p class="text-muted small mb-0">Dapatkan keuntungan promo eksklusif, poin loyalitas, dan pantau pesanan cetak lebih cepat.</p>
             </div>
 
             <% if (error) { %>
-                <div class="alert alert-danger" role="alert"><%= error %></div>
+                <div class="alert alert-danger rounded-3 small fw-semibold" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> <%= error %>
+                </div>
             <% } %>
 
             <form action="<%= page_url('daftar') %>" method="POST">
                 <div class="mb-3">
-                    <label for="name" class="form-label fw-semibold">Nama Lengkap</label>
-                    <input type="text" class="form-control" id="name" name="name" required placeholder="Contoh: Budi Santoso">
+                    <label for="name" class="auth-form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-person field-icon"></i>
+                        <input type="text" id="name" name="name" value="<%= typeof formData !== 'undefined' && formData.name ? formData.name : '' %>" required placeholder="Contoh: Budi Santoso">
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="phone" class="form-label fw-semibold">Nomor WhatsApp</label>
-                    <input type="tel" class="form-control" id="phone" name="phone" required placeholder="082331035371">
+                    <label for="phone" class="auth-form-label">Nomor WhatsApp Aktif <span class="text-danger">*</span></label>
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-whatsapp field-icon text-success"></i>
+                        <input type="tel" id="phone" name="phone" value="<%= typeof formData !== 'undefined' && formData.phone ? formData.phone : '' %>" required placeholder="Contoh: 082331035371">
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="email" class="form-label fw-semibold">Email (Opsional)</label>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="email@contoh.com">
+                    <label for="email" class="auth-form-label">Alamat Email (Opsional)</label>
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-envelope field-icon"></i>
+                        <input type="email" id="email" name="email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" placeholder="email@contoh.com">
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="address" class="form-label fw-semibold">Alamat Lengkap</label>
-                    <textarea class="form-control" id="address" name="address" rows="2" placeholder="Alamat domisili"></textarea>
+                    <label for="password" class="auth-form-label">Buat Password <span class="text-danger">*</span></label>
+                    <div class="auth-input-wrap">
+                        <i class="bi bi-key field-icon"></i>
+                        <input type="password" id="password" name="password" required minlength="6" placeholder="Minimal 6 karakter" style="padding-right: 42px;">
+                        <button type="button" class="btn-toggle-pass" onclick="const p=document.getElementById('password'); const i=this.querySelector('i'); if(p.type==='password'){p.type='text';i.className='bi bi-eye-slash';}else{p.type='password';i.className='bi bi-eye';}" aria-label="Tampilkan password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3">Daftar Akun Member</button>
+                <div class="mb-4">
+                    <label for="address" class="auth-form-label">Alamat Lengkap Pengiriman</label>
+                    <textarea class="auth-textarea" id="address" name="address" rows="2" placeholder="Nama jalan, nomor rumah, RT/RW, desa/kelurahan, kecamatan"><%= typeof formData !== 'undefined' && formData.address ? formData.address : '' %></textarea>
+                </div>
+                <button type="submit" class="btn-auth-submit mb-3">
+                    <i class="bi bi-check2-circle"></i> Daftar Akun Member Sekarang
+                </button>
             </form>
 
-            <div class="text-center small text-muted">
-                Sudah punya akun? <a href="<%= page_url('login') %>" class="text-primary fw-semibold">Masuk di sini</a>
+            <div class="text-center pt-3 border-top" style="font-size: 13.5px; color: #6b7280;">
+                Sudah punya akun member?
+                <a href="<%= page_url('login') %>" style="color: #e11d64; font-weight: 800; text-decoration: none;">Masuk di sini</a>
             </div>
         </div>
     </div>
 </main>
-
-<style>
-.max-w-500 { max-width: 500px; }
-</style>
 
 <%- include('partials/footer') %>

@@ -668,22 +668,35 @@ module.exports = {
     return false;
   },
   getCustomers: () => customers,
-  getCustomerByPhone: (phone) => customers.find(c => c.phone === phone),
+  getCustomerByPhone: (phone) => {
+    const digits = String(phone || '').replace(/\D+/g, '');
+    if (!digits) return null;
+    const norm = digits.startsWith('0') ? ('62' + digits.slice(1)) : (digits.startsWith('8') ? ('62' + digits) : digits);
+    const local = norm.startsWith('62') ? ('0' + norm.slice(2)) : norm;
+    return customers.find(c => {
+      const cDigits = String(c.phone || '').replace(/\D+/g, '');
+      return cDigits === norm || cDigits === local;
+    });
+  },
   createCustomer: (data) => {
+    const digits = String(data.phone || '').replace(/\D+/g, '');
+    const local = digits.startsWith('62') ? ('0' + digits.slice(2)) : (digits.startsWith('8') ? ('0' + digits) : digits);
     const c = {
       id: customers.length + 1,
       name: data.name,
-      username: data.username || '',
-      phone: data.phone,
+      username: data.username || (String(data.name || 'member').split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'member'),
+      phone: local || data.phone,
       email: data.email || '',
+      password: data.password || '123456',
       gender: data.gender || 'L',
       birth_date: data.birth_date || '',
       city: data.city || 'Pasuruan',
-      points: 10,
+      points: 100,
       is_verified: 1,
-      member_tier: 'Silver Member',
+      member_tier: 'Member Baru',
       address: data.address || '',
-      address_note: data.address_note || ''
+      address_note: data.address_note || '',
+      avatar: ''
     };
     customers.push(c);
     return c;

@@ -105,15 +105,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($error === '') {
+            [$phoneNorm, $phoneLocal] = function_exists('customer_phone_candidates')
+                ? customer_phone_candidates($phone)
+                : [$phone, $phone];
+
             if ($pdo && $id > 0) {
                 try {
-                    $q = $pdo->prepare('SELECT id FROM customers WHERE phone = ? AND id <> ? LIMIT 1');
-                    $q->execute([$phone, $id]);
+                    $q = $pdo->prepare('SELECT id FROM customers WHERE (phone = ? OR phone = ?) AND id <> ? LIMIT 1');
+                    $q->execute([$phoneNorm, $phoneLocal, $id]);
                     if ($q->fetch()) {
                         $error = 'Nomor WhatsApp sudah digunakan oleh akun Member lain.';
                     } else {
-                        $upd = $pdo->prepare('UPDATE customers SET name = ?, phone = ?, email = ?, address = ? WHERE id = ?');
-                        $upd->execute([$name, $phone, $email !== '' ? $email : null, $address, $id]);
+                        try {
+                            $upd = $pdo->prepare('UPDATE customers SET name = ?, username = ?, phone = ?, email = ?, gender = ?, birth_date = ?, city = ?, address = ?, address_note = ?, avatar = ? WHERE id = ?');
+                            $upd->execute([
+                                $name,
+                                $username !== '' ? $username : null,
+                                $phoneNorm ?: $phone,
+                                $email !== '' ? $email : null,
+                                $gender,
+                                $birthDate !== '' ? $birthDate : null,
+                                $city !== '' ? $city : 'Pasuruan',
+                                $address,
+                                $addressNote !== '' ? $addressNote : null,
+                                $avatarPath !== '' ? $avatarPath : null,
+                                $id
+                            ]);
+                        } catch (Throwable $innerEx) {
+                            $upd = $pdo->prepare('UPDATE customers SET name = ?, phone = ?, email = ?, address = ? WHERE id = ?');
+                            $upd->execute([$name, $phoneNorm ?: $phone, $email !== '' ? $email : null, $address, $id]);
+                        }
                     }
                 } catch (Throwable $e) {
                     // Tetap lanjut update session
@@ -124,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $updatedUser = array_merge($user, [
                     'name'         => $name,
                     'username'     => $username !== '' ? $username : ($user['username'] ?? ''),
-                    'phone'        => $phone,
+                    'phone'        => $phoneNorm ?: $phone,
                     'email'        => $email,
                     'gender'       => $gender,
                     'birth_date'   => $birthDate,
@@ -173,11 +194,14 @@ $vouchers = [
 if ($isLoggedIn && $user) {
     $id = (int)($user['id'] ?? 0);
     $phone = (string)($user['phone'] ?? '');
+    [$phoneNorm, $phoneLocal] = function_exists('customer_phone_candidates')
+        ? customer_phone_candidates($phone)
+        : [$phone, $phone];
 
     if ($pdo) {
         try {
-            $q = $pdo->prepare('SELECT * FROM orders WHERE customer_id = ? OR customer_phone = ? ORDER BY created_at DESC LIMIT 100');
-            $q->execute([$id, $phone]);
+            $q = $pdo->prepare('SELECT * FROM orders WHERE customer_id = ? OR customer_phone = ? OR customer_phone = ? ORDER BY created_at DESC LIMIT 100');
+            $q->execute([$id, $phoneNorm, $phoneLocal]);
             $orders = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
             foreach ($orders as &$o) {
