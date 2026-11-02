@@ -97,6 +97,19 @@
                                         <strong><%= it.product_name %></strong> <span style="color: #8c8289;">(<%= it.quantity %> <%= it.unit %>)</span>
                                     </div>
                                 <% }); %>
+                                <% if (o.attachments && o.attachments.length > 0) { %>
+                                    <div style="margin-top: 6px; display: flex; flex-direction: column; gap: 4px;">
+                                        <% o.attachments.forEach(function(att) { %>
+                                            <a href="/<%= att.file_path.replace(/^\/+/, '') %>" target="_blank" rel="noopener" download="<%= att.original_name %>" style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #1e40af; background: #eff6ff; border: 1px solid #bfdbfe; padding: 4px 8px; border-radius: 6px; text-decoration: none; font-weight: 700;">
+                                                <i class="bi bi-file-earmark-arrow-down-fill"></i> File Desain: <%= att.original_name %> (<%= Math.max(0.01, (att.file_size || 0) / (1024 * 1024)).toFixed(2) %> MB)
+                                            </a>
+                                        <% }); %>
+                                    </div>
+                                <% } else if (o.design_option === 'seller_design') { %>
+                                    <div style="margin-top: 6px; font-size: 11px; color: #9d174d; background: #fff0f6; border: 1px solid #f5c2d7; padding: 4px 8px; border-radius: 6px; font-weight: 700;">
+                                        <i class="bi bi-brush-fill"></i> Jasa Buatkan Desain Seller (<%= o.design_tier || 'Easy' %> • <%= format_rupiah(o.design_fee || 5000) %>)
+                                    </div>
+                                <% } %>
                                 <% if (o.customer_note) { %>
                                     <div style="font-size: 11.5px; color: #c0392b; background: #fff5f5; border: 1px dashed #f5c6cb; padding: 4px 8px; border-radius: 6px; margin-top: 5px;">
                                         <i class="bi bi-chat-left-dots"></i> <%= o.customer_note %>

@@ -262,6 +262,15 @@ foreach ($paymentCountRows as $cr) if (isset($countsPayment[$cr['payment_status'
                             </div>
                             <div class="order-detail-full"><span class="detail-mini-label">CATATAN / ALAMAT / SPESIFIKASI</span><p class="order-note"><?php echo htmlspecialchars($order['customer_note'] ?: '-'); ?></p></div>
                             <div class="order-detail-full"><span class="detail-mini-label">FILE / DESAIN PEMESAN</span>
+                                <?php
+                                $sellerDesignItem = null;
+                                foreach ($orderItems as $oiCheck) {
+                                    if (str_starts_with((string)($oiCheck['product_id'] ?? ''), 'jasa-desain-') || stripos((string)($oiCheck['product_name'] ?? ''), 'Jasa Buatkan Desain') !== false) {
+                                        $sellerDesignItem = $oiCheck;
+                                        break;
+                                    }
+                                }
+                                ?>
                                 <?php if ($attachmentRows): ?>
                                     <div class="order-attachments-list">
                                     <?php foreach ($attachmentRows as $att): $sizeMb = max(0.01, ((int)$att['file_size']) / 1048576); ?>
@@ -271,6 +280,19 @@ foreach ($paymentCountRows as $cr) if (isset($countsPayment[$cr['payment_status'
                                             <i class="bi bi-download"></i>
                                         </a>
                                     <?php endforeach; ?>
+                                    </div>
+                                <?php elseif ($sellerDesignItem):
+                                    $sdVar = [];
+                                    if (!empty($sellerDesignItem['variant_data'])) {
+                                        $dec = json_decode($sellerDesignItem['variant_data'], true);
+                                        if (is_array($dec)) $sdVar = $dec;
+                                    }
+                                ?>
+                                    <div class="order-note" style="background:#fff0f6;border:1px solid #f5c2d7;color:#9d174d;">
+                                        <strong><i class="bi bi-brush-fill"></i> <?php echo htmlspecialchars($sellerDesignItem['product_name']); ?> — Rp<?php echo number_format((float)$sellerDesignItem['subtotal'], 0, ',', '.'); ?></strong>
+                                        <?php if (!empty($sdVar['catatan'])): ?>
+                                            <div style="margin-top:4px;font-size:12px;color:#5b233c;">Konsep / Arahan Desain: <?php echo htmlspecialchars($sdVar['catatan']); ?></div>
+                                        <?php endif; ?>
                                     </div>
                                 <?php else: ?>
                                     <p class="order-note">Tidak ada file/desain yang dilampirkan.</p>

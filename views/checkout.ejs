@@ -28,9 +28,9 @@
             </div>
         <% } %>
 
-        <form action="<%= page_url('checkout') %>" method="POST" id="checkoutForm">
+        <form action="<%= page_url('checkout') %>" method="POST" enctype="multipart/form-data" id="checkoutForm">
             <div class="row g-3 g-md-4">
-                <!-- Customer Details & Payment Options (Left Column) -->
+                <!-- Customer Details, Design Options & Payment Options (Left Column) -->
                 <div class="col-lg-7">
                     <!-- Data Pemesan Card -->
                     <div class="checkout-card bg-white p-3 p-md-4 rounded-4 shadow-sm mb-3 mb-md-4">
@@ -64,7 +64,129 @@
 
                         <div class="mb-1">
                             <label for="customer_note" class="checkout-label form-label fw-semibold">Catatan Pesanan / Spesifikasi Tambahan</label>
-                            <textarea class="form-control checkout-input" id="customer_note" name="customer_note" rows="2" placeholder="Contoh: Finishing mata ayam 4 sudut, teks acara diganti tanggal 25 Mei, atau file siap cetak dikirim via WA."></textarea>
+                            <textarea class="form-control checkout-input" id="customer_note" name="customer_note" rows="2" placeholder="Contoh: Finishing mata ayam 4 sudut, ukuran pasti, atau catatan pengiriman."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan File / Desain Cetak Card -->
+                    <div class="checkout-card bg-white p-3 p-md-4 rounded-4 shadow-sm mb-3 mb-md-4">
+                        <div class="checkout-card-header d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="checkout-icon-badge">
+                                    <i class="bi bi-palette2"></i>
+                                </span>
+                                <h2 class="checkout-card-title h5 fw-bold mb-0">Pilihan File / Desain Cetak</h2>
+                            </div>
+                            <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 11px;">Wajib Pilih Salah Satu</span>
+                        </div>
+
+                        <div class="d-flex flex-column gap-3">
+                            <!-- OPSI 1: Kirim File Sendiri -->
+                            <label class="payment-card-option design-card-option selected" for="designOptUpload">
+                                <div class="d-flex align-items-start gap-3">
+                                    <input class="form-check-input payment-radio design-option-radio mt-1" type="radio" name="design_option" id="designOptUpload" value="upload" checked>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                            <span class="payment-title fw-bold"><i class="bi bi-cloud-arrow-up-fill text-danger me-1"></i> Kirim File Sendiri (Sudah Punya Desain)</span>
+                                            <span class="badge bg-success-subtle text-success border payment-chip">Gratis • Rp0</span>
+                                        </div>
+                                        <p class="payment-desc text-muted mb-0 mt-1">
+                                            Gunakan fitur ini jika Anda sudah mempunyai file desain siap cetak sendiri (Maksimal ukuran file <strong>10 MB</strong>).
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Box Upload File Desain -->
+                                <div id="designUploadPanel" class="mt-3 pt-3 border-top" onclick="event.stopPropagation();">
+                                    <div class="p-3 rounded-3" style="background: #fff9fc; border: 1.5px dashed #e11d64;">
+                                        <label for="designFilesInput" class="form-label fw-bold small text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="bi bi-file-earmark-arrow-up text-danger fs-6"></i> Unggah File Desain Siap Cetak (Maks. 10 MB)
+                                        </label>
+                                        <input class="form-control form-control-sm checkout-input bg-white" type="file" id="designFilesInput" name="design_files" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.cdr,.ai,.psd,.eps,.svg,.zip,.rar,.7z,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+                                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mt-2">
+                                            <small class="text-muted" style="font-size: 11px;">
+                                                <i class="bi bi-check2-circle text-success me-1"></i>Format: <strong>JPG, PNG, PDF, CDR, AI, PSD, RAR/ZIP, DOCX</strong> (Maks. <strong>10 MB</strong>/file)
+                                            </small>
+                                        </div>
+                                        <div id="designFileAlert" class="alert alert-danger py-2 px-3 mt-2 mb-0 small d-none"></div>
+                                        <div id="designFilePreviewList" class="mt-2 d-flex flex-column gap-1 d-none"></div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <!-- OPSI 2: Jasa Buatkan Desain Oleh Seller -->
+                            <label class="payment-card-option design-card-option" for="designOptSeller">
+                                <div class="d-flex align-items-start gap-3">
+                                    <input class="form-check-input payment-radio design-option-radio mt-1" type="radio" name="design_option" id="designOptSeller" value="seller_design">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                            <span class="payment-title fw-bold"><i class="bi bi-brush-fill text-primary me-1"></i> Jasa Buatkan Desain Oleh Seller (Belum Punya Desain)</span>
+                                            <span class="badge bg-primary-subtle text-primary border payment-chip">Easy 5k • Medium 7k • Hard 10k</span>
+                                        </div>
+                                        <p class="payment-desc text-muted mb-0 mt-1">
+                                            Belum punya desain? Tim desainer Rosa Indah Printing siap membuatkan desain sesuai tingkat kerumitan yang Anda pilih.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Box Pilihan Paket Jasa Desain Easy / Medium / Hard -->
+                                <div id="sellerDesignPanel" class="mt-3 pt-3 border-top d-none" onclick="event.stopPropagation();">
+                                    <div class="mb-2 fw-bold small text-dark">
+                                        Pilih Tingkat Kerumitan Jasa Desain:
+                                    </div>
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-4">
+                                            <label class="tier-option-box d-block p-2 px-3 rounded-3 border h-100 active" for="tier_easy" style="cursor: pointer; transition: all 0.15s ease; background: #fff0f6; border-color: #e11d64 !important;">
+                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                    <div class="form-check mb-0">
+                                                        <input class="form-check-input design-tier-radio" type="radio" name="design_tier" id="tier_easy" value="easy" data-price="5000" data-name="Easy" checked>
+                                                        <span class="fw-bold small text-dark">Easy</span>
+                                                    </div>
+                                                    <span class="badge bg-danger text-white" style="font-size: 11px;">+Rp5.000</span>
+                                                </div>
+                                                <div class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
+                                                    Ganti teks/nama, tambah kontak/WA, atau tata letak simpel 1 sisi.
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="tier-option-box d-block p-2 px-3 rounded-3 border h-100" for="tier_medium" style="cursor: pointer; transition: all 0.15s ease; background: #ffffff; border-color: #e5d4df !important;">
+                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                    <div class="form-check mb-0">
+                                                        <input class="form-check-input design-tier-radio" type="radio" name="design_tier" id="tier_medium" value="medium" data-price="7000" data-name="Medium">
+                                                        <span class="fw-bold small text-dark">Medium</span>
+                                                    </div>
+                                                    <span class="badge bg-danger text-white" style="font-size: 11px;">+Rp7.000</span>
+                                                </div>
+                                                <div class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
+                                                    Kombinasi beberapa foto, elemen grafis promosi, stiker produk, atau spanduk acara.
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="tier-option-box d-block p-2 px-3 rounded-3 border h-100" for="tier_hard" style="cursor: pointer; transition: all 0.15s ease; background: #ffffff; border-color: #e5d4df !important;">
+                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                    <div class="form-check mb-0">
+                                                        <input class="form-check-input design-tier-radio" type="radio" name="design_tier" id="tier_hard" value="hard" data-price="10000" data-name="Hard">
+                                                        <span class="fw-bold small text-dark">Hard</span>
+                                                    </div>
+                                                    <span class="badge bg-danger text-white" style="font-size: 11px;">+Rp10.000</span>
+                                                </div>
+                                                <div class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
+                                                    Desain dari nol penuh detail, brosur/undangan lipat, banyak komponen & tata letak khusus.
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label for="design_brief" class="form-label small fw-semibold text-dark mb-1">
+                                            Arahan / Konsep Desain yang Diinginkan <span class="text-muted fw-normal">(Opsional)</span>
+                                        </label>
+                                        <textarea class="form-control form-control-sm checkout-input bg-white" id="design_brief" name="design_brief" rows="2" placeholder="Contoh: Judul tulisan, pilihan warna dominan, tema acara, atau keterangan konsep desain..."></textarea>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
@@ -78,9 +200,9 @@
                         </div>
                         
                         <div class="payment-options-grid d-flex flex-column gap-2">
-                            <label class="payment-card-option selected" for="payTransfer">
+                            <label class="payment-card-option payment-method-card selected" for="payTransfer">
                                 <div class="d-flex align-items-start gap-3">
-                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payTransfer" value="transfer" checked>
+                                    <input class="form-check-input payment-radio method-radio mt-1" type="radio" name="payment_method" id="payTransfer" value="transfer" checked>
                                     <div class="flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
                                             <span class="payment-title fw-bold">Transfer Bank (Bank Mandiri)</span>
@@ -101,9 +223,9 @@
                                 </div>
                             </label>
 
-                            <label class="payment-card-option" for="payQris">
+                            <label class="payment-card-option payment-method-card" for="payQris">
                                 <div class="d-flex align-items-start gap-3">
-                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payQris" value="qris">
+                                    <input class="form-check-input payment-radio method-radio mt-1" type="radio" name="payment_method" id="payQris" value="qris">
                                     <div class="flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
                                             <span class="payment-title fw-bold">QRIS Resmi Rosa Indah Printing (Semua E-Wallet & M-Banking)</span>
@@ -118,9 +240,9 @@
                                 </div>
                             </label>
 
-                            <label class="payment-card-option" for="payCash">
+                            <label class="payment-card-option payment-method-card" for="payCash">
                                 <div class="d-flex align-items-start gap-3">
-                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payCash" value="cash">
+                                    <input class="form-check-input payment-radio method-radio mt-1" type="radio" name="payment_method" id="payCash" value="cash">
                                     <div class="flex-grow-1">
                                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
                                             <span class="payment-title fw-bold">Bayar di Workshop (Cash / Tunai)</span>
@@ -183,7 +305,11 @@
                         <div class="checkout-breakdown mb-3">
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Subtotal Produk</span>
-                                <span class="fw-semibold tabular-nums small"><%= format_rupiah(total) %></span>
+                                <span class="fw-semibold tabular-nums small" id="summaryProductSubtotal" data-base="<%= total %>"><%= format_rupiah(total) %></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small" id="summaryDesignLabel">File / Jasa Desain</span>
+                                <span class="fw-semibold tabular-nums small text-success" id="summaryDesignValue">Kirim File Sendiri (Rp0)</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small">Biaya Pengiriman</span>
@@ -199,7 +325,7 @@
 
                         <div class="checkout-total-row d-flex justify-content-between align-items-baseline mb-4">
                             <span class="fw-bold">Total Pembayaran</span>
-                            <span class="checkout-total-val fw-bold tabular-nums"><%= format_rupiah(total) %></span>
+                            <span class="checkout-total-val fw-bold tabular-nums" id="summaryGrandTotal"><%= format_rupiah(total) %></span>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-submit-checkout w-100 py-2 py-md-3 fw-bold">
@@ -220,19 +346,159 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Highlight active payment card option
-        const paymentCards = document.querySelectorAll('.payment-card-option');
-        const paymentRadios = document.querySelectorAll('.payment-radio');
+        const baseProductTotal = <%= Number(total || 0) %>;
+        const maxFileBytes = 10 * 1024 * 1024; // 10 MB
 
-        paymentRadios.forEach(radio => {
+        function formatRupiahJs(num) {
+            return 'Rp' + Math.round(num).toLocaleString('id-ID');
+        }
+
+        // 1. Highlight active payment method card
+        const methodCards = document.querySelectorAll('.payment-method-card');
+        const methodRadios = document.querySelectorAll('.method-radio');
+
+        methodRadios.forEach(radio => {
             radio.addEventListener('change', function() {
-                paymentCards.forEach(card => card.classList.remove('selected'));
+                methodCards.forEach(card => card.classList.remove('selected'));
                 if (this.checked) {
-                    const parentCard = this.closest('.payment-card-option');
+                    const parentCard = this.closest('.payment-method-card');
                     if (parentCard) parentCard.classList.add('selected');
                 }
             });
         });
+
+        // 2. Design Option & Tier Calculation
+        const designCards = document.querySelectorAll('.design-card-option');
+        const designOptionRadios = document.querySelectorAll('.design-option-radio');
+        const designTierRadios = document.querySelectorAll('.design-tier-radio');
+        const designUploadPanel = document.getElementById('designUploadPanel');
+        const sellerDesignPanel = document.getElementById('sellerDesignPanel');
+        const summaryDesignLabel = document.getElementById('summaryDesignLabel');
+        const summaryDesignValue = document.getElementById('summaryDesignValue');
+        const summaryGrandTotal = document.getElementById('summaryGrandTotal');
+
+        function recalculateCheckoutTotal() {
+            const selectedOpt = document.querySelector('.design-option-radio:checked');
+            const optVal = selectedOpt ? selectedOpt.value : 'upload';
+            let designFee = 0;
+
+            if (optVal === 'seller_design') {
+                if (designUploadPanel) designUploadPanel.classList.add('d-none');
+                if (sellerDesignPanel) sellerDesignPanel.classList.remove('d-none');
+
+                const selectedTier = document.querySelector('.design-tier-radio:checked');
+                const tierPrice = selectedTier ? parseInt(selectedTier.getAttribute('data-price') || '5000', 10) : 5000;
+                const tierName = selectedTier ? (selectedTier.getAttribute('data-name') || 'Easy') : 'Easy';
+                designFee = tierPrice;
+
+                if (summaryDesignLabel) summaryDesignLabel.textContent = 'Jasa Desain (' + tierName + ')';
+                if (summaryDesignValue) {
+                    summaryDesignValue.textContent = '+' + formatRupiahJs(designFee);
+                    summaryDesignValue.classList.remove('text-success');
+                    summaryDesignValue.classList.add('text-danger');
+                }
+            } else {
+                if (designUploadPanel) designUploadPanel.classList.remove('d-none');
+                if (sellerDesignPanel) sellerDesignPanel.classList.add('d-none');
+
+                if (summaryDesignLabel) summaryDesignLabel.textContent = 'File / Jasa Desain';
+                if (summaryDesignValue) {
+                    summaryDesignValue.textContent = 'Kirim File Sendiri (Rp0)';
+                    summaryDesignValue.classList.remove('text-danger');
+                    summaryDesignValue.classList.add('text-success');
+                }
+            }
+
+            document.querySelectorAll('.tier-option-box').forEach(box => {
+                const rad = box.querySelector('.design-tier-radio');
+                if (rad && rad.checked) {
+                    box.style.background = '#fff0f6';
+                    box.style.borderColor = '#e11d64';
+                } else {
+                    box.style.background = '#ffffff';
+                    box.style.borderColor = '#e5d4df';
+                }
+            });
+
+            const grandTotal = Math.max(0, baseProductTotal + designFee);
+            if (summaryGrandTotal) {
+                summaryGrandTotal.textContent = formatRupiahJs(grandTotal);
+            }
+        }
+
+        designOptionRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                designCards.forEach(card => card.classList.remove('selected'));
+                if (this.checked) {
+                    const parentCard = this.closest('.design-card-option');
+                    if (parentCard) parentCard.classList.add('selected');
+                }
+                recalculateCheckoutTotal();
+            });
+        });
+
+        designTierRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const sellerRadio = document.getElementById('designOptSeller');
+                if (sellerRadio && !sellerRadio.checked) {
+                    sellerRadio.checked = true;
+                    designCards.forEach(card => card.classList.remove('selected'));
+                    const parentCard = sellerRadio.closest('.design-card-option');
+                    if (parentCard) parentCard.classList.add('selected');
+                }
+                recalculateCheckoutTotal();
+            });
+        });
+
+        // 3. Validate File Upload max 10 MB & show file list preview
+        const designFilesInput = document.getElementById('designFilesInput');
+        const designFileAlert = document.getElementById('designFileAlert');
+        const designFilePreviewList = document.getElementById('designFilePreviewList');
+
+        if (designFilesInput) {
+            designFilesInput.addEventListener('change', function() {
+                if (designFileAlert) {
+                    designFileAlert.classList.add('d-none');
+                    designFileAlert.textContent = '';
+                }
+                if (designFilePreviewList) {
+                    designFilePreviewList.innerHTML = '';
+                    designFilePreviewList.classList.add('d-none');
+                }
+
+                const files = Array.from(this.files || []);
+                if (files.length === 0) return;
+
+                let hasOversize = false;
+                let oversizeName = '';
+                files.forEach(f => {
+                    if (f.size > maxFileBytes) {
+                        hasOversize = true;
+                        oversizeName = f.name;
+                    }
+                });
+
+                if (hasOversize) {
+                    if (designFileAlert) {
+                        designFileAlert.innerHTML = '<i class="bi bi-exclamation-octagon-fill me-1"></i> File <strong>' + oversizeName + '</strong> melebihi batas maksimal <strong>10 MB</strong>. Silakan pilih file dengan ukuran maksimal 10 MB.';
+                        designFileAlert.classList.remove('d-none');
+                    }
+                    this.value = '';
+                    return;
+                }
+
+                if (designFilePreviewList) {
+                    files.forEach(f => {
+                        const sizeMb = (f.size / (1024 * 1024)).toFixed(2);
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'd-flex align-items-center justify-content-between bg-white border rounded-2 px-2 py-1 small';
+                        itemEl.innerHTML = '<span class="text-truncate me-2"><i class="bi bi-file-earmark-check-fill text-success me-1"></i><strong>' + f.name + '</strong></span><span class="badge bg-light text-secondary border">' + sizeMb + ' MB</span>';
+                        designFilePreviewList.appendChild(itemEl);
+                    });
+                    designFilePreviewList.classList.remove('d-none');
+                }
+            });
+        }
 
         // Quick Voucher Chips click handler
         const voucherInput = document.getElementById('voucher_code');
@@ -245,6 +511,8 @@
                 }
             });
         });
+
+        recalculateCheckoutTotal();
     });
 </script>
 

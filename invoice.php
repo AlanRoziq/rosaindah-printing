@@ -655,7 +655,7 @@ $phoneForm = $phone !== '' ? $phone : '';
                         <h1>ROSA INDAH <span>PRINTING</span></h1>
                         <p>
                             Percetakan, Digital Printing & Custom Souvenir<br>
-                            Jl. Raya Rejoso No. 12, Pasuruan • WhatsApp: 0823-3103-5371
+                            Regek, Sambirejo, Rejoso • WhatsApp: 0823-3103-5371
                         </p>
                     </div>
                 </div>

@@ -16,10 +16,12 @@ const uploadDir = path.join(__dirname, 'uploads');
 const produkUploadDir = path.join(__dirname, 'uploads/produk');
 const avatarUploadDir = path.join(__dirname, 'uploads/avatars');
 const pembayaranUploadDir = path.join(__dirname, 'uploads/pembayaran');
+const orderDesignsUploadDir = path.join(__dirname, 'uploads/order-designs');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(produkUploadDir)) fs.mkdirSync(produkUploadDir, { recursive: true });
 if (!fs.existsSync(avatarUploadDir)) fs.mkdirSync(avatarUploadDir, { recursive: true });
 if (!fs.existsSync(pembayaranUploadDir)) fs.mkdirSync(pembayaranUploadDir, { recursive: true });
+if (!fs.existsSync(orderDesignsUploadDir)) fs.mkdirSync(orderDesignsUploadDir, { recursive: true });
 
 const produkStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -83,6 +85,21 @@ const uploadPayment = multer({
       cb(new Error('Format file bukti pembayaran harus berupa gambar (JPG, PNG, WEBP) atau PDF'));
     }
   }
+});
+
+const designStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, orderDesignsUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.pdf';
+    const rand = Math.random().toString(36).substring(2, 9);
+    cb(null, `desain-${Date.now()}-${rand}${ext}`);
+  }
+});
+const uploadDesign = multer({
+  storage: designStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 function parsePriceTiers(raw) {
@@ -377,58 +394,132 @@ app.get('/checkout', handleCheckoutGet);
 app.get('/checkout.php', handleCheckoutGet);
 
 const handleCheckoutPost = (req, res) => {
-  const { customer_name, customer_phone, customer_address, customer_note, voucher_code, payment_method } = req.body;
-  const { items, total } = getCartDetails(req.session.cart);
+  uploadDesign.any()(req, res, (uploadErr) => {
+    if (uploadErr) {
+      const msg = uploadErr.code === 'LIMIT_FILE_SIZE'
+        ? 'Ukuran file desain melebihi batas maksimal 10 MB per file.'
+        : (uploadErr.message || 'Gagal mengunggah file desain.');
+      return res.redirect('/checkout.php?error=' + encodeURIComponent(msg));
+    }
 
-  if (!customer_name || !customer_phone) {
-    return res.redirect('/checkout.php?error=' + encodeURIComponent('Nama dan nomor WhatsApp wajib diisi'));
-  }
+    const {
+      customer_name,
+      customer_phone,
+      customer_address,
+      customer_note,
+      voucher_code,
+      payment_method,
+      design_option,
+      design_tier,
+      design_brief
+    } = req.body;
+    const { items, total: productSubtotal } = getCartDetails(req.session.cart);
 
-  let discount = 0;
-  if (voucher_code) {
-    const v = store.getVoucherByCode(voucher_code);
-    if (v && total >= (v.min_order || 0)) {
-      if (v.discount_type === 'percent') {
-        discount = (total * v.discount_value) / 100;
-        if (v.max_discount && discount > v.max_discount) discount = v.max_discount;
-      } else {
-        discount = v.discount_value;
+    if (!customer_name || !customer_phone) {
+      return res.redirect('/checkout.php?error=' + encodeURIComponent('Nama dan nomor WhatsApp wajib diisi'));
+    }
+
+    const designTiers = {
+      easy: { code: 'easy', name: 'Easy', label: 'Easy (Desain Sederhana)', price: 5000 },
+      medium: { code: 'medium', name: 'Medium', label: 'Medium (Desain Menengah)', price: 7000 },
+      hard: { code: 'hard', name: 'Hard', label: 'Hard (Desain Kompleks / Custom)', price: 10000 }
+    };
+
+    const chosenDesignOpt = design_option === 'seller_design' ? 'seller_design' : 'upload';
+    const chosenTierKey = designTiers[design_tier] ? design_tier : 'easy';
+    const selectedTierObj = chosenDesignOpt === 'seller_design' ? designTiers[chosenTierKey] : null;
+    const designFee = selectedTierObj ? selectedTierObj.price : 0;
+
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [];
+    const attachments = chosenDesignOpt === 'upload'
+      ? uploadedFiles.map(f => ({
+          original_name: f.originalname,
+          stored_name: f.filename,
+          file_path: 'uploads/order-designs/' + f.filename,
+          mime_type: f.mimetype || 'application/octet-stream',
+          file_size: f.size || 0
+        }))
+      : [];
+
+    const total = productSubtotal + designFee;
+
+    let discount = 0;
+    if (voucher_code) {
+      const v = store.getVoucherByCode(voucher_code);
+      if (v && total >= (v.min_order || 0)) {
+        if (v.discount_type === 'percent') {
+          discount = (total * v.discount_value) / 100;
+          if (v.max_discount && discount > v.max_discount) discount = v.max_discount;
+        } else {
+          discount = v.discount_value;
+        }
       }
     }
-  }
 
-  const finalTotal = Math.max(0, total - discount);
+    const finalTotal = Math.max(0, total - discount);
 
-  const newOrder = store.createOrder({
-    customer_name,
-    customer_phone,
-    customer_address,
-    customer_note,
-    subtotal: total,
-    discount_amount: discount,
-    voucher_code: voucher_code || '',
-    total_estimate: finalTotal,
-    payment_method: payment_method || 'transfer',
-    items: items.map(it => ({
+    const orderItems = items.map(it => ({
       product_id: it.product.id,
       product_name: it.product.name,
       quantity: it.quantity,
       unit: it.product.unit,
       unit_price: it.unitPrice,
       subtotal: it.subtotal
-    }))
+    }));
+
+    if (chosenDesignOpt === 'seller_design' && selectedTierObj) {
+      orderItems.push({
+        product_id: 'jasa-desain-' + selectedTierObj.code,
+        product_name: `Jasa Buatkan Desain Oleh Seller (${selectedTierObj.name})`,
+        quantity: 1,
+        unit: 'desain',
+        unit_price: designFee,
+        subtotal: designFee,
+        spec: design_brief || selectedTierObj.label
+      });
+    }
+
+    let combinedNote = '';
+    if (chosenDesignOpt === 'seller_design' && selectedTierObj) {
+      combinedNote += `Pilihan Desain: Jasa Buatkan Desain Oleh Seller - ${selectedTierObj.name} (Rp${designFee.toLocaleString('id-ID')})`;
+      if (design_brief) combinedNote += ` | Konsep: ${design_brief}`;
+    } else if (attachments.length > 0) {
+      combinedNote += `Pilihan Desain: Kirim File Sendiri (${attachments.map(a => a.original_name).join(', ')})`;
+    } else {
+      combinedNote += 'Pilihan Desain: Kirim File Sendiri';
+    }
+    if (customer_note) {
+      combinedNote += (combinedNote ? ' | Catatan: ' : '') + customer_note;
+    }
+
+    const newOrder = store.createOrder({
+      customer_name,
+      customer_phone,
+      customer_address,
+      customer_note: combinedNote,
+      design_option: chosenDesignOpt,
+      design_tier: selectedTierObj ? selectedTierObj.name : null,
+      design_fee: designFee,
+      attachments,
+      subtotal: total,
+      discount_amount: discount,
+      voucher_code: voucher_code || '',
+      total_estimate: finalTotal,
+      payment_method: payment_method || 'transfer',
+      items: orderItems
+    });
+
+    // Clear cart
+    req.session.cart = [];
+
+    const chosenMethod = payment_method || 'transfer';
+    if (chosenMethod === 'transfer' || chosenMethod === 'qris') {
+      return res.redirect(`/pembayaran.php?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
+    }
+
+    // Redirect to track page for cash / workshop payment
+    res.redirect(`/lacak-pesanan.php?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
   });
-
-  // Clear cart
-  req.session.cart = [];
-
-  const chosenMethod = payment_method || 'transfer';
-  if (chosenMethod === 'transfer' || chosenMethod === 'qris') {
-    return res.redirect(`/pembayaran.php?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
-  }
-
-  // Redirect to track page for cash / workshop payment
-  res.redirect(`/lacak-pesanan.php?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
 };
 app.post('/checkout', handleCheckoutPost);
 app.post('/checkout.php', handleCheckoutPost);

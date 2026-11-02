@@ -621,7 +621,7 @@ include __DIR__ . '/includes/header.php';
                             <div class="p-3 rounded-3 bg-light border">
                                 <h2 class="h6 fw-bold mb-2"><i class="bi bi-shop text-primary me-2"></i>Pembayaran Tunai di Workshop</h2>
                                 <p class="small text-secondary mb-2">
-                                    Anda dapat melakukan pembayaran tunai langsung kepada kasir di Workshop <strong>Rosa Indah Printing</strong> (Jl. Raya Rejoso, Pasuruan).
+                                    Anda dapat melakukan pembayaran tunai langsung kepada kasir di Workshop <strong>Rosa Indah Printing</strong> (Regek, Sambirejo, Rejoso).
                                 </p>
                                 <p class="small text-muted mb-0">
                                     Apabila Anda berubah pikiran dan ingin membayar sekarang melalui Transfer Bank Mandiri atau QRIS, silakan pilih tab metode di atas lalu unggah bukti pembayarannya.
