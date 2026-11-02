@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/config.php';
+$waNumber = defined('WHATSAPP_NUMBER') ? WHATSAPP_NUMBER : '6282331035371';
 $pageTitle = 'Tentang Kami';
 include __DIR__ . '/includes/header.php';
 ?>
@@ -9,80 +10,297 @@ include __DIR__ . '/includes/header.php';
     <?php include __DIR__ . '/includes/navbar.php'; ?>
 </header>
 
-<main class="py-5">
+<main class="rip-about-page">
     <div class="container">
         <!-- Breadcrumb -->
-        <div class="catalog-breadcrumb mb-4">
+        <div class="catalog-breadcrumb mb-3">
             <a href="<?php echo page_url('index.php'); ?>">Home</a>
             <i class="bi bi-chevron-right"></i>
             <span>Tentang Kami</span>
         </div>
 
-        <div class="card p-4 p-md-5 rounded-4 shadow-sm border-0 mb-5">
-            <div class="row g-5 align-items-center">
-                <div class="col-lg-6">
-                    <span class="badge bg-primary px-3 py-2 mb-2">Profil Perusahaan</span>
-                    <h1 class="display-6 fw-bold mb-3">Tentang <span class="text-primary">Rosa Indah Printing</span></h1>
-                    <p class="text-muted leading-relaxed">
-                        Rosa Indah Printing adalah unit usaha percetakan digital dan offset profesional yang berlokasi di Regek, Sambirejo, Rejoso. Kami hadir untuk membantu para pelaku usaha, institusi pendidikan, organisasi, hingga perorangan dalam mewujudkan media promosi dan kebutuhan cetak berkualitas tinggi.
+        <!-- Hero Card Profil Perusahaan -->
+        <section class="rip-about-hero-card">
+            <div class="rip-about-hero-grid">
+                <div class="rip-about-copy">
+                    <span class="rip-about-kicker">Profil Perusahaan</span>
+                    <h1>Tentang <span>Rosa Indah Printing</span></h1>
+                    <p>
+                        Rosa Indah Printing adalah unit usaha percetakan digital, offset, dan custom merchandise profesional yang berlokasi di Regek, Sambirejo, Rejoso, Pasuruan. Kami hadir untuk membantu pelaku UMKM, perusahaan, instansi pendidikan, organisasi, hingga perorangan dalam mewujudkan media promosi dan cetakan berkualitas tinggi.
                     </p>
-                    <p class="text-muted leading-relaxed">
-                        Dengan moto <strong>"Cetak Ide Jadi Kenyataan"</strong>, kami berkomitmen menghadirkan ketepatan warna, ketajaman detail, bahan cetak pilihan, serta pelayanan yang bersahabat dan tepat waktu.
+                    <p>
+                        Dengan moto <strong>"Cetak Ide Jadi Kenyataan"</strong>, kami berkomitmen menghadirkan ketepatan warna, ketajaman detail, bahan cetak pilihan, serta pelayanan yang ramah dan tepat waktu.
                     </p>
 
-                    <div class="row g-3 mt-4">
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3">
-                                <h3 class="fw-bold text-primary mb-0">10+</h3>
-                                <small class="text-muted">Tahun Berpengalaman</small>
-                            </div>
+                    <div class="rip-about-stats">
+                        <div class="rip-about-stat-box">
+                            <strong>10+</strong>
+                            <span>Tahun Berpengalaman</span>
                         </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3">
-                                <h3 class="fw-bold text-primary mb-0">25.000+</h3>
-                                <small class="text-muted">Produk Dicetak</small>
-                            </div>
+                        <div class="rip-about-stat-box">
+                            <strong>25.000+</strong>
+                            <span>Produk Telah Dicetak</span>
+                        </div>
+                        <div class="rip-about-stat-box">
+                            <strong>240+</strong>
+                            <span>Varian Katalog Cetak</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-6 text-center">
-                    <img src="<?php echo asset_url('images/hero/mockup-printing.png'); ?>" alt="Workshop Rosa Indah Printing" class="img-fluid rounded-4 shadow-sm" style="max-height: 400px;">
+                <div class="rip-about-visual">
+                    <div class="rip-about-img-wrap">
+                        <img src="<?php echo asset_url('images/hero/mockup-printing.png'); ?>" alt="Workshop Rosa Indah Printing" loading="lazy">
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Workshop Info -->
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
-                    <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
-                        <i class="bi bi-geo-alt-fill"></i>
-                    </div>
-                    <h5 class="fw-bold">Lokasi Workshop</h5>
-                    <p class="text-muted small">Regek, Sambirejo, Rejoso, Pasuruan, Jawa Timur.</p>
+        <!-- Keunggulan Layanan & Info Workshop -->
+        <section class="rip-about-info-grid">
+            <article class="rip-about-info-card">
+                <div class="rip-about-info-icon">
+                    <i class="bi bi-geo-alt-fill"></i>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
-                    <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
-                        <i class="bi bi-clock-fill"></i>
-                    </div>
-                    <h5 class="fw-bold">Jam Operasional</h5>
-                    <p class="text-muted small">Senin - Sabtu: 08:00 - 21:00 WIB<br>Minggu: Konsultasi Online via WA</p>
+                <div>
+                    <h3>Lokasi Workshop</h3>
+                    <p>Regek, Sambirejo, Kec. Rejoso, Kabupaten Pasuruan, Jawa Timur. Mudah diakses untuk pengambilan langsung maupun pengiriman kurir.</p>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-4 rounded-4 shadow-sm border-0 h-100 text-center">
-                    <div class="rounded-circle bg-light text-primary mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; font-size: 24px;">
-                        <i class="bi bi-headset"></i>
-                    </div>
-                    <h5 class="fw-bold">Layanan Pelanggan</h5>
-                    <p class="text-muted small">WhatsApp: 0823-3103-5371<br>Email: rosaindahprinting@gmail.com</p>
+            </article>
+
+            <article class="rip-about-info-card">
+                <div class="rip-about-info-icon">
+                    <i class="bi bi-clock-fill"></i>
                 </div>
-            </div>
-        </div>
+                <div>
+                    <h3>Jam Operasional</h3>
+                    <p>Senin – Sabtu: 08.00 – 21.00 WIB<br>Minggu & Hari Libur: Konsultasi & Pemesanan Online via WhatsApp.</p>
+                </div>
+            </article>
+
+            <article class="rip-about-info-card">
+                <div class="rip-about-info-icon">
+                    <i class="bi bi-headset"></i>
+                </div>
+                <div>
+                    <h3>Layanan Pelanggan</h3>
+                    <p>WhatsApp: <strong>0823-3103-5371</strong><br>Email: rosaindahprinting@gmail.com</p>
+                </div>
+            </article>
+        </section>
     </div>
 </main>
+
+<style>
+.rip-about-page {
+    padding: 28px 0 70px;
+}
+.rip-about-hero-card {
+    background: #ffffff;
+    border: 1px solid #f2dce7;
+    border-radius: 22px;
+    padding: 36px 34px;
+    box-shadow: 0 10px 30px rgba(214, 74, 138, 0.06);
+    margin-bottom: 24px;
+}
+.rip-about-hero-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 32px;
+    align-items: center;
+}
+.rip-about-kicker {
+    display: inline-block;
+    background: #fff0f6;
+    color: #e11d64;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 999px;
+    border: 1px solid #f5c6da;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+.rip-about-copy h1 {
+    font-size: clamp(24px, 3.2vw, 36px);
+    font-weight: 800;
+    color: #18243a;
+    line-height: 1.2;
+    margin: 0 0 14px;
+}
+.rip-about-copy h1 span {
+    color: #e11d64;
+}
+.rip-about-copy p {
+    font-size: 14px;
+    color: #5c545f;
+    line-height: 1.7;
+    margin: 0 0 12px;
+}
+.rip-about-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 22px;
+}
+.rip-about-stat-box {
+    background: #fff8fb;
+    border: 1px solid #f3dce7;
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+}
+.rip-about-stat-box strong {
+    display: block;
+    font-size: 22px;
+    font-weight: 800;
+    color: #e11d64;
+    line-height: 1.15;
+}
+.rip-about-stat-box span {
+    display: block;
+    font-size: 11.5px;
+    color: #6f6670;
+    margin-top: 3px;
+    font-weight: 500;
+}
+.rip-about-img-wrap {
+    background: linear-gradient(145deg, #fff5f9 0%, #ffe8f2 100%);
+    border: 1px solid #f3d5e3;
+    border-radius: 18px;
+    padding: 16px;
+    text-align: center;
+}
+.rip-about-img-wrap img {
+    width: 100%;
+    max-height: 340px;
+    object-fit: contain;
+    border-radius: 12px;
+}
+.rip-about-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+.rip-about-info-card {
+    background: #ffffff;
+    border: 1px solid #f2dce7;
+    border-radius: 18px;
+    padding: 22px 20px;
+    box-shadow: 0 8px 24px rgba(214, 74, 138, 0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+}
+.rip-about-info-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: #fff0f6;
+    color: #e11d64;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex: 0 0 52px;
+}
+.rip-about-info-card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #18243a;
+    margin: 0 0 6px;
+}
+.rip-about-info-card p {
+    font-size: 13px;
+    color: #665e68;
+    line-height: 1.6;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 991.98px) {
+    .rip-about-hero-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .rip-about-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .rip-about-page {
+        padding: 14px 0 88px;
+    }
+    .rip-about-hero-card {
+        padding: 18px 15px;
+        border-radius: 16px;
+        margin-bottom: 14px;
+    }
+    .rip-about-kicker {
+        font-size: 9.5px;
+        padding: 4px 10px;
+        margin-bottom: 8px;
+    }
+    .rip-about-copy h1 {
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+    .rip-about-copy p {
+        font-size: 12px;
+        line-height: 1.55;
+        margin-bottom: 9px;
+    }
+    .rip-about-stats {
+        gap: 8px;
+        margin-top: 14px;
+    }
+    .rip-about-stat-box {
+        padding: 10px 6px;
+        border-radius: 11px;
+    }
+    .rip-about-stat-box strong {
+        font-size: 16px;
+    }
+    .rip-about-stat-box span {
+        font-size: 9.5px;
+        line-height: 1.2;
+    }
+    .rip-about-img-wrap {
+        padding: 10px;
+        border-radius: 14px;
+    }
+    .rip-about-img-wrap img {
+        max-height: 220px;
+    }
+    .rip-about-info-card {
+        flex-direction: row;
+        align-items: flex-start;
+        text-align: left;
+        padding: 14px 13px;
+        border-radius: 14px;
+        gap: 12px;
+    }
+    .rip-about-info-icon {
+        width: 40px;
+        height: 40px;
+        flex-basis: 40px;
+        border-radius: 11px;
+        font-size: 18px;
+    }
+    .rip-about-info-card h3 {
+        font-size: 13.5px;
+        margin-bottom: 3px;
+    }
+    .rip-about-info-card p {
+        font-size: 11.5px;
+        line-height: 1.45;
+    }
+}
+</style>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
