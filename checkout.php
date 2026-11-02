@@ -242,7 +242,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 cart_clear();
             }
 
-            header('Location: ' . page_url('lacak-pesanan.php?code=' . urlencode($orderCode) . '&phone=' . urlencode($phone) . '&new=1'));
+            if (in_array($paymentMethod, ['transfer', 'qris'], true)) {
+                header('Location: ' . page_url('pembayaran.php?code=' . urlencode($orderCode) . '&phone=' . urlencode($phone) . '&new=1'));
+            } else {
+                header('Location: ' . page_url('lacak-pesanan.php?code=' . urlencode($orderCode) . '&phone=' . urlencode($phone) . '&new=1'));
+            }
             exit;
         }
     }
@@ -577,6 +581,37 @@ include __DIR__ . '/includes/header.php';
                     </div>
 
                     <!-- Metode Pembayaran Card -->
+                    <?php
+                    // Daftar Rekening Bank Resmi Rosa Indah Printing
+                    // Catatan: Untuk menampilkan Bank BRI atau BCA ke depannya, cukup ubah 'active' => true dan isi 'account_number'.
+                    $bankAccounts = [
+                        [
+                            'bank_code'      => 'MANDIRI',
+                            'bank_name'      => 'Bank Mandiri',
+                            'account_number' => '1440020363831',
+                            'account_holder' => 'Muhammad Alan Roziqi',
+                            'active'         => true,
+                        ],
+                        [
+                            'bank_code'      => 'BRI',
+                            'bank_name'      => 'Bank BRI',
+                            'account_number' => '', // Isi nomor rekening BRI saat sudah tersedia
+                            'account_holder' => 'Muhammad Alan Roziqi',
+                            'active'         => false,
+                        ],
+                        [
+                            'bank_code'      => 'BCA',
+                            'bank_name'      => 'Bank BCA',
+                            'account_number' => '', // Isi nomor rekening BCA saat sudah tersedia
+                            'account_holder' => 'Muhammad Alan Roziqi',
+                            'active'         => false,
+                        ],
+                    ];
+                    $activeBanks = array_values(array_filter($bankAccounts, function ($b) {
+                        return !empty($b['active']) && !empty($b['account_number']);
+                    }));
+                    $selectedPayment = $_POST['payment_method'] ?? 'transfer';
+                    ?>
                     <div class="checkout-card bg-white p-3 p-md-4 rounded-4 shadow-sm">
                         <div class="checkout-card-header d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
                             <span class="checkout-icon-badge">
@@ -586,41 +621,57 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
                         <div class="payment-options-grid d-flex flex-column gap-2">
-                            <label class="payment-card-option selected" for="payTransfer">
+                            <label class="payment-card-option <?php echo $selectedPayment === 'transfer' ? 'selected' : ''; ?>" for="payTransfer">
                                 <div class="d-flex align-items-start gap-3">
-                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payTransfer" value="transfer" checked>
+                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payTransfer" value="transfer" <?php echo $selectedPayment === 'transfer' ? 'checked' : ''; ?>>
                                     <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="payment-title fw-bold">Transfer Bank (BCA / BRI / Mandiri)</span>
-                                            <span class="badge bg-light text-dark border payment-chip">Manual Transfer</span>
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                            <span class="payment-title fw-bold">Transfer Bank (<?php echo implode(' / ', array_column($activeBanks, 'bank_name')); ?>)</span>
+                                            <span class="badge bg-primary-subtle text-primary border payment-chip">Transfer Bank</span>
                                         </div>
-                                        <p class="payment-desc text-muted mb-0 mt-1">Nomor rekening tujuan transfer ditampilkan di halaman tracking setelah order dibuat.</p>
+                                        <p class="payment-desc text-muted mb-2 mt-1">Lakukan transfer ke rekening resmi kami dan unggah bukti transfer di halaman pembayaran setelah klik Buat Pesanan.</p>
+                                        <div class="p-2 px-3 rounded-3 bg-white border d-flex flex-column gap-1 mt-1">
+                                            <?php foreach ($activeBanks as $bank): ?>
+                                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 small">
+                                                    <div>
+                                                        <span class="badge bg-warning text-dark fw-bold me-1"><?php echo htmlspecialchars($bank['bank_code']); ?></span>
+                                                        <strong class="text-dark"><?php echo htmlspecialchars($bank['bank_name']); ?></strong>:
+                                                        <code class="fw-bold text-primary fs-6 ms-1"><?php echo htmlspecialchars($bank['account_number']); ?></code>
+                                                    </div>
+                                                    <span class="text-secondary fw-semibold">a/n <?php echo htmlspecialchars($bank['account_holder']); ?></span>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </label>
 
-                            <label class="payment-card-option" for="payQris">
+                            <label class="payment-card-option <?php echo $selectedPayment === 'qris' ? 'selected' : ''; ?>" for="payQris">
                                 <div class="d-flex align-items-start gap-3">
-                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payQris" value="qris">
+                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payQris" value="qris" <?php echo $selectedPayment === 'qris' ? 'checked' : ''; ?>>
                                     <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="payment-title fw-bold">QRIS (Semua E-Wallet & M-Banking)</span>
-                                            <span class="badge bg-light text-success border payment-chip">Instan QR</span>
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                                            <span class="payment-title fw-bold">QRIS Resmi Rosa Indah Printing (Semua E-Wallet & M-Banking)</span>
+                                            <span class="badge bg-success-subtle text-success border payment-chip">Instan QRIS</span>
                                         </div>
-                                        <p class="payment-desc text-muted mb-0 mt-1">Scan instan barcode via GoPay, OVO, DANA, ShopeePay, LinkAja, atau Mobile Banking.</p>
+                                        <p class="payment-desc text-muted mb-2 mt-1">Scan barcode QRIS resmi (GoPay, DANA, OVO, ShopeePay, LinkAja, atau Mobile Banking) dan upload bukti bayar di langkah berikutnya.</p>
+                                        <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between flex-wrap gap-2 small">
+                                            <span><i class="bi bi-qr-code-scan text-danger me-1"></i> <strong>ROSA INDAH PRINTING</strong></span>
+                                            <span class="text-muted">NMID: <code>ID1026627457595</code></span>
+                                        </div>
                                     </div>
                                 </div>
                             </label>
 
-                            <label class="payment-card-option" for="payCash">
+                            <label class="payment-card-option <?php echo $selectedPayment === 'cash' ? 'selected' : ''; ?>" for="payCash">
                                 <div class="d-flex align-items-start gap-3">
-                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payCash" value="cash">
+                                    <input class="form-check-input payment-radio mt-1" type="radio" name="payment_method" id="payCash" value="cash" <?php echo $selectedPayment === 'cash' ? 'checked' : ''; ?>>
                                     <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
                                             <span class="payment-title fw-bold">Bayar di Workshop (Cash / Tunai)</span>
                                             <span class="badge bg-light text-secondary border payment-chip">Ambil Sendiri</span>
                                         </div>
-                                        <p class="payment-desc text-muted mb-0 mt-1">Bayar langsung secara tunai saat mengambil hasil cetak di workshop Rosa Indah Printing.</p>
+                                        <p class="payment-desc text-muted mb-0 mt-1">Bayar langsung secara tunai kepada kasir saat mengambil hasil cetak di workshop Rosa Indah Printing.</p>
                                     </div>
                                 </div>
                             </label>

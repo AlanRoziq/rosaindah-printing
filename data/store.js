@@ -615,10 +615,11 @@ module.exports = {
       voucher_code: data.voucher_code || '',
       total_estimate: Number(data.total_estimate) || 0,
       status: data.status || 'pending',
-      payment_status: data.payment_status || 'waiting',
+      payment_status: data.payment_status || 'unpaid',
       payment_method: data.payment_method || 'transfer',
       paid_amount: Number(data.paid_amount) || 0,
       payment_proof: data.payment_proof || null,
+      payment_note: data.payment_note || '',
       created_at: data.created_at || now.toISOString().replace('T', ' ').slice(0, 19),
       items: data.items || [],
       history: [
@@ -652,15 +653,19 @@ module.exports = {
     }
     return order;
   },
-  uploadPaymentProof: (orderCode, filename) => {
-    const order = orders.find(o => o.order_code === orderCode);
-    if (order) {
+  uploadPaymentProof: (orderCode, filename, note, method) => {
+    const order = orders.find(o => o.order_code.toUpperCase() === String(orderCode || '').trim().toUpperCase());
+    if (order && order.payment_status !== 'paid') {
       order.payment_proof = filename;
       order.payment_status = 'waiting';
+      if (note) order.payment_note = note;
+      if (method && ['transfer', 'qris', 'cash'].includes(method)) {
+        order.payment_method = method;
+      }
       const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
       order.history.push({
         status: order.status,
-        note: 'Bukti pembayaran diunggah oleh pelanggan. Menunggu verifikasi admin.',
+        note: 'Bukti pembayaran diunggah oleh pelanggan' + (note ? ` (${note})` : '') + '. Menunggu verifikasi admin.',
         created_at: now
       });
       return true;

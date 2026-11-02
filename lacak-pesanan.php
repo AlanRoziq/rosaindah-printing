@@ -70,6 +70,18 @@ if ($code !== '') {
                         ];
                     }
 
+                    $latestProofPath = (string)($dbOrder['payment_proof'] ?? '');
+                    $latestProofNote = (string)($dbOrder['payment_note'] ?? '');
+                    try {
+                        $stmtPay = $pdo->prepare('SELECT proof_path, note FROM order_payments WHERE order_id = ? ORDER BY id DESC LIMIT 1');
+                        $stmtPay->execute([(int)$dbOrder['id']]);
+                        $payRow = $stmtPay->fetch(PDO::FETCH_ASSOC);
+                        if ($payRow) {
+                            if (!empty($payRow['proof_path'])) $latestProofPath = (string)$payRow['proof_path'];
+                            if (!empty($payRow['note'])) $latestProofNote = (string)$payRow['note'];
+                        }
+                    } catch (Throwable $e) {}
+
                     $order = [
                         'order_code' => (string)$dbOrder['order_code'],
                         'customer_name' => (string)($dbOrder['customer_name'] ?? 'Pelanggan'),
@@ -77,6 +89,8 @@ if ($code !== '') {
                         'status' => strtolower((string)($dbOrder['status'] ?? 'pending')),
                         'payment_status' => strtolower((string)($dbOrder['payment_status'] ?? 'unpaid')),
                         'payment_method' => strtolower((string)($dbOrder['payment_method'] ?? 'transfer')),
+                        'payment_proof' => $latestProofPath !== '' ? $latestProofPath : null,
+                        'payment_note' => $latestProofNote,
                         'discount_amount' => (float)($dbOrder['discount_amount'] ?? 0),
                         'voucher_code' => (string)($dbOrder['voucher_code'] ?? ''),
                         'total_estimate' => (float)($dbOrder['total_estimate'] ?? 0),
@@ -122,6 +136,8 @@ if ($code !== '') {
                     'status'          => strtolower((string)($sessOrd['status'] ?? 'pending')),
                     'payment_status'  => strtolower((string)($sessOrd['payment_status'] ?? 'unpaid')),
                     'payment_method'  => strtolower((string)($sessOrd['payment_method'] ?? 'transfer')),
+                    'payment_proof'   => $sessOrd['payment_proof'] ?? null,
+                    'payment_note'    => (string)($sessOrd['payment_note'] ?? ''),
                     'discount_amount' => (float)($sessOrd['discount_amount'] ?? 0),
                     'voucher_code'    => (string)($sessOrd['voucher_code'] ?? ''),
                     'total_estimate'  => (float)($sessOrd['total_estimate'] ?? 0),
@@ -971,35 +987,54 @@ include __DIR__ . '/includes/header.php';
                             </h3>
 
                             <div class="tracking-bank-card p-3 rounded-3 bg-light border mb-3">
-                                <small class="text-muted d-block mb-1">Metode: <b class="text-uppercase text-dark"><?php echo htmlspecialchars($order['payment_method']); ?></b></small>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Metode: <b class="text-uppercase text-dark"><?php echo htmlspecialchars($order['payment_method'] === 'transfer' ? 'Transfer Bank Mandiri' : ($order['payment_method'] === 'qris' ? 'QRIS Resmi' : 'Tunai di Workshop')); ?></b></small>
+                                    <?php if ($order['payment_status'] !== 'paid'): ?>
+                                        <a href="<?php echo page_url('pembayaran.php?code=' . urlencode($order['order_code']) . '&phone=' . urlencode($order['customer_phone'])); ?>" class="small fw-semibold text-primary text-decoration-none">
+                                            Ubah / Detail <i class="bi bi-arrow-right-short"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
 
                                 <?php if ($order['payment_method'] === 'transfer'): ?>
                                     <div class="bank-details mt-2 pt-2 border-top">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <span class="small fw-bold text-dark">Bank BCA Pasuruan</span>
-                                            <span class="badge bg-primary-subtle text-primary border">BCA</span>
+                                            <span class="small fw-bold text-dark">Bank Mandiri</span>
+                                            <span class="badge bg-warning text-dark border fw-bold">MANDIRI</span>
                                         </div>
-                                        <div class="d-flex align-items-center justify-content-between mt-1">
-                                            <code class="bank-acc-no fs-6 fw-bold user-select-all">1234-5678-90</code>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary btn-copy-bank py-0 px-2" data-acc="1234567890">
+                                        <div class="d-flex align-items-center justify-content-between mt-1 bg-white p-2 rounded-2 border">
+                                            <code class="bank-acc-no fs-6 fw-bold text-dark user-select-all">1440020363831</code>
+                                            <button type="button" class="btn btn-sm btn-outline-primary btn-copy-bank py-0 px-2" data-acc="1440020363831">
                                                 <i class="bi bi-clipboard"></i> Salin
                                             </button>
                                         </div>
-                                        <small class="text-muted d-block mt-1">a.n. Rosa Indah Printing</small>
+                                        <small class="text-secondary fw-semibold d-block mt-1">a/n Muhammad Alan Roziqi</small>
                                     </div>
                                 <?php elseif ($order['payment_method'] === 'qris'): ?>
                                     <div class="qris-details mt-2 pt-2 border-top text-center">
-                                        <small class="text-muted d-block mb-1">Scan QRIS saat konfirmasi via WhatsApp</small>
-                                        <span class="badge bg-success-subtle text-success border">QRIS Siap Dipindai</span>
+                                        <strong class="small text-dark d-block">ROSA INDAH PRINTING</strong>
+                                        <small class="text-muted d-block mb-2">NMID: ID1026627457595</small>
+                                        <img src="<?php echo asset_url('images/qris-rosa-indah.png'); ?>"
+                                             alt="QRIS Rosa Indah Printing"
+                                             class="img-fluid rounded-3 border bg-white p-1 mb-2"
+                                             style="max-width: 210px;">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a href="<?php echo asset_url('images/qris-rosa-indah.png'); ?>" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2">
+                                                <i class="bi bi-arrows-fullscreen"></i> Perbesar
+                                            </a>
+                                            <a href="<?php echo asset_url('images/qris-rosa-indah.png'); ?>" download="QRIS-Rosa-Indah-Printing.png" class="btn btn-sm btn-outline-success py-1 px-2">
+                                                <i class="bi bi-download"></i> Unduh QRIS
+                                            </a>
+                                        </div>
                                     </div>
                                 <?php else: ?>
                                     <div class="cash-details mt-2 pt-2 border-top">
-                                        <small class="text-muted d-block">Bayar langsung saat pengambilan pesanan di workshop.</small>
+                                        <small class="text-muted d-block">Bayar langsung secara tunai kepada kasir saat pengambilan pesanan di workshop Rosa Indah Printing.</small>
                                     </div>
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Upload Proof Form -->
+                            <!-- Upload Proof Form (Tampil selama Admin belum konfirmasi Lunas) -->
                             <div class="tracking-upload-box p-3 rounded-3 border bg-light mb-3">
                                 <h4 class="h6 fw-bold mb-2">Konfirmasi Bukti Pembayaran</h4>
                                 <?php if ($order['payment_status'] === 'paid'): ?>
@@ -1007,22 +1042,45 @@ include __DIR__ . '/includes/header.php';
                                         <i class="bi bi-check-circle-fill me-1"></i> Pembayaran telah diverifikasi lunas oleh kasir/admin.
                                     </div>
                                 <?php else: ?>
-                                    <p class="small text-muted mb-2">Upload bukti transfer atau struk resi agar pesanan segera masuk tahap pengerjaan.</p>
+                                    <?php if (!empty($order['payment_proof'])): ?>
+                                        <div class="alert alert-warning py-2 px-3 mb-2 small rounded-3">
+                                            <div class="fw-bold text-dark mb-1">
+                                                <i class="bi bi-hourglass-split me-1"></i> Menunggu Konfirmasi Admin
+                                            </div>
+                                            <div class="text-secondary mb-2">Bukti pembayaran Anda sudah diterima dan sedang diperiksa oleh Admin.</div>
+                                            <a href="<?php echo page_url($order['payment_proof']); ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-dark w-100 py-1">
+                                                <i class="bi bi-eye me-1"></i> Lihat Bukti Bayar Terunggah
+                                            </a>
+                                        </div>
+                                        <p class="small text-muted mb-2">Ingin mengganti foto bukti pembayaran sebelum dikonfirmasi Admin? Unggah ulang di bawah ini:</p>
+                                    <?php else: ?>
+                                        <p class="small text-muted mb-2">Upload foto struk transfer Mandiri atau screenshot pembayaran QRIS agar pesanan segera dikonfirmasi Admin.</p>
+                                    <?php endif; ?>
                                     <form action="<?php echo page_url('pembayaran.php'); ?>" method="POST" enctype="multipart/form-data">
                                         <input type="hidden" name="order_code" value="<?php echo htmlspecialchars($order['order_code']); ?>">
                                         <input type="hidden" name="customer_phone" value="<?php echo htmlspecialchars($order['customer_phone']); ?>">
+                                        <input type="hidden" name="payment_method" value="<?php echo htmlspecialchars($order['payment_method']); ?>">
                                         <div class="mb-2">
-                                            <input type="file" class="form-control form-control-sm" name="proof" required>
+                                            <input type="file" class="form-control form-control-sm" name="proof" accept=".jpg,.jpeg,.png,.webp,.pdf" required>
                                         </div>
-                                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">
-                                            <i class="bi bi-upload me-1"></i> Kirim Bukti Bayar
+                                        <div class="mb-2">
+                                            <input type="text" class="form-control form-control-sm" name="payment_note" placeholder="Catatan pengirim (opsional)" value="<?php echo htmlspecialchars($order['payment_note'] ?? ''); ?>">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold">
+                                            <i class="bi bi-upload me-1"></i> <?php echo !empty($order['payment_proof']) ? 'Perbarui Bukti Pembayaran' : 'Kirim Bukti Pembayaran'; ?>
                                         </button>
                                     </form>
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Action Buttons: WA & Invoice -->
+                            <!-- Action Buttons: Halaman Pembayaran, WA & Invoice -->
                             <div class="tracking-action-buttons d-flex flex-column gap-2">
+                                <?php if ($order['payment_status'] !== 'paid'): ?>
+                                    <a href="<?php echo page_url('pembayaran.php?code=' . urlencode($order['order_code']) . '&phone=' . urlencode($order['customer_phone'])); ?>"
+                                       class="btn btn-outline-primary btn-sm w-100 py-2 fw-semibold">
+                                        <i class="bi bi-wallet2 me-1"></i> Buka Halaman Instruksi Pembayaran
+                                    </a>
+                                <?php endif; ?>
                                 <a href="https://wa.me/<?php echo htmlspecialchars($waNumber); ?>?text=Halo%20Rosa%20Indah%20Printing,%20konfirmasi%20pesanan%20<?php echo urlencode($order['order_code']); ?>"
                                    target="_blank" rel="noopener" class="btn btn-success btn-sm w-100 py-2 fw-semibold">
                                     <i class="bi bi-whatsapp me-1"></i> Konfirmasi via WhatsApp

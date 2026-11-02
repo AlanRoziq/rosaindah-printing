@@ -15,9 +15,11 @@ const WHATSAPP_NUMBER = process.env.WHATSAPP_NUMBER || '6282331035371';
 const uploadDir = path.join(__dirname, 'uploads');
 const produkUploadDir = path.join(__dirname, 'uploads/produk');
 const avatarUploadDir = path.join(__dirname, 'uploads/avatars');
+const pembayaranUploadDir = path.join(__dirname, 'uploads/pembayaran');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(produkUploadDir)) fs.mkdirSync(produkUploadDir, { recursive: true });
 if (!fs.existsSync(avatarUploadDir)) fs.mkdirSync(avatarUploadDir, { recursive: true });
+if (!fs.existsSync(pembayaranUploadDir)) fs.mkdirSync(pembayaranUploadDir, { recursive: true });
 
 const produkStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -55,6 +57,30 @@ const uploadAvatar = multer({
       cb(null, true);
     } else {
       cb(new Error('Format file harus berupa gambar (JPG, PNG, WEBP)'));
+    }
+  }
+});
+
+const pembayaranStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, pembayaranUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const rawCode = String(req.body.order_code || 'order').toLowerCase().replace(/[^a-z0-9\-]+/g, '');
+    const rand = Math.random().toString(36).substring(2, 8);
+    cb(null, `bukti-${rawCode || 'order'}-${Date.now()}-${rand}${ext}`);
+  }
+});
+const uploadPayment = multer({
+  storage: pembayaranStorage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (['.jpg', '.jpeg', '.png', '.webp', '.pdf'].includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Format file bukti pembayaran harus berupa gambar (JPG, PNG, WEBP) atau PDF'));
     }
   }
 });
@@ -396,11 +422,34 @@ const handleCheckoutPost = (req, res) => {
   // Clear cart
   req.session.cart = [];
 
-  // Redirect to track page
+  const chosenMethod = payment_method || 'transfer';
+  if (chosenMethod === 'transfer' || chosenMethod === 'qris') {
+    return res.redirect(`/pembayaran.php?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
+  }
+
+  // Redirect to track page for cash / workshop payment
   res.redirect(`/lacak-pesanan.php?code=${encodeURIComponent(newOrder.order_code)}&phone=${encodeURIComponent(customer_phone)}&new=1`);
 };
 app.post('/checkout', handleCheckoutPost);
 app.post('/checkout.php', handleCheckoutPost);
+
+// Dedicated Payment Page (GET)
+const handlePembayaranGet = (req, res) => {
+  const code = (req.query.code || '').trim().toUpperCase();
+  const phone = (req.query.phone || '').trim();
+  const order = code ? store.getOrderByCode(code) : null;
+
+  res.render('pembayaran', {
+    code,
+    phone,
+    order,
+    error: req.query.error || '',
+    isNew: !!req.query.new,
+    uploaded: !!req.query.uploaded
+  });
+};
+app.get('/pembayaran', handlePembayaranGet);
+app.get('/pembayaran.php', handlePembayaranGet);
 
 // Order Tracking
 const handleLacakPesanan = (req, res) => {
@@ -424,7 +473,8 @@ const handleLacakPesanan = (req, res) => {
     phone,
     order,
     error,
-    isNew: !!req.query.new
+    isNew: !!req.query.new,
+    uploaded: !!req.query.uploaded
   });
 };
 app.get('/lacak-pesanan', handleLacakPesanan);
@@ -432,14 +482,24 @@ app.get('/lacak-pesanan.php', handleLacakPesanan);
 app.get('/lacak', handleLacakPesanan);
 app.get('/lacak.php', handleLacakPesanan);
 
-// Payment proof submission
+// Payment proof submission (POST)
 const handlePembayaranPost = (req, res) => {
-  const orderCode = req.body.order_code;
-  const phone = req.body.customer_phone || '';
-  if (orderCode) {
-    store.uploadPaymentProof(orderCode, 'bukti-bayar-upload.jpg');
-  }
-  res.redirect(`/lacak-pesanan.php?code=${encodeURIComponent(orderCode)}&phone=${encodeURIComponent(phone)}&uploaded=1`);
+  uploadPayment.single('proof')(req, res, function(err) {
+    const orderCode = (req.body.order_code || '').trim().toUpperCase();
+    const phone = (req.body.customer_phone || '').trim();
+    const note = (req.body.payment_note || '').trim();
+    const method = (req.body.payment_method || '').trim().toLowerCase();
+
+    if (err) {
+      return res.redirect(`/pembayaran.php?code=${encodeURIComponent(orderCode)}&phone=${encodeURIComponent(phone)}&error=${encodeURIComponent(err.message || 'Gagal mengunggah bukti pembayaran.')}`);
+    }
+
+    const storedPath = req.file ? ('uploads/pembayaran/' + req.file.filename) : 'uploads/pembayaran/bukti-bayar.jpg';
+    if (orderCode) {
+      store.uploadPaymentProof(orderCode, storedPath, note, method);
+    }
+    res.redirect(`/lacak-pesanan.php?code=${encodeURIComponent(orderCode)}&phone=${encodeURIComponent(phone)}&uploaded=1`);
+  });
 };
 app.post('/pembayaran', handlePembayaranPost);
 app.post('/pembayaran.php', handlePembayaranPost);
