@@ -316,46 +316,142 @@ if ($customerPdo) {
 .notif-dropdown-wrap {
   position: relative;
   display: inline-flex;
+  align-items: center;
+}
+.custom-navbar .notification-nav-btn,
+.custom-navbar .right-menu .notification-nav-btn {
+  width: 38px !important;
+  height: 38px !important;
+  flex: 0 0 38px !important;
+  border-radius: 50% !important;
+  background: #fff0f5 !important;
+  border: 1px solid #fbcfe8 !important;
+  color: #e11d64 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+  position: relative !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 100, 0.08) !important;
+}
+.custom-navbar .notification-nav-btn:hover,
+.custom-navbar .notification-nav-btn.active {
+  background: #e11d64 !important;
+  border-color: #e11d64 !important;
+  color: #ffffff !important;
+}
+.custom-navbar .notification-nav-btn.active i,
+.custom-navbar .notification-nav-btn:hover i {
+  color: #ffffff !important;
+}
+.notification-nav-count {
+  position: absolute !important;
+  top: -4px !important;
+  right: -4px !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 4px !important;
+  border-radius: 999px !important;
+  background: #e11d64 !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #ffffff !important;
+  line-height: 1 !important;
+  box-shadow: 0 2px 6px rgba(225, 29, 100, 0.3) !important;
+}
+.notif-dropdown-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(1.5px);
+  z-index: 2147483645;
+}
+.notif-dropdown-backdrop.show {
+  display: block;
 }
 .notif-dropdown-menu {
   position: absolute;
-  top: calc(100% + 10px);
-  right: -45px;
-  width: 320px;
-  max-width: calc(100vw - 24px);
+  top: calc(100% + 12px);
+  right: 0;
+  width: 345px;
+  max-width: calc(100vw - 20px);
   background: #ffffff;
   border: 1.5px solid #f2dce7;
-  border-radius: 18px;
-  box-shadow: 0 16px 40px rgba(24, 36, 58, 0.16);
-  z-index: 1080;
+  border-radius: 20px;
+  box-shadow: 0 20px 48px rgba(24, 36, 58, 0.22);
+  z-index: 2147483650;
   display: none;
   overflow: hidden;
   text-align: left;
 }
 .notif-dropdown-menu.show {
-  display: block;
+  display: block !important;
+  animation: notifPopIn 0.18s ease-out;
+}
+@keyframes notifPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .notif-dropdown-head {
-  padding: 12px 16px;
+  padding: 13px 16px;
   background: linear-gradient(135deg, #fff0f6 0%, #ffffff 100%);
   border-bottom: 1px solid #f2dce7;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 .notif-dropdown-head strong {
   font-size: 13.5px;
   font-weight: 800;
   color: #18243a;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.notif-dropdown-close {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid #f2dce7;
+  background: #ffffff;
+  color: #6f626b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.notif-dropdown-close:hover {
+  background: #fff0f6;
+  color: #e11d64;
 }
 .notif-dropdown-list {
-  max-height: 310px;
+  max-height: 330px;
   overflow-y: auto;
+  background: #ffffff;
 }
 .notif-dropdown-item {
   display: flex;
-  gap: 10px;
-  padding: 11px 15px;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 15px;
   border-bottom: 1px solid #f8eef3;
   text-decoration: none;
   color: #18243a;
@@ -368,30 +464,72 @@ if ($customerPdo) {
   background: #fff9fc;
 }
 .notif-dropdown-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
   background: #fff0f6;
   color: #e11d64;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
+  font-size: 16px;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 .notif-dropdown-foot {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   text-align: center;
-  padding: 10px 14px;
-  font-size: 12px;
+  padding: 11px 14px;
+  font-size: 12.5px;
   font-weight: 800;
   color: #e11d64;
   background: #fffafc;
+  border-top: 1px solid #f3e2eb;
   text-decoration: none;
 }
 .notif-dropdown-foot:hover {
   background: #fff0f6;
   color: #be124f;
+}
+@media (max-width: 991.98px) {
+  .custom-navbar .notification-nav-btn,
+  .custom-navbar .right-menu .notification-nav-btn {
+    width: 31px !important;
+    height: 31px !important;
+    flex: 0 0 31px !important;
+  }
+  .notification-nav-count {
+    top: -3px !important;
+    right: -3px !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    font-size: 9px !important;
+  }
+  .notif-dropdown-menu {
+    position: fixed !important;
+    top: var(--notif-top, 102px) !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    max-width: none !important;
+    border-radius: 18px !important;
+    z-index: 2147483650 !important;
+    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.28) !important;
+  }
+  .notif-dropdown-list {
+    max-height: 58vh !important;
+  }
+}
+@media (max-width: 390px) {
+  .custom-navbar .notification-nav-btn,
+  .custom-navbar .right-menu .notification-nav-btn {
+    width: 29px !important;
+    height: 29px !important;
+    flex: 0 0 29px !important;
+  }
 }
 </style>
 <nav class="navbar navbar-expand-lg custom-navbar">
@@ -452,83 +590,252 @@ if ($customerPdo) {
                 $navNotifItems = [];
                 $cUser = customer_user();
                 $cId = (int)customer_id();
+                $cPhone = trim((string)($cUser['phone'] ?? ''));
+                [$cPhoneNorm, $cPhoneLocal] = function_exists('customer_phone_candidates')
+                    ? customer_phone_candidates($cPhone)
+                    : [$cPhone, $cPhone];
+
                 if ($customerPdo && $cId > 0) {
                     try {
-                        $existingNotifs = member_notifications($customerPdo, $cId, 8);
-                        if (empty($existingNotifs)) {
-                            member_notification_add(
-                                $customerPdo,
-                                $cId,
-                                'welcome',
-                                'Selamat Datang di Rosa Indah Member! 🎉',
-                                'Kumpulkan poin dari setiap pesanan selesai dan gunakan kode voucher di halaman Checkout.',
-                                page_url('akun.php?tab=poin')
-                            );
-                            $existingNotifs = member_notifications($customerPdo, $cId, 8);
-                        }
-                        $navNotifItems = $existingNotifs;
+                        $navNotifItems = member_notifications($customerPdo, $cId, 8);
                         $navNotifCount = member_notification_unread_count($customerPdo, $cId);
                     } catch (Throwable $e) {}
                 }
+
+                // Pastikan notifikasi pesanan aktif milik customer selalu muncul meskipun tabel baru dibuat
+                if ($customerPdo && ($cId > 0 || $cPhone !== '')) {
+                    $hasOrderNotif = false;
+                    foreach ($navNotifItems as $ni) {
+                        if (in_array((string)($ni['type'] ?? ''), ['order', 'status', 'payment'], true)) {
+                            $hasOrderNotif = true;
+                            break;
+                        }
+                    }
+                    if (!$hasOrderNotif) {
+                        try {
+                            $ordStmt = $customerPdo->prepare('SELECT order_code, status, payment_status, total_estimate, created_at FROM orders WHERE customer_id = ? OR customer_phone = ? OR customer_phone = ? ORDER BY created_at DESC LIMIT 3');
+                            $ordStmt->execute([$cId, $cPhoneNorm, $cPhoneLocal]);
+                            $liveOrders = $ordStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                            $statusLabels = [
+                                'pending'    => 'Menunggu Konfirmasi Admin',
+                                'confirmed'  => 'Dikonfirmasi Seller',
+                                'processing' => 'Sedang Diproses Produksi',
+                                'printed'    => 'Selesai Dicetak & Siap Diambil/Dikirim',
+                                'completed'  => 'Pesanan Selesai',
+                                'cancelled'  => 'Pesanan Dibatalkan',
+                            ];
+                            foreach (array_reverse($liveOrders) as $lo) {
+                                $loCode = (string)($lo['order_code'] ?? '');
+                                $loStatus = strtolower((string)($lo['status'] ?? 'pending'));
+                                $loStatusLabel = $statusLabels[$loStatus] ?? ucfirst($loStatus);
+                                $loTotal = 'Rp ' . number_format((float)($lo['total_estimate'] ?? 0), 0, ',', '.');
+                                array_unshift($navNotifItems, [
+                                    'id'         => 0,
+                                    'type'       => 'order',
+                                    'title'      => 'Status Pesanan #' . $loCode . ': ' . $loStatusLabel,
+                                    'message'    => 'Total pesanan ' . $loTotal . '. Klik untuk melihat detail progres cetak & pembayaran Anda.',
+                                    'link'       => page_url('lacak-pesanan.php?kode=' . urlencode($loCode)),
+                                    'is_read'    => 0,
+                                    'created_at' => (string)($lo['created_at'] ?? date('Y-m-d H:i:s')),
+                                ]);
+                                $navNotifCount++;
+                            }
+                        } catch (Throwable $e) {}
+                    }
+                }
+
                 if (empty($navNotifItems)) {
+                    $cPoints = (int)($cUser['points'] ?? 100);
                     $navNotifItems = [
                         [
                             'id' => 1,
-                            'type' => 'promo',
-                            'title' => 'Promo & Voucher Member Aktif 🎟️',
-                            'message' => 'Klaim kode voucher diskon dan pantau status pesanan cetak Anda secara langsung.',
+                            'type' => 'points',
+                            'title' => 'Saldo Poin Member Aktif: ' . number_format($cPoints, 0, ',', '.') . ' Poin ⭐',
+                            'message' => 'Kumpulkan poin dari setiap pesanan selesai dan tukarkan menjadi voucher potongan belanja.',
                             'link' => page_url('akun.php?tab=poin'),
                             'is_read' => 0,
                             'created_at' => date('Y-m-d H:i:s'),
-                        ]
+                        ],
+                        [
+                            'id' => 2,
+                            'type' => 'promo',
+                            'title' => '3 Voucher Diskon Member Siap Dipakai 🎟️',
+                            'message' => 'Salin kode voucher ROSAHEMAT10 atau CETAK kilat dan gunakan saat Checkout pesanan.',
+                            'link' => page_url('akun.php?tab=poin'),
+                            'is_read' => 0,
+                            'created_at' => date('Y-m-d H:i:s'),
+                        ],
                     ];
+                    $navNotifCount = count($navNotifItems);
                 }
                 $cFirstName = explode(' ', trim((string)($cUser['name'] ?? 'Member')))[0];
                 $cAvatarUrl = function_exists('customer_avatar_url') ? customer_avatar_url($cUser['avatar'] ?? '') : (!empty($cUser['avatar']) ? page_url(ltrim((string)$cUser['avatar'], '/')) : '');
                 ?>
                 <div class="notif-dropdown-wrap" id="navNotifWrap">
-                    <a href="<?php echo page_url('akun.php?tab=notifikasi'); ?>" class="notification-nav-btn" id="navNotifToggle" aria-label="Notifikasi & Status Pesanan" title="Notifikasi Seller & Status Pesanan" onclick="var m=document.getElementById('navNotifMenu'); if(m){event.preventDefault(); m.classList.toggle('show');}">
-                        <i class="bi bi-bell"></i><?php if ($navNotifCount > 0): ?><span class="notification-nav-count"><?php echo min(99, $navNotifCount); ?></span><?php endif; ?>
-                    </a>
-                    <div class="notif-dropdown-menu" id="navNotifMenu">
+                    <button type="button" class="notification-nav-btn" id="navNotifToggle" aria-label="Notifikasi & Status Pesanan" aria-expanded="false" title="Notifikasi Seller & Status Pesanan">
+                        <i class="bi bi-bell"></i>
+                        <?php if ($navNotifCount > 0): ?>
+                            <span class="notification-nav-count" id="navNotifBadge"><?php echo min(99, $navNotifCount); ?></span>
+                        <?php endif; ?>
+                    </button>
+                    <div class="notif-dropdown-backdrop" id="navNotifBackdrop"></div>
+                    <div class="notif-dropdown-menu" id="navNotifMenu" role="dialog" aria-label="Notifikasi Member">
                         <div class="notif-dropdown-head">
-                            <strong><i class="bi bi-bell-fill text-rosa me-1"></i> Notifikasi Member</strong>
-                            <?php if ($navNotifCount > 0): ?>
-                                <span style="background:#e11d64;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;"><?php echo $navNotifCount; ?> Baru</span>
-                            <?php endif; ?>
+                            <strong><i class="bi bi-bell-fill text-rosa"></i> Notifikasi Member</strong>
+                            <div class="d-flex align-items-center gap-2">
+                                <?php if ($navNotifCount > 0): ?>
+                                    <span style="background:#ffe4ef;color:#e11d64;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;"><?php echo $navNotifCount; ?> Baru</span>
+                                <?php endif; ?>
+                                <button type="button" class="notif-dropdown-close" id="navNotifCloseBtn" aria-label="Tutup Notifikasi">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="notif-dropdown-list">
-                            <?php foreach (array_slice($navNotifItems, 0, 5) as $nItem):
+                            <?php foreach (array_slice($navNotifItems, 0, 6) as $nItem):
                                 $nType = (string)($nItem['type'] ?? 'general');
                                 $nIcon = 'bi-megaphone-fill';
-                                if (in_array($nType, ['order', 'status'], true)) $nIcon = 'bi-box-seam-fill';
-                                elseif ($nType === 'payment') $nIcon = 'bi-credit-card-2-front-fill';
-                                elseif (in_array($nType, ['points', 'bonus', 'reward'], true)) $nIcon = 'bi-star-fill';
-                                elseif (in_array($nType, ['promo', 'voucher'], true)) $nIcon = 'bi-ticket-perforated-fill';
-                                $nHref = !empty($nItem['link']) ? $nItem['link'] : page_url('akun.php?tab=notifikasi');
+                                $nBg = '#fff0f6';
+                                $nColor = '#e11d64';
+                                $nLabel = 'Info Seller';
+                                if (in_array($nType, ['order', 'status'], true)) {
+                                    $nIcon = 'bi-box-seam-fill';
+                                    $nBg = '#eef6ff';
+                                    $nColor = '#1d4ed8';
+                                    $nLabel = 'Status Pesanan';
+                                } elseif ($nType === 'payment') {
+                                    $nIcon = 'bi-credit-card-2-front-fill';
+                                    $nBg = '#e8f8ef';
+                                    $nColor = '#15803d';
+                                    $nLabel = 'Pembayaran';
+                                } elseif (in_array($nType, ['points', 'bonus', 'reward'], true)) {
+                                    $nIcon = 'bi-star-fill';
+                                    $nBg = '#fff9df';
+                                    $nColor = '#b45309';
+                                    $nLabel = 'Poin & Reward';
+                                } elseif (in_array($nType, ['promo', 'voucher'], true)) {
+                                    $nIcon = 'bi-ticket-perforated-fill';
+                                    $nBg = '#fff0f6';
+                                    $nColor = '#e11d64';
+                                    $nLabel = 'Voucher Promo';
+                                }
+                                $nHref = !empty($nItem['link']) ? $nItem['link'] : page_url('akun.php?tab=notifikasi#pusatNotifikasi');
                             ?>
                                 <a href="<?php echo htmlspecialchars($nHref, ENT_QUOTES, 'UTF-8'); ?>" class="notif-dropdown-item <?php echo empty($nItem['is_read']) ? 'unread' : ''; ?>">
-                                    <div class="notif-dropdown-icon"><i class="bi <?php echo $nIcon; ?>"></i></div>
+                                    <div class="notif-dropdown-icon" style="background:<?php echo $nBg; ?>;color:<?php echo $nColor; ?>;"><i class="bi <?php echo $nIcon; ?>"></i></div>
                                     <div style="min-width:0;flex:1;">
-                                        <div style="font-size:12px;font-weight:800;color:#18243a;line-height:1.3;margin-bottom:2px;"><?php echo htmlspecialchars((string)($nItem['title'] ?? 'Info Member'), ENT_QUOTES, 'UTF-8'); ?></div>
-                                        <div style="font-size:11px;color:#6f626b;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"><?php echo htmlspecialchars((string)($nItem['message'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
+                                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
+                                            <span style="background:<?php echo $nBg; ?>;color:<?php echo $nColor; ?>;font-size:9.5px;font-weight:800;padding:1.5px 7px;border-radius:999px;"><?php echo htmlspecialchars($nLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php if (!empty($nItem['created_at'])): ?>
+                                                <span style="font-size:10px;color:#9ca3af;font-weight:600;"><?php echo htmlspecialchars(date('d M H:i', strtotime((string)$nItem['created_at']) ?: time()), ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div style="font-size:12.5px;font-weight:800;color:#18243a;line-height:1.35;margin-bottom:2px;"><?php echo htmlspecialchars((string)($nItem['title'] ?? 'Info Member'), ENT_QUOTES, 'UTF-8'); ?></div>
+                                        <div style="font-size:11.5px;color:#6f626b;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"><?php echo htmlspecialchars((string)($nItem['message'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
                                     </div>
                                 </a>
                             <?php endforeach; ?>
                         </div>
-                        <a href="<?php echo page_url('akun.php?tab=notifikasi'); ?>" class="notif-dropdown-foot">
-                            Lihat Semua Notifikasi &rarr;
+                        <a href="<?php echo page_url('akun.php?tab=notifikasi#pusatNotifikasi'); ?>" class="notif-dropdown-foot">
+                            <span>Buka Pusat Notifikasi Member</span>
+                            <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>
                 </div>
                 <script>
-                document.addEventListener('click', function(e) {
-                    var wrap = document.getElementById('navNotifWrap');
+                (function() {
+                    var toggleBtn = document.getElementById('navNotifToggle');
                     var menu = document.getElementById('navNotifMenu');
-                    if (wrap && menu && !wrap.contains(e.target)) {
-                        menu.classList.remove('show');
+                    var backdrop = document.getElementById('navNotifBackdrop');
+                    var closeBtn = document.getElementById('navNotifCloseBtn');
+                    var wrap = document.getElementById('navNotifWrap');
+                    if (!toggleBtn || !menu || !wrap) return;
+
+                    function syncNotifPlacement() {
+                        var isMobile = window.innerWidth <= 991.98;
+                        var header = document.querySelector('.main-header') || document.querySelector('.custom-navbar');
+                        if (isMobile) {
+                            if (backdrop && backdrop.parentElement !== document.body) {
+                                document.body.appendChild(backdrop);
+                            }
+                            if (menu.parentElement !== document.body) {
+                                document.body.appendChild(menu);
+                            }
+                            var topPx = 98;
+                            if (header) {
+                                var rect = header.getBoundingClientRect();
+                                if (rect && rect.bottom > 40) {
+                                    topPx = Math.round(rect.bottom + 8);
+                                }
+                            }
+                            menu.style.setProperty('--notif-top', topPx + 'px');
+                        } else {
+                            if (backdrop) backdrop.classList.remove('show');
+                            if (menu.parentElement !== wrap) {
+                                wrap.appendChild(menu);
+                            }
+                            menu.style.removeProperty('--notif-top');
+                        }
                     }
-                });
+
+                    function closeNotifMenu() {
+                        menu.classList.remove('show');
+                        toggleBtn.classList.remove('active');
+                        toggleBtn.setAttribute('aria-expanded', 'false');
+                        if (backdrop) backdrop.classList.remove('show');
+                    }
+
+                    function openNotifMenu() {
+                        syncNotifPlacement();
+                        // Close hamburger menu on mobile if open
+                        var navCollapse = document.getElementById('menu');
+                        if (navCollapse && navCollapse.classList.contains('show')) {
+                            navCollapse.classList.remove('show');
+                        }
+                        menu.classList.add('show');
+                        toggleBtn.classList.add('active');
+                        toggleBtn.setAttribute('aria-expanded', 'true');
+                        if (backdrop && window.innerWidth <= 991.98) {
+                            backdrop.classList.add('show');
+                        }
+                    }
+
+                    toggleBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (menu.classList.contains('show')) {
+                            closeNotifMenu();
+                        } else {
+                            openNotifMenu();
+                        }
+                    });
+
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            closeNotifMenu();
+                        });
+                    }
+
+                    if (backdrop) {
+                        backdrop.addEventListener('click', function() {
+                            closeNotifMenu();
+                        });
+                    }
+
+                    document.addEventListener('click', function(e) {
+                        if (!menu.classList.contains('show')) return;
+                        if (wrap.contains(e.target) || menu.contains(e.target)) return;
+                        closeNotifMenu();
+                    });
+
+                    window.addEventListener('resize', function() {
+                        if (menu.classList.contains('show')) {
+                            syncNotifPlacement();
+                        }
+                    });
+                })();
                 </script>
                 <a href="<?php echo page_url('akun.php'); ?>" class="login-btn" title="Akun Saya">
                     <img id="navAvatarImg" src="<?php echo htmlspecialchars($cAvatarUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($cFirstName, ENT_QUOTES, 'UTF-8'); ?>" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff; <?php echo $cAvatarUrl !== '' ? 'display: inline-block;' : 'display: none;'; ?>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">

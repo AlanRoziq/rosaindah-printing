@@ -23,9 +23,7 @@ function loyalty_ensure_tables(PDO $pdo): void {
         description VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_loyalty_order_earn (order_id, type),
-        INDEX idx_loyalty_customer (customer_id, created_at),
-        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
-        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+        INDEX idx_loyalty_customer (customer_id, created_at)
     ) ENGINE=InnoDB");
     $pdo->exec("CREATE TABLE IF NOT EXISTS loyalty_rewards (
         id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -50,9 +48,7 @@ function loyalty_ensure_tables(PDO $pdo): void {
         voucher_id BIGINT UNSIGNED NULL,
         voucher_code VARCHAR(60) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX idx_loyalty_red_customer (customer_id, created_at),
-        FOREIGN KEY (reward_id) REFERENCES loyalty_rewards(id) ON DELETE CASCADE,
-        FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+        INDEX idx_loyalty_red_customer (customer_id, created_at)
     ) ENGINE=InnoDB");
     try {
         $cols = $pdo->query('SHOW COLUMNS FROM vouchers')->fetchAll(PDO::FETCH_COLUMN);

@@ -464,6 +464,63 @@ if ($isLoggedIn && $user) {
                 }
             }
         } catch (Throwable $e) {}
+
+        // Pastikan pesanan customer, poin, dan voucher selalu tampil di Pusat Notifikasi Member
+        $hasOrderInCenter = false;
+        foreach ($memberNotifications as $mn) {
+            if (in_array((string)($mn['type'] ?? ''), ['order', 'status', 'payment'], true)) {
+                $hasOrderInCenter = true;
+                break;
+            }
+        }
+        if (!$hasOrderInCenter && !empty($orders)) {
+            $statusMap = [
+                'pending'    => 'Menunggu Konfirmasi Admin',
+                'confirmed'  => 'Dikonfirmasi Seller',
+                'processing' => 'Sedang Diproses Produksi',
+                'printed'    => 'Selesai Dicetak & Siap Diambil/Dikirim',
+                'completed'  => 'Pesanan Selesai',
+                'cancelled'  => 'Pesanan Dibatalkan',
+            ];
+            foreach (array_reverse(array_slice($orders, 0, 10)) as $ordItem) {
+                $oCode = (string)($ordItem['order_code'] ?? '');
+                $oStat = strtolower((string)($ordItem['status'] ?? 'pending'));
+                $oStatLabel = $statusMap[$oStat] ?? ucfirst($oStat);
+                $oTotalFmt = account_rupiah($ordItem['total_estimate'] ?? 0);
+                array_unshift($memberNotifications, [
+                    'id'         => 0,
+                    'type'       => 'order',
+                    'title'      => 'Status Pesanan #' . $oCode . ': ' . $oStatLabel,
+                    'message'    => 'Pesanan Anda dengan total estimasi ' . $oTotalFmt . ' saat ini berstatus "' . $oStatLabel . '". Klik Buka Detail untuk memantau progres cetak.',
+                    'link'       => page_url('lacak-pesanan.php?kode=' . urlencode($oCode)),
+                    'is_read'    => ($tab === 'notifikasi') ? 1 : 0,
+                    'created_at' => (string)($ordItem['created_at'] ?? date('Y-m-d H:i:s')),
+                ]);
+            }
+        }
+        if (empty($memberNotifications)) {
+            $ptsVal = (int)($user['points'] ?? 100);
+            $memberNotifications = [
+                [
+                    'id'         => 1,
+                    'type'       => 'points',
+                    'title'      => 'Saldo Poin Member Aktif: ' . number_format($ptsVal, 0, ',', '.') . ' Poin ⭐',
+                    'message'    => 'Kumpulkan poin dari setiap transaksi selesai dan tukarkan menjadi voucher diskon di tab Poin & Voucher.',
+                    'link'       => page_url('akun.php?tab=poin'),
+                    'is_read'    => 1,
+                    'created_at' => date('Y-m-d H:i:s'),
+                ],
+                [
+                    'id'         => 2,
+                    'type'       => 'promo',
+                    'title'      => count($vouchers) . ' Voucher Promo Member Siap Digunakan 🎟️',
+                    'message'    => 'Gunakan kode voucher diskon Anda pada halaman Checkout untuk mendapatkan potongan harga otomatis.',
+                    'link'       => page_url('akun.php?tab=poin'),
+                    'is_read'    => 1,
+                    'created_at' => date('Y-m-d H:i:s'),
+                ],
+            ];
+        }
     }
 }
 
@@ -1837,14 +1894,105 @@ include __DIR__ . '/includes/header.php';
                  5B. TAB CONTENT: PUSAT NOTIFIKASI MEMBER
                  ========================================================= -->
             <?php if ($tab === 'notifikasi'): ?>
-                <div class="profile-card">
+                <style>
+                .notif-center-list {
+                    display: grid;
+                    gap: 12px;
+                }
+                .notif-center-item {
+                    border: 1.5px solid #f0dce6;
+                    border-radius: 16px;
+                    padding: 15px 18px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    gap: 14px;
+                    transition: all 0.2s ease;
+                }
+                .notif-center-item.unread {
+                    background: #fff9fc;
+                    border-color: #f4bad2;
+                }
+                .notif-center-item.read {
+                    background: #ffffff;
+                }
+                .notif-center-main {
+                    display: flex;
+                    gap: 12px;
+                    align-items: flex-start;
+                    flex: 1;
+                    min-width: 0;
+                }
+                .notif-center-icon {
+                    width: 42px;
+                    height: 42px;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    flex-shrink: 0;
+                }
+                .notif-center-body {
+                    flex: 1;
+                    min-width: 0;
+                }
+                .notif-center-meta {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                    margin-bottom: 4px;
+                }
+                .notif-center-btn {
+                    border: 1px solid #f2c9de;
+                    background: #fff0f6;
+                    color: #e11d64;
+                    padding: 8px 14px;
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: 800;
+                    text-decoration: none;
+                    white-space: nowrap;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 5px;
+                    align-self: center;
+                    transition: all 0.15s ease;
+                }
+                .notif-center-btn:hover {
+                    background: #e11d64;
+                    border-color: #e11d64;
+                    color: #ffffff;
+                }
+                @media (max-width: 575.98px) {
+                    .notif-center-item {
+                        flex-direction: column;
+                        padding: 13px 14px;
+                        gap: 11px;
+                    }
+                    .notif-center-icon {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 10px;
+                        font-size: 16px;
+                    }
+                    .notif-center-btn {
+                        width: 100%;
+                        padding: 8px 12px;
+                    }
+                }
+                </style>
+                <div class="profile-card" id="pusatNotifikasi">
                     <div class="profile-card-header flex-wrap gap-2">
                         <div>
                             <h2><i class="bi bi-bell-fill text-rosa"></i> Pusat Notifikasi Member</h2>
                             <p>Semua informasi promo/pengumuman dari Seller serta update otomatis status pesanan &amp; pembayaran Anda.</p>
                         </div>
                         <?php if (!empty($memberNotifications)): ?>
-                            <form method="POST" action="<?php echo page_url('akun.php?tab=notifikasi'); ?>" style="margin: 0;">
+                            <form method="POST" action="<?php echo page_url('akun.php?tab=notifikasi#pusatNotifikasi'); ?>" style="margin: 0;">
                                 <input type="hidden" name="action" value="mark_notif_read">
                                 <button type="submit" style="border: 1px solid #f2c9de; background: #fff0f6; color: #e11d64; padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer;">
                                     <i class="bi bi-check2-all"></i> Tandai Semua Dibaca
@@ -1860,7 +2008,7 @@ include __DIR__ . '/includes/header.php';
                             <p style="color: #8c7e87; font-size: 13px; max-width: 420px; margin: 0 auto;">Notifikasi update pesanan, verifikasi pembayaran, poin reward, dan info promo dari Seller akan tampil di sini.</p>
                         </div>
                     <?php else: ?>
-                        <div style="display: grid; gap: 12px;">
+                        <div class="notif-center-list">
                             <?php foreach ($memberNotifications as $n):
                                 $nType = (string)($n['type'] ?? 'general');
                                 $badgeLabel = 'Info Seller';
@@ -1889,27 +2037,28 @@ include __DIR__ . '/includes/header.php';
                                     $iconClass = 'bi-ticket-perforated-fill';
                                 }
                             ?>
-                                <div style="border: 1px solid #f0dce6; background: <?php echo empty($n['is_read']) ? '#fff9fc' : '#ffffff'; ?>; border-radius: 16px; padding: 15px 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap;">
-                                    <div style="display: flex; gap: 12px; align-items: flex-start; flex: 1; min-width: 220px;">
-                                        <div style="width: 40px; height: 40px; border-radius: 12px; background: <?php echo $badgeBg; ?>; color: <?php echo $badgeColor; ?>; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                <div class="notif-center-item <?php echo empty($n['is_read']) ? 'unread' : 'read'; ?>">
+                                    <div class="notif-center-main">
+                                        <div class="notif-center-icon" style="background: <?php echo $badgeBg; ?>; color: <?php echo $badgeColor; ?>;">
                                             <i class="bi <?php echo $iconClass; ?>"></i>
                                         </div>
-                                        <div>
-                                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                        <div class="notif-center-body">
+                                            <div class="notif-center-meta">
                                                 <span style="background: <?php echo $badgeBg; ?>; color: <?php echo $badgeColor; ?>; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
                                                     <?php echo account_e($badgeLabel); ?>
                                                 </span>
-                                                <small style="color: #8c7e87; font-size: 11.5px;">
+                                                <small style="color: #8c7e87; font-size: 11px; font-weight: 600;">
                                                     <i class="bi bi-clock"></i> <?php echo account_e($n['created_at'] ?? ''); ?>
                                                 </small>
                                             </div>
-                                            <strong style="display: block; color: #18243a; font-size: 14px; margin-bottom: 3px;"><?php echo account_e($n['title'] ?? ''); ?></strong>
-                                            <p style="margin: 0; font-size: 13px; color: #5b5058; line-height: 1.5;"><?php echo account_e($n['message'] ?? ''); ?></p>
+                                            <strong style="display: block; color: #18243a; font-size: 13.8px; line-height: 1.35; margin-bottom: 4px;"><?php echo account_e($n['title'] ?? ''); ?></strong>
+                                            <p style="margin: 0; font-size: 12.8px; color: #5b5058; line-height: 1.5;"><?php echo account_e($n['message'] ?? ''); ?></p>
                                         </div>
                                     </div>
                                     <?php if (!empty($n['link'])): ?>
-                                        <a href="<?php echo account_e($n['link']); ?>" style="border: 1px solid #f2c9de; background: #fff; color: #e11d64; padding: 7px 13px; border-radius: 9px; font-size: 12px; font-weight: 800; text-decoration: none; white-space: nowrap;">
-                                            Buka Detail &rarr;
+                                        <a href="<?php echo account_e($n['link']); ?>" class="notif-center-btn">
+                                            <span>Buka Detail</span>
+                                            <i class="bi bi-arrow-right"></i>
                                         </a>
                                     <?php endif; ?>
                                 </div>
@@ -2139,6 +2288,26 @@ include __DIR__ . '/includes/header.php';
                     }
                 });
             });
+        }
+
+        // Auto-scroll active tab pill into view & scroll to tab content on mobile when non-default tab is active
+        var activeTabBtn = document.querySelector('.marketplace-tab-btn.active');
+        var navTabsWrap = document.querySelector('.marketplace-nav-tabs');
+        if (activeTabBtn && navTabsWrap) {
+            var scrollLeft = activeTabBtn.offsetLeft - (navTabsWrap.clientWidth / 2) + (activeTabBtn.clientWidth / 2);
+            navTabsWrap.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+        }
+        var currentTab = <?php echo json_encode($tab); ?>;
+        if (window.innerWidth <= 991.98 && currentTab && currentTab !== 'profil') {
+            var tabsBar = document.querySelector('.marketplace-tabs-wrap');
+            if (tabsBar) {
+                setTimeout(function() {
+                    var headerEl = document.querySelector('.main-header');
+                    var offset = headerEl ? headerEl.getBoundingClientRect().height + 12 : 104;
+                    var y = tabsBar.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+                }, 120);
+            }
         }
     });
 </script>

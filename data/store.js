@@ -1126,6 +1126,70 @@ module.exports = {
   getNotifications: () => notifications,
   getMemberNotifications: (customerId) => {
     const cid = Number(customerId) || 0;
+    if (cid > 0) {
+      const cust = customers.find(c => Number(c.id) === cid);
+      const hasPersonal = notifications.some(n => Number(n.customer_id) === cid);
+      if (cust && !hasPersonal) {
+        const pts = Number(cust.points || 100);
+        notifications.unshift({
+          id: notifications.length + 1,
+          customer_id: cid,
+          customer_name: cust.name,
+          title: `Saldo ${pts} Poin Member Aktif ⭐`,
+          message: 'Selamat datang di Rosa Indah Printing! Kumpulkan poin dari setiap pesanan selesai dan tukarkan menjadi voucher diskon di menu Poin & Voucher.',
+          link: '/akun.php?tab=poin',
+          type: 'reward',
+          is_read: 0,
+          created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+        });
+        notifications.unshift({
+          id: notifications.length + 1,
+          customer_id: cid,
+          customer_name: cust.name,
+          title: 'Voucher Diskon Member Siap Dipakai 🎟️',
+          message: 'Gunakan kode voucher ROSAHEMAT10, MEMBERBARU, atau CETAKUMKM20 saat Checkout untuk mendapatkan potongan harga langsung.',
+          link: '/akun.php?tab=poin',
+          type: 'promo',
+          is_read: 0,
+          created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+        });
+      }
+      if (cust) {
+        const cleanCustPhone = String(cust.phone || '').replace(/\D+/g, '').replace(/^0/, '62');
+        const custOrders = orders.filter(o => {
+          const op = String(o.customer_phone || '').replace(/\D+/g, '').replace(/^0/, '62');
+          return Number(o.customer_id) === cid || (cleanCustPhone && op === cleanCustPhone);
+        });
+        const statusLabels = {
+          pending: ['Menunggu Konfirmasi', 'sedang menunggu konfirmasi dari Admin Rosa Indah Printing.'],
+          confirmed: ['Dikonfirmasi', 'telah dikonfirmasi oleh Admin dan masuk antrean produksi.'],
+          processing: ['Sedang Diproses', 'sedang dalam proses pengerjaan/desain oleh tim produksi kami.'],
+          printed: ['Sedang Dicetak', 'sedang dalam tahap pencetakan & finishing di workshop.'],
+          completed: ['Pesanan Selesai', 'telah selesai dikerjakan. Terima kasih telah mencetak di Rosa Indah Printing!'],
+          cancelled: ['Dibatalkan', 'telah dibatalkan. Hubungi Admin jika membutuhkan bantuan.']
+        };
+        custOrders.forEach(ord => {
+          const code = String(ord.order_code || '');
+          if (!code) return;
+          const alreadyHas = notifications.some(n => Number(n.customer_id) === cid && (String(n.title || '').includes(code) || String(n.message || '').includes(code)));
+          if (!alreadyHas) {
+            const [stTitle, stDesc] = statusLabels[ord.status] || ['Update Pesanan', 'sedang diproses oleh tim Rosa Indah Printing.'];
+            const totalFmt = 'Rp' + Number(ord.total_estimate || 0).toLocaleString('id-ID');
+            notifications.unshift({
+              id: notifications.length + 1,
+              customer_id: cid,
+              customer_name: cust.name,
+              title: `Status Pesanan ${code}: ${stTitle}`,
+              message: `Pesanan Anda (${code} • ${totalFmt}) ${stDesc}`,
+              link: `/lacak-pesanan.php?code=${encodeURIComponent(code)}&phone=${encodeURIComponent(cust.phone || '')}`,
+              type: 'order',
+              is_read: 0,
+              created_at: ord.created_at || new Date().toISOString().replace('T', ' ').slice(0, 16)
+            });
+          }
+        });
+      }
+    }
     return notifications.filter(n => Number(n.customer_id) === 0 || Number(n.customer_id) === cid);
   },
   markNotificationsRead: (customerId) => {
