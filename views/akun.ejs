@@ -384,10 +384,46 @@
     margin-bottom: 12px;
 }
 
+/* Hero User Meta & Action Buttons */
+.profile-user-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: #7d727b;
+}
+.profile-user-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+.profile-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.profile-hero-btn {
+    border-radius: 12px;
+    padding: 9px 14px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
 /* Quick Stats Bar */
 .profile-stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin-top: 18px;
 }
@@ -398,7 +434,8 @@
     padding: 12px 14px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
+    min-width: 0;
 }
 .profile-stat-icon {
     width: 38px;
@@ -412,32 +449,77 @@
     font-size: 18px;
     flex-shrink: 0;
 }
+.profile-stat-info {
+    min-width: 0;
+    flex: 1;
+}
 .profile-stat-info strong {
     display: block;
-    font-size: 16px;
+    font-size: 15.5px;
     font-weight: 800;
     color: #18243a;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .profile-stat-info span {
-    font-size: 11px;
+    display: block;
+    font-size: 11.5px;
     color: #8c7f88;
     font-weight: 600;
+    line-height: 1.3;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Mobile Specific Optimizations */
 @media (max-width: 768px) {
     .profile-hero-card {
-        padding: 18px;
+        padding: 16px;
         border-radius: 20px;
     }
     .profile-hero-flex {
         flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 16px !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+    .profile-user-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+    }
+    .profile-hero-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 8px !important;
+        width: 100%;
+    }
+    .profile-hero-btn {
+        padding: 9px 10px;
+        font-size: 12px;
     }
     .profile-stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 8px !important;
+    }
+    .profile-stat-box {
+        padding: 10px 11px;
+        gap: 9px;
+    }
+    .profile-stat-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+        border-radius: 9px;
+    }
+    .profile-stat-info strong {
+        font-size: 14px;
+    }
+    .profile-stat-info span {
+        font-size: 11px;
     }
     .profile-card {
         padding: 18px;
@@ -694,37 +776,40 @@
                     </div>
 
                     <!-- User Name & Badges -->
-                    <div>
+                    <div class="min-w-0">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <h1 style="font-size: 22px; font-weight: 800; color: #18243a; margin: 0;">
+                            <h1 style="font-size: 21px; font-weight: 800; color: #18243a; margin: 0; line-height: 1.25;">
                                 <%= user.name %>
                             </h1>
-                            <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;">
-                                <i class="bi bi-award-fill"></i> <%= user.member_tier || 'Member Prioritas' %>
+                            <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                <i class="bi bi-award-fill"></i> <%= user.member_tier || 'Member Baru' %>
                             </span>
                         </div>
 
-                        <div class="d-flex align-items-center gap-3 mt-1 flex-wrap" style="font-size: 12.5px; color: #7d727b;">
-                            <span><i class="bi bi-person-circle text-rosa"></i> @<%= user.username || user.phone %></span>
-                            <span>•</span>
-                            <span><i class="bi bi-whatsapp text-success"></i> <%= user.phone %></span>
+                        <div class="profile-user-meta">
+                            <span class="profile-user-meta-item">
+                                <i class="bi bi-person-circle text-rosa"></i> @<%= user.username || user.phone %>
+                            </span>
+                            <span class="profile-user-meta-item">
+                                <i class="bi bi-whatsapp text-success"></i> <%= user.phone %>
+                            </span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right Action / Reward Badges -->
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <a href="<%= page_url('akun?tab=poin') %>" style="background: #fff9df; border: 1px solid #fae69e; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #9c6c00; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                <div class="profile-hero-actions">
+                    <a href="<%= page_url('akun?tab=poin') %>" class="profile-hero-btn" style="background: #fff9df; border: 1px solid #fae69e; color: #9c6c00;">
                         <i class="bi bi-star-fill text-warning"></i>
-                        <span><%= user.points || 150 %> Poin Member</span>
+                        <span><%= Number(user.points !== undefined ? user.points : 100).toLocaleString('id-ID') %> Poin Member</span>
                     </a>
 
-                    <a href="<%= page_url('akun?tab=poin') %>" style="background: #fff0f6; border: 1px solid #f2c9de; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #e11d64; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                    <a href="<%= page_url('akun?tab=poin') %>" class="profile-hero-btn" style="background: #fff0f6; border: 1px solid #f2c9de; color: #e11d64;">
                         <i class="bi bi-ticket-perforated-fill"></i>
                         <span><%= (typeof vouchers !== 'undefined' ? vouchers.length : 4) %> Voucher</span>
                     </a>
 
-                    <a href="<%= page_url('logout') %>" style="background: #ffffff; border: 1px solid #f0dce6; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #a43a4e; font-weight: 700; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;" title="Keluar Akun">
+                    <a href="<%= page_url('logout') %>" class="profile-hero-btn" style="background: #ffffff; border: 1px solid #f0dce6; color: #a43a4e; font-weight: 700;" title="Keluar Akun">
                         <i class="bi bi-box-arrow-right"></i>
                         <span class="d-none d-sm-inline">Keluar</span>
                     </a>
@@ -781,6 +866,13 @@
                 <a href="<%= page_url('akun?tab=poin') %>" class="marketplace-tab-btn <%= (tab === 'poin') ? 'active' : '' %>">
                     <i class="bi bi-stars"></i>
                     <span>Poin & Voucher</span>
+                </a>
+                <a href="<%= page_url('akun?tab=notifikasi') %>" class="marketplace-tab-btn <%= (tab === 'notifikasi') ? 'active' : '' %>">
+                    <i class="bi bi-bell"></i>
+                    <span>Notifikasi</span>
+                    <% if (typeof unreadNotifCount !== 'undefined' && unreadNotifCount > 0) { %>
+                        <span class="badge-pill"><%= unreadNotifCount %></span>
+                    <% } %>
                 </a>
                 <a href="<%= page_url('akun?tab=alamat') %>" class="marketplace-tab-btn <%= (tab === 'alamat') ? 'active' : '' %>">
                     <i class="bi bi-geo-alt"></i>
@@ -1127,14 +1219,59 @@
                             <i class="bi bi-stars" style="font-size: 22px;"></i> Saldo Poin Saya
                         </h2>
                         <div style="font-size: 38px; font-weight: 800; color: #d67a00; font-variant-numeric: tabular-nums;">
-                            <%= user.points || 150 %> <span style="font-size: 16px; font-weight: 700; color: #8f6500;">Poin</span>
+                            <%= Number(user.points !== undefined ? user.points : 100).toLocaleString('id-ID') %> <span style="font-size: 16px; font-weight: 700; color: #8f6500;">Poin</span>
                         </div>
                         <p style="font-size: 12.5px; color: #7f6629; margin: 10px 0 16px; line-height: 1.6;">
-                            Kumpulkan poin setiap pemesanan cetak di Rosa Indah Printing. Setiap kelipatan belanja Rp10.000 otomatis mendapatkan 1 Poin reward.
+                            Kumpulkan poin setiap pemesanan cetak selesai di Rosa Indah Printing. Setiap kelipatan belanja <b><%= format_rupiah((typeof loyaltyRule !== 'undefined' && loyaltyRule && loyaltyRule.amount_per_point) ? loyaltyRule.amount_per_point : 10000) %></b> otomatis mendapatkan <b>1 Poin</b> reward.
                         </p>
-                        <a href="<%= page_url('produk') %>" class="btn-save-profile" style="padding: 10px 20px; font-size: 13px;">
-                            <i class="bi bi-cart-plus"></i> Belanja Tambah Poin
-                        </a>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="<%= page_url('produk') %>" class="btn-save-profile" style="padding: 10px 20px; font-size: 13px;">
+                                <i class="bi bi-cart-plus"></i> Belanja Tambah Poin
+                            </a>
+                            <a href="<%= page_url('promo') %>" style="background:#fff;border:1.5px solid #e6c665;color:#8f6500;padding:10px 16px;border-radius:12px;font-weight:800;font-size:12.5px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                                <i class="bi bi-gift-fill"></i> Lihat Promo
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Tukar Poin dengan Reward -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div>
+                                <h2><i class="bi bi-gift text-rosa"></i> Tukar Poin Reward</h2>
+                                <p>Tukarkan saldo poin Anda menjadi kode voucher potongan harga langsung.</p>
+                            </div>
+                        </div>
+
+                        <% if (typeof loyaltyRewards === 'undefined' || !loyaltyRewards || loyaltyRewards.length === 0) { %>
+                            <div class="text-center py-3 text-muted" style="font-size:13px;">Belum ada katalog reward aktif.</div>
+                        <% } else { %>
+                            <div style="display:grid;gap:12px;">
+                                <% loyaltyRewards.forEach(function(rw) {
+                                    const rwCost = Number(rw.points_cost || 0);
+                                    const canRedeem = Number(user.points !== undefined ? user.points : 100) >= rwCost && Number(rw.stock || 0) > 0;
+                                %>
+                                    <div style="border:1.5px solid #f2dce7;background:#fffcfd;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                                        <div>
+                                            <span style="display:inline-flex;align-items:center;gap:4px;background:#fff9df;border:1px solid #fae69e;color:#9c6c00;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;margin-bottom:5px;">
+                                                <i class="bi bi-star-fill text-warning"></i> <%= rwCost.toLocaleString('id-ID') %> Poin
+                                            </span>
+                                            <strong style="display:block;color:#18243a;font-size:14px;"><%= rw.title %></strong>
+                                            <small style="color:#796c76;font-size:11.5px;">
+                                                <%= rw.description || 'Potongan belanja member' %> • Stok: <%= Number(rw.stock || 0) %>
+                                            </small>
+                                        </div>
+                                        <form method="POST" action="<%= page_url('akun?tab=poin') %>" style="margin:0;">
+                                            <input type="hidden" name="action" value="redeem_reward">
+                                            <input type="hidden" name="reward_id" value="<%= rw.id %>">
+                                            <button type="submit" <%= canRedeem ? '' : 'disabled' %> style="border:none;background:<%= canRedeem ? 'linear-gradient(135deg,#e11d64 0%,#be124f 100%)' : '#e5e7eb' %>;color:<%= canRedeem ? '#fff' : '#9ca3af' %>;padding:8px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:<%= canRedeem ? 'pointer' : 'not-allowed' %>;">
+                                                <i class="bi bi-arrow-repeat me-1"></i> <%= canRedeem ? 'Tukar Poin' : 'Poin Belum Cukup' %>
+                                            </button>
+                                        </form>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
 
@@ -1143,7 +1280,7 @@
                         <div class="profile-card-header">
                             <div>
                                 <h2><i class="bi bi-ticket-perforated text-rosa"></i> Kupon & Voucher Siap Pakai</h2>
-                                <p>Gunakan kode voucher saat checkout untuk mendapatkan potongan harga langsung.</p>
+                                <p>Salin kode voucher di bawah ini dan masukkan saat Checkout untuk potongan otomatis.</p>
                             </div>
                         </div>
 
@@ -1160,15 +1297,137 @@
                                                 Min. Order <%= format_rupiah(v.min_order) %> • Diskon <%= v.discount_type === 'percent' ? v.discount_value + '%' : format_rupiah(v.discount_value) %>
                                             </small>
                                         </div>
-                                        <button type="button" onclick="navigator.clipboard.writeText('<%= v.code %>'); this.innerText='Tersalin!'; setTimeout(() => this.innerText='Salin Kode', 2000);" style="border: 1px solid #e11d64; background: #fff; color: #e11d64; padding: 7px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
-                                            Salin Kode
-                                        </button>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button type="button" onclick="navigator.clipboard.writeText('<%= v.code %>'); this.innerText='Tersalin!'; setTimeout(() => this.innerText='Salin Kode', 2000);" style="border: 1px solid #e11d64; background: #fff; color: #e11d64; padding: 7px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                                                Salin Kode
+                                            </button>
+                                            <a href="<%= page_url('checkout?voucher=' + encodeURIComponent(v.code)) %>" style="background:#e11d64;color:#fff;padding:7px 12px;border-radius:8px;font-weight:800;font-size:12px;text-decoration:none;">
+                                                Pakai
+                                            </a>
+                                        </div>
                                     </div>
                                 <% }); %>
                             <% } %>
                         </div>
                     </div>
+
+                    <!-- Riwayat Mutasi Poin -->
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div>
+                                <h2><i class="bi bi-clock-history text-rosa"></i> Riwayat Poin Member</h2>
+                                <p>Catatan perolehan poin dari pesanan selesai, bonus member, dan penukaran reward.</p>
+                            </div>
+                        </div>
+
+                        <% if (typeof loyaltyTransactions === 'undefined' || !loyaltyTransactions || loyaltyTransactions.length === 0) { %>
+                            <div class="text-center py-3 text-muted" style="font-size:13px;">Belum ada riwayat transaksi poin.</div>
+                        <% } else { %>
+                            <div style="display:grid;gap:10px;">
+                                <% loyaltyTransactions.forEach(function(tx) {
+                                    const ptsChange = Number(tx.points_change || 0);
+                                    const isPlus = ptsChange >= 0;
+                                %>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:12px;border:1px solid #f3e2eb;background:#ffffff;gap:10px;">
+                                        <div>
+                                            <strong style="display:block;font-size:13px;color:#18243a;"><%= tx.description || 'Transaksi Poin' %></strong>
+                                            <small style="color:#8c7f88;font-size:11px;">
+                                                <%= tx.created_at ? new Date(tx.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '' %>
+                                            </small>
+                                        </div>
+                                        <span style="font-weight:800;font-size:13.5px;color:<%= isPlus ? '#15803d' : '#be124f' %>;white-space:nowrap;">
+                                            <%= (isPlus ? '+' : '') + ptsChange.toLocaleString('id-ID') %> Poin
+                                        </span>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        <% } %>
+                    </div>
                 </div>
+            </div>
+        <% } %>
+
+        <!-- =========================================================
+             5B. TAB CONTENT: NOTIFIKASI MEMBER
+             ========================================================= -->
+        <% if (tab === 'notifikasi') { %>
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <h2><i class="bi bi-bell-fill text-rosa"></i> Pusat Notifikasi Member</h2>
+                        <p>Semua informasi update status pesanan, konfirmasi pembayaran, poin reward, dan pengumuman promo dari Seller.</p>
+                    </div>
+                    <% if (typeof unreadNotifCount !== 'undefined' && unreadNotifCount > 0) { %>
+                        <form method="POST" action="<%= page_url('akun?tab=notifikasi') %>" style="margin:0;">
+                            <input type="hidden" name="action" value="mark_notif_read">
+                            <button type="submit" class="btn-save-profile" style="padding:8px 14px;font-size:12px;">
+                                <i class="bi bi-check2-all"></i> Tandai Semua Dibaca
+                            </button>
+                        </form>
+                    <% } %>
+                </div>
+
+                <% if (typeof memberNotifications === 'undefined' || !memberNotifications || memberNotifications.length === 0) { %>
+                    <div class="text-center py-5">
+                        <div style="width:64px;height:64px;border-radius:50%;background:#fff0f6;color:#e11d64;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px;">
+                            <i class="bi bi-bell-slash"></i>
+                        </div>
+                        <h5 class="fw-bold mb-1">Belum Ada Notifikasi</h5>
+                        <p class="text-muted small mb-0">Informasi pesanan dan promo terbaru akan muncul secara otomatis di sini.</p>
+                    </div>
+                <% } else { %>
+                    <div style="display:grid;gap:12px;">
+                        <% memberNotifications.forEach(function(nf) {
+                            const nfType = String(nf.type || 'info');
+                            const isUnread = !nf.is_read;
+                            let nfIcon = 'bi-megaphone-fill';
+                            let nfBg = '#fff0f6';
+                            let nfColor = '#e11d64';
+                            let nfBadge = 'Info Seller';
+                            if (nfType === 'order') {
+                                nfIcon = 'bi-box-seam-fill';
+                                nfBg = '#eef6ff';
+                                nfColor = '#1d4ed8';
+                                nfBadge = 'Status Pesanan';
+                            } else if (nfType === 'payment') {
+                                nfIcon = 'bi-credit-card-2-front-fill';
+                                nfBg = '#e8f8ef';
+                                nfColor = '#15803d';
+                                nfBadge = 'Info Pembayaran';
+                            } else if (nfType === 'reward') {
+                                nfIcon = 'bi-stars';
+                                nfBg = '#fff9df';
+                                nfColor = '#b45309';
+                                nfBadge = 'Poin & Reward';
+                            } else if (nfType === 'promo') {
+                                nfIcon = 'bi-ticket-perforated-fill';
+                                nfBg = '#fff0f6';
+                                nfColor = '#e11d64';
+                                nfBadge = 'Promo & Voucher';
+                            }
+                        %>
+                            <div style="display:flex;gap:14px;padding:15px 16px;border-radius:16px;border:1.5px solid <%= isUnread ? '#f4bad2' : '#f2dce7' %>;background:<%= isUnread ? '#fff8fb' : '#ffffff' %>;align-items:flex-start;">
+                                <div style="width:42px;height:42px;border-radius:12px;background:<%= nfBg %>;color:<%= nfColor %>;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">
+                                    <i class="bi <%= nfIcon %>"></i>
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span style="background:<%= nfBg %>;color:<%= nfColor %>;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;"><%= nfBadge %></span>
+                                            <strong style="font-size:14px;color:#18243a;"><%= nf.title || 'Notifikasi' %></strong>
+                                        </div>
+                                        <small style="font-size:11.5px;color:#8c7f88;font-weight:600;">
+                                            <%= nf.created_at ? new Date(nf.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '' %> WIB
+                                        </small>
+                                    </div>
+                                    <p style="font-size:13px;color:#4b5563;margin:4px 0 0;line-height:1.55;">
+                                        <%= nf.message || '' %>
+                                    </p>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
             </div>
         <% } %>
 

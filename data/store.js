@@ -311,10 +311,10 @@ let portfolios = [
 ];
 
 let vouchers = [
-  { id: 1, code: 'ROSAHEMAT10', name: 'Diskon 10% Spesial', discount_type: 'percent', discount_value: 10, min_order: 50000, max_discount: 25000, status: 'active', quota: 50, usage_count: 8, starts_at: '2025-01-01', ends_at: '2026-12-31' },
-  { id: 2, code: 'MEMBERBARU', name: 'Potongan Rp 5.000', discount_type: 'fixed', discount_value: 5000, min_order: 30000, max_discount: null, status: 'active', quota: 100, usage_count: 14, starts_at: '2025-01-01', ends_at: '2026-12-31' },
-  { id: 3, code: 'CETAKBANYAK', name: 'Diskon 15% Partai', discount_type: 'percent', discount_value: 15, min_order: 200000, max_discount: 50000, status: 'active', quota: 30, usage_count: 5, starts_at: '2025-01-01', ends_at: '2026-12-31' },
-  { id: 4, code: 'MEMBERROSA', name: 'Voucher Spesial Member', discount_type: 'fixed', discount_value: 10000, min_order: 100000, max_discount: null, status: 'active', quota: 50, usage_count: 8, starts_at: '2025-01-01', ends_at: '2026-12-31' }
+  { id: 1, code: 'ROSAHEMAT10', name: 'Diskon Spesial Member 10%', discount_type: 'percent', discount_value: 10, min_order: 50000, max_discount: 25000, status: 'active', quota: 50, usage_count: 8, starts_at: '2025-01-01', ends_at: '2027-12-31' },
+  { id: 2, code: 'MEMBERBARU', name: 'Potongan Member Baru Rp5.000', discount_type: 'fixed', discount_value: 5000, min_order: 30000, max_discount: null, status: 'active', quota: 100, usage_count: 14, starts_at: '2025-01-01', ends_at: '2027-12-31' },
+  { id: 3, code: 'CETAKUMKM20', name: 'Potongan Cetak Kemasan & Stiker 20%', discount_type: 'percent', discount_value: 20, min_order: 100000, max_discount: 40000, status: 'active', quota: 50, usage_count: 5, starts_at: '2025-01-01', ends_at: '2027-12-31' },
+  { id: 4, code: 'UNDANGAN25RB', name: 'Potongan Langsung Cetak Undangan', discount_type: 'fixed', discount_value: 25000, min_order: 250000, max_discount: null, status: 'active', quota: 50, usage_count: 8, starts_at: '2025-01-01', ends_at: '2027-12-31' }
 ];
 
 let customers = [
@@ -635,12 +635,40 @@ module.exports = {
       ]
     };
     orders.push(newOrder);
+
+    // Cari member berdasarkan telepon dan tambahkan notifikasi pesanan baru
+    const phoneDigits = String(data.customer_phone || '').replace(/\D+/g, '');
+    const matchedCust = customers.find(c => {
+      const cd = String(c.phone || '').replace(/\D+/g, '');
+      return cd && phoneDigits && cd.slice(-8) === phoneDigits.slice(-8);
+    });
+    if (matchedCust) {
+      newOrder.customer_id = matchedCust.id;
+      notifications.unshift({
+        id: notifications.length + 1,
+        customer_id: matchedCust.id,
+        customer_name: matchedCust.name,
+        title: `Pesanan diterima (${orderCode})`,
+        message: 'Pesanan Anda sudah masuk ke sistem Rosa Indah Printing dan sedang menunggu pemeriksaan Admin.',
+        link: `/lacak-pesanan.php?code=${encodeURIComponent(orderCode)}&phone=${encodeURIComponent(data.customer_phone || '')}`,
+        type: 'order',
+        is_read: 0,
+        created_at: now.toISOString().replace('T', ' ').slice(0, 16)
+      });
+    }
     return newOrder;
   },
   updateOrderStatus: (orderCode, newStatus, newPaymentStatus, note, paidAmount) => {
     const order = orders.find(o => o.order_code === orderCode);
     if (!order) return null;
     const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    const phoneDigits = String(order.customer_phone || '').replace(/\D+/g, '');
+    const matchedCust = customers.find(c => {
+      if (order.customer_id && c.id === Number(order.customer_id)) return true;
+      const cd = String(c.phone || '').replace(/\D+/g, '');
+      return cd && phoneDigits && cd.slice(-8) === phoneDigits.slice(-8);
+    });
+
     if (newStatus && newStatus !== order.status) {
       order.status = newStatus;
       order.history.push({
@@ -648,9 +676,87 @@ module.exports = {
         note: note || `Status diperbarui menjadi ${newStatus}`,
         created_at: now
       });
+
+      const statusMsgMap = {
+        pending: ['Pesanan diterima', 'Pesanan Anda sudah masuk ke sistem Rosa Indah Printing.'],
+        confirmed: ['Pesanan dikonfirmasi', 'Pesanan Anda sudah dikonfirmasi oleh Seller dan siap masuk ke proses produksi.'],
+        processing: ['Pesanan sedang diproses', 'Pesanan Anda sedang dikerjakan oleh tim produksi Rosa Indah Printing.'],
+        printed: ['Pesanan sudah dicetak', 'Proses pencetakan pesanan Anda sudah selesai dan siap diambil/dikirim.'],
+        completed: ['Pesanan selesai', 'Pesanan Anda telah selesai. Terima kasih sudah mempercayakan kebutuhan printing kepada kami.'],
+        cancelled: ['Pesanan dibatalkan', 'Pesanan Anda telah dibatalkan. Silakan hubungi Admin untuk informasi lebih lanjut.']
+      };
+      const [stTitle, stBody] = statusMsgMap[newStatus] || ['Status pesanan diperbarui', `Status pesanan Anda kini: ${newStatus}`];
+
+      if (matchedCust) {
+        notifications.unshift({
+          id: notifications.length + 1,
+          customer_id: matchedCust.id,
+          customer_name: matchedCust.name,
+          title: `${stTitle} (${order.order_code})`,
+          message: note ? `${stBody} Catatan: ${note}` : stBody,
+          link: `/lacak-pesanan.php?code=${encodeURIComponent(order.order_code)}&phone=${encodeURIComponent(order.customer_phone || '')}`,
+          type: 'order',
+          is_read: 0,
+          created_at: now.slice(0, 16)
+        });
+
+        // Jika status selesai (completed) dan belum pernah dapat poin dari order ini, tambahkan poin otomatis!
+        if (newStatus === 'completed' && !order.points_awarded) {
+          const perAmount = Math.max(1, Number(loyaltySettings.points_per_amount) || 10000);
+          const minOrder = Number(loyaltySettings.points_per_order_min) || 0;
+          const totalEst = Math.max(0, Number(order.total_estimate) || 0);
+          if (totalEst >= minOrder) {
+            const earnedPoints = Math.floor(totalEst / perAmount);
+            if (earnedPoints > 0) {
+              order.points_awarded = true;
+              matchedCust.points = (Number(matchedCust.points) || 0) + earnedPoints;
+              loyaltyTransactions.unshift({
+                id: loyaltyTransactions.length + 1,
+                customer_id: matchedCust.id,
+                customer_name: matchedCust.name,
+                points: earnedPoints,
+                description: `Poin belanja dari pesanan ${order.order_code}`,
+                created_at: now.slice(0, 16)
+              });
+              notifications.unshift({
+                id: notifications.length + 1,
+                customer_id: matchedCust.id,
+                customer_name: matchedCust.name,
+                title: 'Poin berhasil bertambah ⭐',
+                message: `Pesanan ${order.order_code} sudah selesai. Anda mendapatkan +${earnedPoints} Poin Member!`,
+                link: '/akun.php?tab=poin',
+                type: 'points',
+                is_read: 0,
+                created_at: now.slice(0, 16)
+              });
+            }
+          }
+        }
+      }
     }
-    if (newPaymentStatus) {
+
+    if (newPaymentStatus && newPaymentStatus !== order.payment_status) {
       order.payment_status = newPaymentStatus;
+      const payMsgMap = {
+        waiting: ['Pembayaran sedang diverifikasi', 'Konfirmasi pembayaran Anda sedang diperiksa oleh Admin.'],
+        partial: ['Pembayaran DP / sebagian diterima', 'Pembayaran sebagian/DP sudah tercatat oleh Admin.'],
+        paid: ['Pembayaran lunas', 'Pembayaran pesanan Anda sudah dinyatakan LUNAS oleh Seller.'],
+        rejected: ['Pembayaran perlu diperiksa kembali', 'Bukti pembayaran belum dapat diverifikasi. Silakan cek kembali atau hubungi Admin.']
+      };
+      if (matchedCust && payMsgMap[newPaymentStatus]) {
+        const [pTitle, pBody] = payMsgMap[newPaymentStatus];
+        notifications.unshift({
+          id: notifications.length + 1,
+          customer_id: matchedCust.id,
+          customer_name: matchedCust.name,
+          title: `${pTitle} (${order.order_code})`,
+          message: pBody,
+          link: `/lacak-pesanan.php?code=${encodeURIComponent(order.order_code)}&phone=${encodeURIComponent(order.customer_phone || '')}`,
+          type: 'payment',
+          is_read: 0,
+          created_at: now.slice(0, 16)
+        });
+      }
     }
     if (paidAmount !== undefined) {
       order.paid_amount = Number(paidAmount);
@@ -672,6 +778,26 @@ module.exports = {
         note: 'Bukti pembayaran diunggah oleh pelanggan' + (note ? ` (${note})` : '') + '. Menunggu verifikasi admin.',
         created_at: now
       });
+
+      const phoneDigits = String(order.customer_phone || '').replace(/\D+/g, '');
+      const matchedCust = customers.find(c => {
+        if (order.customer_id && c.id === Number(order.customer_id)) return true;
+        const cd = String(c.phone || '').replace(/\D+/g, '');
+        return cd && phoneDigits && cd.slice(-8) === phoneDigits.slice(-8);
+      });
+      if (matchedCust) {
+        notifications.unshift({
+          id: notifications.length + 1,
+          customer_id: matchedCust.id,
+          customer_name: matchedCust.name,
+          title: `Bukti bayar terkirim (${order.order_code})`,
+          message: 'Bukti pembayaran Anda sudah diterima dan sedang menunggu konfirmasi dari Seller.',
+          link: `/lacak-pesanan.php?code=${encodeURIComponent(order.order_code)}&phone=${encodeURIComponent(order.customer_phone || '')}`,
+          type: 'payment',
+          is_read: 0,
+          created_at: now.slice(0, 16)
+        });
+      }
       return true;
     }
     return false;
@@ -690,8 +816,9 @@ module.exports = {
   createCustomer: (data) => {
     const digits = String(data.phone || '').replace(/\D+/g, '');
     const local = digits.startsWith('62') ? ('0' + digits.slice(2)) : (digits.startsWith('8') ? ('0' + digits) : digits);
+    const newId = customers.length + 1;
     const c = {
-      id: customers.length + 1,
+      id: newId,
       name: data.name,
       username: data.username || (String(data.name || 'member').split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'member'),
       phone: local || data.phone,
@@ -708,6 +835,25 @@ module.exports = {
       avatar: ''
     };
     customers.push(c);
+    loyaltyTransactions.unshift({
+      id: loyaltyTransactions.length + 1,
+      customer_id: newId,
+      customer_name: c.name,
+      points: 100,
+      description: 'Bonus poin pendaftaran Member Baru',
+      created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+    });
+    notifications.unshift({
+      id: notifications.length + 1,
+      customer_id: newId,
+      customer_name: c.name,
+      title: 'Selamat Datang di Rosa Indah Member! 🎉',
+      message: 'Anda mendapatkan bonus 100 Poin Member Baru! Kumpulkan poin setiap pesanan cetak selesai dan tukarkan dengan voucher diskon.',
+      link: '/akun.php?tab=poin',
+      type: 'bonus',
+      is_read: 0,
+      created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+    });
     return c;
   },
   updateCustomer: (idOrPhone, data) => {
@@ -768,7 +914,10 @@ module.exports = {
   },
   // Promotions & Vouchers
   getPromotions: () => promotions,
-  getVouchers: () => vouchers,
+  getVouchers: (customerId) => {
+    if (!customerId) return vouchers.filter(v => !v.customer_id);
+    return vouchers.filter(v => !v.customer_id || Number(v.customer_id) === Number(customerId));
+  },
   addPromotion: (data) => {
     const item = {
       id: promotions.length + 1,
@@ -788,6 +937,19 @@ module.exports = {
       status: data.status || 'active'
     };
     promotions.push(item);
+    if (item.status === 'active') {
+      notifications.unshift({
+        id: notifications.length + 1,
+        customer_id: 0,
+        customer_name: 'Semua Member',
+        title: 'Promo baru tersedia 🎉',
+        message: `${item.name}. ${item.description || 'Ada promo baru yang bisa Anda nikmati sebagai Member.'}`,
+        link: '/promo.php',
+        type: 'promo',
+        is_read: 0,
+        created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      });
+    }
     return item;
   },
   deletePromotion: (id) => {
@@ -813,6 +975,19 @@ module.exports = {
       status: data.status || 'active'
     };
     vouchers.push(item);
+    if (item.status === 'active') {
+      notifications.unshift({
+        id: notifications.length + 1,
+        customer_id: 0,
+        customer_name: 'Semua Member',
+        title: 'Voucher baru tersedia 🎟️',
+        message: `${item.name} tersedia dengan kode ${item.code}. Gunakan voucher ini saat checkout.`,
+        link: '/akun.php?tab=poin',
+        type: 'voucher',
+        is_read: 0,
+        created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      });
+    }
     return item;
   },
   deleteVoucher: (id) => {
@@ -841,28 +1016,126 @@ module.exports = {
       status: data.status || 'active'
     };
     loyaltyRewards.push(item);
+    if (item.status === 'active') {
+      notifications.unshift({
+        id: notifications.length + 1,
+        customer_id: 0,
+        customer_name: 'Semua Member',
+        title: 'Reward Member baru tersedia 🎁',
+        message: `${item.name} (${item.points_cost} Poin) tersedia. Tukarkan poin Anda di menu Poin & Voucher.`,
+        link: '/akun.php?tab=poin',
+        type: 'reward',
+        is_read: 0,
+        created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      });
+    }
     return item;
   },
   deleteLoyaltyReward: (id) => {
     loyaltyRewards = loyaltyRewards.filter(r => r.id !== Number(id));
   },
-  adjustCustomerPoints: (customerId, points, description) => {
+  redeemLoyaltyReward: (customerId, rewardId) => {
     const cust = customers.find(c => c.id === Number(customerId));
-    if (!cust) return false;
-    cust.points = Math.max(0, (cust.points || 0) + Number(points));
-    loyaltyTransactions.push({
+    if (!cust) return { ok: false, message: 'Akun Member tidak valid.' };
+    const rw = loyaltyRewards.find(r => r.id === Number(rewardId) && r.status === 'active');
+    if (!rw) return { ok: false, message: 'Reward tidak tersedia.' };
+    const cost = Number(rw.points_cost) || 100;
+    if ((Number(cust.points) || 0) < cost) {
+      return { ok: false, message: 'Poin Anda belum mencukupi untuk menukar reward ini.' };
+    }
+    const randHex = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const code = `RWD${randHex}`;
+    cust.points = Math.max(0, (Number(cust.points) || 0) - cost);
+    rw.redeemed_count = (Number(rw.redeemed_count) || 0) + 1;
+    const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+
+    vouchers.unshift({
+      id: vouchers.length + 1,
+      code,
+      name: `Reward Member: ${rw.name}`,
+      description: 'Voucher hasil penukaran poin Member.',
+      discount_type: rw.discount_type,
+      discount_value: Number(rw.discount_value) || 0,
+      min_order: Number(rw.min_order) || 0,
+      max_discount: rw.max_discount ? Number(rw.max_discount) : null,
+      customer_id: cust.id,
+      status: 'active',
+      quota: 1,
+      usage_count: 0,
+      starts_at: nowStr.slice(0, 10),
+      ends_at: '2027-12-31'
+    });
+
+    loyaltyTransactions.unshift({
       id: loyaltyTransactions.length + 1,
       customer_id: cust.id,
       customer_name: cust.name,
-      points: Number(points),
+      points: -cost,
+      description: `Tukar reward: ${rw.name} (Kode: ${code})`,
+      created_at: nowStr
+    });
+
+    notifications.unshift({
+      id: notifications.length + 1,
+      customer_id: cust.id,
+      customer_name: cust.name,
+      title: 'Reward berhasil ditukar 🎁',
+      message: `Reward "${rw.name}" berhasil ditukar. Kode voucher Anda: ${code}`,
+      link: '/akun.php?tab=poin',
+      type: 'reward',
+      is_read: 0,
+      created_at: nowStr
+    });
+
+    return { ok: true, code, points: cust.points, message: `Reward berhasil ditukar! Kode voucher Anda: ${code}` };
+  },
+  adjustCustomerPoints: (customerId, points, description) => {
+    const cust = customers.find(c => c.id === Number(customerId));
+    if (!cust) return false;
+    const pts = Number(points) || 0;
+    cust.points = Math.max(0, (cust.points || 0) + pts);
+    const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+    loyaltyTransactions.unshift({
+      id: loyaltyTransactions.length + 1,
+      customer_id: cust.id,
+      customer_name: cust.name,
+      points: pts,
       description: description || 'Penyesuaian poin oleh Admin',
-      created_at: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      created_at: nowStr
+    });
+    notifications.unshift({
+      id: notifications.length + 1,
+      customer_id: cust.id,
+      customer_name: cust.name,
+      title: pts > 0 ? 'Bonus poin masuk 🎉' : 'Penyesuaian poin Member',
+      message: pts > 0
+        ? `Halo ${cust.name}, Anda mendapatkan bonus +${pts} poin. ${description || ''}`
+        : `Saldo poin Anda disesuaikan sebesar ${pts} poin. ${description || ''}`,
+      link: '/akun.php?tab=poin',
+      type: pts > 0 ? 'bonus' : 'points',
+      is_read: 0,
+      created_at: nowStr
     });
     return true;
   },
-  getLoyaltyTransactions: () => loyaltyTransactions,
+  getLoyaltyTransactions: (customerId) => {
+    if (!customerId) return loyaltyTransactions;
+    return loyaltyTransactions.filter(t => Number(t.customer_id) === Number(customerId));
+  },
   // Notifications
   getNotifications: () => notifications,
+  getMemberNotifications: (customerId) => {
+    const cid = Number(customerId) || 0;
+    return notifications.filter(n => Number(n.customer_id) === 0 || Number(n.customer_id) === cid);
+  },
+  markNotificationsRead: (customerId) => {
+    const cid = Number(customerId) || 0;
+    notifications.forEach(n => {
+      if (Number(n.customer_id) === 0 || Number(n.customer_id) === cid) {
+        n.is_read = 1;
+      }
+    });
+  },
   addNotification: (customerId, title, message, link) => {
     const notif = {
       id: notifications.length + 1,

@@ -84,6 +84,19 @@ function ensure_promotions_tables(PDO $pdo): void {
             try { $pdo->exec($sql); } catch (Throwable $e) {}
         }
     }
+
+    try {
+        $vCount = (int)$pdo->query("SELECT COUNT(*) FROM vouchers")->fetchColumn();
+        if ($vCount === 0) {
+            $now = date('Y-m-d H:i:s', time() - 86400);
+            $end = date('Y-m-d H:i:s', time() + 365 * 86400);
+            $ins = $pdo->prepare("INSERT IGNORE INTO vouchers (code, name, description, discount_type, discount_value, min_order, max_discount, scope_type, scope_value, member_only, quota, usage_count, starts_at, ends_at, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'all', NULL, ?, ?, 0, ?, ?, 'active')");
+            $ins->execute(['ROSAHEMAT10', 'Diskon Spesial Member 10%', 'Diskon 10% untuk semua produk percetakan.', 'percent', 10, 50000, 25000, 0, 100, $now, $end]);
+            $ins->execute(['MEMBERBARU', 'Potongan Member Baru Rp5.000', 'Potongan langsung Rp5.000 untuk pesanan pertama.', 'fixed', 5000, 30000, null, 0, 100, $now, $end]);
+            $ins->execute(['CETAKUMKM20', 'Potongan Cetak Kemasan & Stiker 20%', 'Diskon 20% khusus cetak stiker, banner & kemasan UMKM.', 'percent', 20, 100000, 40000, 1, 50, $now, $end]);
+            $ins->execute(['UNDANGAN25RB', 'Potongan Langsung Cetak Undangan Rp25.000', 'Potongan Rp25.000 untuk cetak undangan pernikahan / walimah.', 'fixed', 25000, 250000, null, 0, 50, $now, $end]);
+        }
+    } catch (Throwable $e) {}
 }
 
 function promo_now(): string { return date('Y-m-d H:i:s'); }

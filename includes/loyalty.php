@@ -61,6 +61,15 @@ function loyalty_ensure_tables(PDO $pdo): void {
             try { $pdo->exec("ALTER TABLE vouchers ADD INDEX idx_vouchers_customer (customer_id)"); } catch(Throwable $e) {}
         }
     } catch(Throwable $e) {}
+    try {
+        $rCount = (int)$pdo->query("SELECT COUNT(*) FROM loyalty_rewards")->fetchColumn();
+        if ($rCount === 0) {
+            $insR = $pdo->prepare("INSERT INTO loyalty_rewards (name, points_cost, discount_type, discount_value, min_order, max_discount, validity_days, quota, redeemed_count, status) VALUES (?, ?, ?, ?, ?, ?, 30, NULL, 0, 'active')");
+            $insR->execute(['Voucher Potongan Rp10.000', 100, 'fixed', 10000, 50000, null]);
+            $insR->execute(['Voucher Diskon Cetak 10%', 150, 'percent', 10, 100000, 30000]);
+            $insR->execute(['Voucher Potongan Partai Rp25.000', 250, 'fixed', 25000, 200000, null]);
+        }
+    } catch(Throwable $e) {}
 }
 
 function loyalty_settings(PDO $pdo): array {
@@ -70,7 +79,27 @@ function loyalty_settings(PDO $pdo): array {
 }
 function loyalty_balance(PDO $pdo, int $customerId): int {
     loyalty_ensure_tables($pdo);
-    $s=$pdo->prepare('SELECT COALESCE(SUM(points),0) FROM loyalty_transactions WHERE customer_id=?'); $s->execute([$customerId]); return max(0,(int)$s->fetchColumn());
+    $cntStmt = $pdo->prepare('SELECT COUNT(*) FROM loyalty_transactions WHERE customer_id=?');
+    $cntStmt->execute([$customerId]);
+    if ((int)$cntStmt->fetchColumn() === 0 && $customerId > 0) {
+        try {
+            $initPts = 100;
+            $cStmt = $pdo->prepare('SELECT points FROM customers WHERE id=? LIMIT 1');
+            $cStmt->execute([$customerId]);
+            $dbPts = $cStmt->fetchColumn();
+            if ($dbPts !== false && (int)$dbPts > 0) {
+                $initPts = (int)$dbPts;
+            }
+            $insT = $pdo->prepare("INSERT INTO loyalty_transactions(customer_id,type,points,balance_after,description) VALUES(?,'adjust',?,?,?)");
+            $insT->execute([$customerId, $initPts, $initPts, 'Bonus poin pendaftaran Member Baru']);
+        } catch (Throwable $e) {}
+    }
+    $s=$pdo->prepare('SELECT COALESCE(SUM(points),0) FROM loyalty_transactions WHERE customer_id=?'); $s->execute([$customerId]);
+    $bal = max(0,(int)$s->fetchColumn());
+    try {
+        $pdo->prepare('UPDATE customers SET points=? WHERE id=?')->execute([$bal, $customerId]);
+    } catch (Throwable $e) {}
+    return $bal;
 }
 function loyalty_earn_for_completed_order(PDO $pdo, int $orderId): array {
     loyalty_ensure_tables($pdo);

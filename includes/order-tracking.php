@@ -79,6 +79,40 @@ function order_add_notification(PDO $pdo, int $orderId, string $type, string $ti
         $history = $pdo->prepare('INSERT INTO order_status_history (order_id, status, title, message) VALUES (?, ?, ?, ?)');
         $history->execute([$orderId, $status, $title, $message]);
     }
+
+    // Sinkronkan juga ke tabel member_notifications agar muncul di ikon lonceng header Member
+    try {
+        if (is_file(__DIR__ . '/notifications.php')) {
+            require_once __DIR__ . '/notifications.php';
+        }
+        if (function_exists('member_notification_add')) {
+            $ordStmt = $pdo->prepare('SELECT customer_id, order_code, customer_phone FROM orders WHERE id = ? LIMIT 1');
+            $ordStmt->execute([$orderId]);
+            $ordRow = $ordStmt->fetch(PDO::FETCH_ASSOC);
+            if ($ordRow) {
+                $cid = (int)($ordRow['customer_id'] ?? 0);
+                $oCode = (string)($ordRow['order_code'] ?? '');
+                $oPhone = (string)($ordRow['customer_phone'] ?? '');
+                if ($cid <= 0 && $oPhone !== '') {
+                    $normPhone = order_normalize_phone($oPhone);
+                    $localPhone = strpos($normPhone, '62') === 0 ? ('0' . substr($normPhone, 2)) : $normPhone;
+                    $cStmt = $pdo->prepare('SELECT id FROM customers WHERE phone = ? OR phone = ? OR phone = ? LIMIT 1');
+                    $cStmt->execute([$oPhone, $normPhone, $localPhone]);
+                    $cid = (int)$cStmt->fetchColumn();
+                }
+                if ($cid > 0) {
+                    $notifType = $type === 'payment' ? 'payment' : 'order';
+                    $notifTitle = $oCode !== '' ? ($title . ' (' . $oCode . ')') : $title;
+                    $notifLink = function_exists('page_url')
+                        ? page_url('lacak-pesanan.php?code=' . urlencode($oCode) . ($oPhone !== '' ? '&phone=' . urlencode($oPhone) : ''))
+                        : ('lacak-pesanan.php?code=' . urlencode($oCode));
+                    member_notification_add($pdo, $cid, $notifType, $notifTitle, $message, $notifLink);
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        // Abaikan jika tabel member_notifications belum siap
+    }
 }
 
 function order_record_status(PDO $pdo, int $orderId, string $status): void {

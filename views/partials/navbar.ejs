@@ -15,6 +15,158 @@
     display: none !important;
   }
 }
+.notif-dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.notification-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid #f4c8dc;
+  background: #fff5f9;
+  color: #e11d64;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 17px;
+  padding: 0;
+}
+.notification-nav-btn:hover {
+  background: #ffe4ef;
+  color: #be124f;
+  transform: translateY(-1px);
+}
+.notif-badge-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #e11d64;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+  line-height: 1;
+}
+.notif-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  background: #ffffff;
+  border: 1.5px solid #f2dce7;
+  border-radius: 18px;
+  box-shadow: 0 18px 42px rgba(24, 36, 58, 0.14);
+  z-index: 1055;
+  display: none;
+  overflow: hidden;
+}
+.notif-dropdown-menu.show {
+  display: block;
+}
+.notif-dropdown-header {
+  padding: 13px 16px;
+  background: linear-gradient(135deg, #fff5f9 0%, #ffffff 100%);
+  border-bottom: 1px solid #f3e2eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.notif-dropdown-header strong {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #18243a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.notif-dropdown-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+.notif-dropdown-item {
+  display: flex;
+  gap: 11px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f7edf2;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.notif-dropdown-item:hover {
+  background: #fff9fc;
+}
+.notif-dropdown-item.unread {
+  background: #fff5f9;
+}
+.notif-item-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.notif-item-body {
+  flex: 1;
+  min-width: 0;
+}
+.notif-item-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #18243a;
+  margin-bottom: 2px;
+  line-height: 1.35;
+}
+.notif-item-msg {
+  font-size: 11.5px;
+  color: #6b7280;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.notif-item-time {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.notif-dropdown-footer {
+  padding: 10px 16px;
+  background: #fffafc;
+  text-align: center;
+  border-top: 1px solid #f3e2eb;
+}
+.notif-dropdown-footer a {
+  font-size: 12px;
+  font-weight: 800;
+  color: #e11d64;
+  text-decoration: none;
+}
+@media (max-width: 575.98px) {
+  .notif-dropdown-menu {
+    position: fixed;
+    top: 66px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+}
 </style>
 <nav class="navbar navbar-expand-lg custom-navbar">
     <div class="container">
@@ -70,12 +222,103 @@
                 <% } %>
             </a>
             <% if (currentUser) { %>
-                <% const navAvatarSrc = currentUser.avatar ? (currentUser.avatar.startsWith('data:image/') || currentUser.avatar.startsWith('http') ? currentUser.avatar : '/' + currentUser.avatar.replace(/^\/+/, '')) : ''; %>
+                <%
+                    const navNotifs = (typeof navNotifications !== 'undefined' && Array.isArray(navNotifications)) ? navNotifications : [];
+                    const navUnreadCount = (typeof navUnreadNotifCount !== 'undefined') ? Number(navUnreadNotifCount || 0) : 0;
+                    const navAvatarSrc = currentUser.avatar ? (currentUser.avatar.startsWith('data:image/') || currentUser.avatar.startsWith('http') ? currentUser.avatar : '/' + currentUser.avatar.replace(/^\/+/, '')) : '';
+                %>
+                <div class="notif-dropdown-wrap" id="navNotifWrap">
+                    <button type="button" class="notification-nav-btn" id="navNotifBtn" aria-label="Notifikasi Member" title="Notifikasi Pesanan & Promo">
+                        <i class="bi bi-bell"></i>
+                        <% if (navUnreadCount > 0) { %>
+                            <span class="notif-badge-dot"><%= navUnreadCount > 9 ? '9+' : navUnreadCount %></span>
+                        <% } %>
+                    </button>
+                    <div class="notif-dropdown-menu" id="navNotifMenu">
+                        <div class="notif-dropdown-header">
+                            <strong><i class="bi bi-bell-fill text-rosa"></i> Notifikasi Member</strong>
+                            <% if (navUnreadCount > 0) { %>
+                                <span style="background:#ffe4ef;color:#e11d64;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;"><%= navUnreadCount %> Baru</span>
+                            <% } %>
+                        </div>
+                        <div class="notif-dropdown-list">
+                            <% if (navNotifs.length === 0) { %>
+                                <div style="padding:24px 16px;text-align:center;color:#8c7f88;font-size:12.5px;">
+                                    <i class="bi bi-bell-slash d-block mb-1" style="font-size:22px;color:#d6b8c7;"></i>
+                                    Belum ada notifikasi pesanan atau promo.
+                                </div>
+                            <% } else { %>
+                                <% navNotifs.slice(0, 5).forEach(function(nf) {
+                                    const nfType = String(nf.type || 'info');
+                                    let nfIcon = 'bi-megaphone-fill';
+                                    let nfBg = '#fff0f6';
+                                    let nfColor = '#e11d64';
+                                    let nfLink = page_url('akun?tab=notifikasi');
+                                    if (nfType === 'order') {
+                                        nfIcon = 'bi-box-seam-fill';
+                                        nfBg = '#eef6ff';
+                                        nfColor = '#1d4ed8';
+                                        nfLink = page_url('akun?tab=pesanan');
+                                    } else if (nfType === 'payment') {
+                                        nfIcon = 'bi-credit-card-2-front-fill';
+                                        nfBg = '#e8f8ef';
+                                        nfColor = '#15803d';
+                                        nfLink = page_url('akun?tab=pesanan');
+                                    } else if (nfType === 'reward') {
+                                        nfIcon = 'bi-stars';
+                                        nfBg = '#fff9df';
+                                        nfColor = '#b45309';
+                                        nfLink = page_url('akun?tab=poin');
+                                    } else if (nfType === 'promo') {
+                                        nfIcon = 'bi-ticket-perforated-fill';
+                                        nfBg = '#fff0f6';
+                                        nfColor = '#e11d64';
+                                        nfLink = page_url('akun?tab=poin');
+                                    }
+                                %>
+                                    <a href="<%= nfLink %>" class="notif-dropdown-item <%= !nf.is_read ? 'unread' : '' %>">
+                                        <div class="notif-item-icon" style="background:<%= nfBg %>;color:<%= nfColor %>;">
+                                            <i class="bi <%= nfIcon %>"></i>
+                                        </div>
+                                        <div class="notif-item-body">
+                                            <div class="notif-item-title"><%= nf.title || 'Info Rosa Indah' %></div>
+                                            <div class="notif-item-msg"><%= nf.message || '' %></div>
+                                            <% if (nf.created_at) { %>
+                                                <div class="notif-item-time"><%= new Date(nf.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+                                            <% } %>
+                                        </div>
+                                    </a>
+                                <% }); %>
+                            <% } %>
+                        </div>
+                        <div class="notif-dropdown-footer">
+                            <a href="<%= page_url('akun?tab=notifikasi') %>">Lihat Semua Notifikasi <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
                 <a href="<%= page_url('akun') %>" class="login-btn" title="Akun Saya">
                     <img id="navAvatarImg" src="<%= navAvatarSrc %>" alt="<%= currentUser.name %>" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff; <%= navAvatarSrc ? 'display: inline-block;' : 'display: none;' %>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">
                     <i id="navAvatarIcon" class="bi bi-person-circle" style="<%= navAvatarSrc ? 'display: none;' : 'display: inline-block;' %>"></i>
                     <span><%= currentUser.name.split(' ')[0] %></span>
                 </a>
+                <script>
+                (function() {
+                    var btn = document.getElementById('navNotifBtn');
+                    var menu = document.getElementById('navNotifMenu');
+                    var wrap = document.getElementById('navNotifWrap');
+                    if (btn && menu && wrap) {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            menu.classList.toggle('show');
+                        });
+                        document.addEventListener('click', function(e) {
+                            if (!wrap.contains(e.target)) {
+                                menu.classList.remove('show');
+                            }
+                        });
+                    }
+                })();
+                </script>
             <% } else { %>
                 <a href="<%= page_url('login') %>" class="login-btn" title="Login Member">
                     <i class="bi bi-person"></i>

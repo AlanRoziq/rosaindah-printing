@@ -192,10 +192,24 @@ app.use((req, res, next) => {
     if (clean.startsWith('assets/')) return '/' + clean;
     return '/assets/images/' + clean;
   };
+  if (req.session.customer && req.session.customer.phone) {
+    const freshCust = store.getCustomerByPhone(req.session.customer.phone);
+    if (freshCust) {
+      req.session.customer = { ...req.session.customer, ...freshCust };
+    }
+  }
+  const activeCustomer = req.session.customer || null;
+  const navNotifs = activeCustomer && store.getMemberNotifications
+    ? store.getMemberNotifications(activeCustomer.id)
+    : [];
+  const navUnread = navNotifs.filter(n => !n.is_read).length;
+
   res.locals.format_rupiah = (amount) => 'Rp' + Number(amount || 0).toLocaleString('id-ID');
   res.locals.cart = cartItems;
   res.locals.cart_count = cartCount;
-  res.locals.currentUser = req.session.customer || null;
+  res.locals.currentUser = activeCustomer;
+  res.locals.navNotifications = navNotifs;
+  res.locals.navUnreadNotifCount = navUnread;
   res.locals.currentAdmin = req.session.admin || null;
   res.locals.categories = store.categories;
   res.locals.homeCategories = store.homeCategories;
@@ -732,8 +746,18 @@ const handleAkunGet = (req, res) => {
   const orders = user
     ? (store.getCustomerOrders ? store.getCustomerOrders(user.phone || user.id) : store.getOrders())
     : [];
-  const vouchers = store.getVouchers ? store.getVouchers() : [];
+  const vouchers = store.getVouchers ? store.getVouchers(user ? user.id : null) : [];
+  const loyaltyRewards = store.getLoyaltyRewards ? store.getLoyaltyRewards().filter(r => r.status === 'active') : [];
+  const loyaltyTransactions = (user && store.getLoyaltyTransactions) ? store.getLoyaltyTransactions(user.id) : [];
+  const loyaltyRule = store.getLoyaltySettings ? store.getLoyaltySettings() : { points_per_amount: 10000, points_per_order_min: 0 };
   const tab = req.query.tab || 'profil';
+
+  if (user && tab === 'notifikasi' && store.markNotificationsRead) {
+    store.markNotificationsRead(user.id);
+  }
+  const memberNotifications = (user && store.getMemberNotifications) ? store.getMemberNotifications(user.id) : [];
+  const unreadNotifCount = memberNotifications.filter(n => !n.is_read).length;
+
   let notice = req.query.notice || '';
   if (!notice && req.query.welcome) {
     notice = 'Akun Member berhasil didaftarkan. Selamat datang di Rosa Indah Printing!';
@@ -748,6 +772,11 @@ const handleAkunGet = (req, res) => {
     user,
     orders,
     vouchers,
+    loyaltyRewards,
+    loyaltyTransactions,
+    loyaltyRule,
+    memberNotifications,
+    unreadNotifCount,
     stats: {
       total: orders.length,
       active: activeOrdersCount,
@@ -785,7 +814,23 @@ const handleAkunPost = (req, res) => {
     return res.redirect('/login.php');
   }
   const current = req.session.customer;
-  const { name, username, phone, email, gender, birth_date, city, address, address_note, remove_avatar, ajax_avatar } = req.body;
+  const { action, reward_id, name, username, phone, email, gender, birth_date, city, address, address_note, remove_avatar, ajax_avatar } = req.body;
+
+  if (action === 'redeem_reward') {
+    const resRedeem = store.redeemLoyaltyReward(current.id, reward_id);
+    if (resRedeem.ok) {
+      req.session.customer.points = resRedeem.points;
+      return res.redirect('/akun.php?tab=poin&notice=' + encodeURIComponent(resRedeem.message));
+    }
+    return res.redirect('/akun.php?tab=poin&error=' + encodeURIComponent(resRedeem.message || 'Gagal menukar poin.'));
+  }
+
+  if (action === 'mark_notif_read') {
+    if (store.markNotificationsRead) {
+      store.markNotificationsRead(current.id);
+    }
+    return res.redirect('/akun.php?tab=notifikasi&notice=' + encodeURIComponent('Semua notifikasi telah ditandai sudah dibaca.'));
+  }
 
   if (ajax_avatar === '1') {
     const newAvatar = req.file ? ('uploads/avatars/' + req.file.filename) : (remove_avatar === '1' ? '' : (current.avatar || ''));
@@ -850,10 +895,10 @@ app.get('/logout.php', (req, res) => {
 });
 
 // Member points and notifications
-app.get('/poin-member', (req, res) => res.redirect('/akun.php'));
-app.get('/poin-member.php', (req, res) => res.redirect('/akun.php'));
-app.get('/notifikasi-member', (req, res) => res.redirect('/akun.php'));
-app.get('/notifikasi-member.php', (req, res) => res.redirect('/akun.php'));
+app.get('/poin-member', (req, res) => res.redirect('/akun.php?tab=poin'));
+app.get('/poin-member.php', (req, res) => res.redirect('/akun.php?tab=poin'));
+app.get('/notifikasi-member', (req, res) => res.redirect('/akun.php?tab=notifikasi'));
+app.get('/notifikasi-member.php', (req, res) => res.redirect('/akun.php?tab=notifikasi'));
 
 // ==========================================
 // ADMIN ROUTES

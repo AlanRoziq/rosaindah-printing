@@ -56,13 +56,23 @@ if ($isLoggedIn && $user && $pdo && !empty($user['id'])) {
     } catch (Throwable $eFresh) {}
 }
 
+if (is_file(__DIR__ . '/includes/loyalty.php')) {
+    require_once __DIR__ . '/includes/loyalty.php';
+}
+if (is_file(__DIR__ . '/includes/promotions.php')) {
+    require_once __DIR__ . '/includes/promotions.php';
+}
+if (is_file(__DIR__ . '/includes/notifications.php')) {
+    require_once __DIR__ . '/includes/notifications.php';
+}
+
 $tab = isset($_GET['tab']) ? trim((string)$_GET['tab']) : 'profil';
-if (!in_array($tab, ['profil', 'pesanan', 'poin', 'alamat'], true)) {
+if (!in_array($tab, ['profil', 'pesanan', 'poin', 'notifikasi', 'alamat'], true)) {
     $tab = 'profil';
 }
 
-$notice = '';
-$error = '';
+$notice = isset($_GET['notice']) ? trim((string)$_GET['notice']) : '';
+$error = isset($_GET['error']) ? trim((string)$_GET['error']) : '';
 
 if (isset($_GET['welcome'])) {
     $notice = 'Akun Member berhasil diverifikasi. Selamat datang di Rosa Indah Printing!';
@@ -129,6 +139,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $id = (int)($user['id'] ?? 0);
+    $postAction = trim((string)($_POST['action'] ?? ''));
+
+    // Aksi Tukar Poin dengan Voucher Reward
+    if ($postAction === 'redeem_reward') {
+        $rewardId = (int)($_POST['reward_id'] ?? 0);
+        if ($pdo && $id > 0 && function_exists('loyalty_issue_reward')) {
+            [$okRedeem, $msgRedeem, $codeRedeem] = loyalty_issue_reward($pdo, $id, $rewardId);
+            if ($okRedeem) {
+                $newBal = function_exists('loyalty_balance') ? loyalty_balance($pdo, $id) : max(0, (int)($user['points'] ?? 100));
+                $user['points'] = $newBal;
+                $_SESSION['customer']['points'] = $newBal;
+                header('Location: ' . page_url('akun.php?tab=poin&notice=' . urlencode($msgRedeem)));
+                exit;
+            } else {
+                header('Location: ' . page_url('akun.php?tab=poin&error=' . urlencode($msgRedeem)));
+                exit;
+            }
+        } else {
+            header('Location: ' . page_url('akun.php?tab=poin&error=' . urlencode('Layanan penukaran poin belum tersedia.')));
+            exit;
+        }
+    }
+
+    // Aksi Tandai Semua Notifikasi Sudah Dibaca
+    if ($postAction === 'mark_notif_read') {
+        if ($pdo && $id > 0 && function_exists('member_notification_mark_read')) {
+            try {
+                member_notification_mark_read($pdo, $id);
+            } catch (Throwable $e) {}
+        }
+        header('Location: ' . page_url('akun.php?tab=notifikasi&notice=' . urlencode('Semua notifikasi telah ditandai sudah dibaca.')));
+        exit;
+    }
+
     $removeAvatar = ($_POST['remove_avatar'] ?? '0') === '1';
 
     // Mode Auto-Upload / Hapus Foto Profil Instan via AJAX
@@ -286,6 +330,13 @@ $vouchers = [
         'discount_value' => 10
     ],
     [
+        'code' => 'MEMBERBARU',
+        'name' => 'Potongan Member Baru Rp5.000',
+        'min_order' => 30000,
+        'discount_type' => 'fixed',
+        'discount_value' => 5000
+    ],
+    [
         'code' => 'CETAKUMKM20',
         'name' => 'Potongan Cetak Kemasan & Stiker 20%',
         'min_order' => 100000,
@@ -300,6 +351,30 @@ $vouchers = [
         'discount_value' => 25000
     ]
 ];
+$loyaltyRewards = [
+    [
+        'id' => 1,
+        'name' => 'Voucher Potongan Rp10.000',
+        'points_cost' => 100,
+        'discount_type' => 'fixed',
+        'discount_value' => 10000,
+        'min_order' => 50000,
+        'validity_days' => 30
+    ],
+    [
+        'id' => 2,
+        'name' => 'Voucher Diskon Cetak 10%',
+        'points_cost' => 150,
+        'discount_type' => 'percent',
+        'discount_value' => 10,
+        'min_order' => 100000,
+        'validity_days' => 30
+    ]
+];
+$loyaltyTransactions = [];
+$memberNotifications = [];
+$unreadNotifCount = 0;
+$loyaltyRule = ['points_per_amount' => 10000, 'points_per_order_min' => 0];
 
 if ($isLoggedIn && $user) {
     $id = (int)($user['id'] ?? 0);
@@ -309,6 +384,7 @@ if ($isLoggedIn && $user) {
         : [$phone, $phone];
 
     if ($pdo) {
+        // 1. Ambil Pesanan & Statistik
         try {
             $q = $pdo->prepare('SELECT * FROM orders WHERE customer_id = ? OR customer_phone = ? OR customer_phone = ? ORDER BY created_at DESC LIMIT 100');
             $q->execute([$id, $phoneNorm, $phoneLocal]);
@@ -326,7 +402,6 @@ if ($isLoggedIn && $user) {
                     $stats['spent'] += (float)($o['total_estimate'] ?? 0);
                 }
 
-                // Ambil item pesanan jika tabel order_items tersedia
                 $o['items'] = [];
                 try {
                     $qi = $pdo->prepare('SELECT * FROM order_items WHERE order_id = ?');
@@ -340,6 +415,55 @@ if ($isLoggedIn && $user) {
         } catch (Throwable $e) {
             $orders = [];
         }
+
+        // 2. Sinkronkan Poin Loyalty, Daftar Reward, dan Riwayat Poin
+        try {
+            if (function_exists('loyalty_ensure_tables')) {
+                loyalty_ensure_tables($pdo);
+                $loyaltyRule = loyalty_settings($pdo);
+                if ($id > 0) {
+                    $livePoints = loyalty_balance($pdo, $id);
+                    $user['points'] = $livePoints;
+                    $_SESSION['customer']['points'] = $livePoints;
+
+                    $trStmt = $pdo->prepare('SELECT * FROM loyalty_transactions WHERE customer_id = ? ORDER BY created_at DESC, id DESC LIMIT 20');
+                    $trStmt->execute([$id]);
+                    $loyaltyTransactions = $trStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                }
+                $rwStmt = $pdo->query("SELECT * FROM loyalty_rewards WHERE status = 'active' ORDER BY points_cost ASC, id DESC");
+                $dbRewards = $rwStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                if (!empty($dbRewards)) {
+                    $loyaltyRewards = $dbRewards;
+                }
+            }
+        } catch (Throwable $e) {}
+
+        // 3. Sinkronkan Voucher Aktif (Voucher Umum + Voucher Reward Member)
+        try {
+            if (function_exists('ensure_promotions_tables')) {
+                ensure_promotions_tables($pdo);
+            }
+            $vStmt = $pdo->prepare("SELECT * FROM vouchers WHERE status = 'active' AND ends_at >= NOW() AND (customer_id IS NULL OR customer_id = 0 OR customer_id = ?) ORDER BY customer_id DESC, id DESC");
+            $vStmt->execute([$id]);
+            $dbVouchers = $vStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            if (!empty($dbVouchers)) {
+                $vouchers = $dbVouchers;
+            }
+        } catch (Throwable $e) {}
+
+        // 4. Sinkronkan Notifikasi Member (Dari Seller & Dari Pesanan)
+        try {
+            if (function_exists('notifications_ensure_tables')) {
+                notifications_ensure_tables($pdo);
+                if ($id > 0) {
+                    if ($tab === 'notifikasi') {
+                        member_notification_mark_read($pdo, $id);
+                    }
+                    $memberNotifications = member_notifications($pdo, $id, 50);
+                    $unreadNotifCount = member_notification_unread_count($pdo, $id);
+                }
+            }
+        } catch (Throwable $e) {}
     }
 }
 
@@ -731,63 +855,173 @@ include __DIR__ . '/includes/header.php';
     margin-bottom: 12px;
 }
 
+/* User Identity Meta & Hero Action Pills */
+.profile-user-identity {
+    min-width: 0;
+    flex: 1;
+}
+.profile-user-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: #6f626b;
+}
+.profile-user-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.profile-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.profile-action-pill {
+    border-radius: 12px;
+    padding: 9px 14px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 12.5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.profile-action-pill:hover {
+    transform: translateY(-1px);
+}
+.profile-action-pill.pill-points {
+    background: #fff9df;
+    border: 1px solid #fae69e;
+    color: #9c6c00;
+}
+.profile-action-pill.pill-vouchers {
+    background: #fff0f6;
+    border: 1px solid #f2c9de;
+    color: #e11d64;
+}
+.profile-action-pill.pill-logout {
+    background: #ffffff;
+    border: 1px solid #f0dce6;
+    color: #a43a4e;
+    font-weight: 700;
+}
+
 /* Quick Stats Bar */
 .profile-stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
     margin-top: 18px;
 }
 .profile-stat-box {
     background: #ffffff;
     border: 1px solid #f2dce7;
-    border-radius: 14px;
-    padding: 12px 14px;
+    border-radius: 15px;
+    padding: 13px 14px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
+    min-width: 0;
 }
 .profile-stat-icon {
     width: 38px;
     height: 38px;
-    border-radius: 10px;
+    border-radius: 11px;
     background: #fff0f6;
     color: #e11d64;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 17px;
     flex-shrink: 0;
+}
+.profile-stat-info {
+    min-width: 0;
+    flex: 1;
 }
 .profile-stat-info strong {
     display: block;
     font-size: 16px;
     font-weight: 800;
     color: #18243a;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .profile-stat-info span {
-    font-size: 11px;
-    color: #8c7f88;
+    display: block;
+    font-size: 11.5px;
+    color: #7d727b;
     font-weight: 600;
+    line-height: 1.3;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Mobile Specific Optimizations */
 @media (max-width: 768px) {
     .profile-hero-card {
-        padding: 18px;
+        padding: 18px 16px;
         border-radius: 20px;
     }
     .profile-hero-flex {
         flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 16px !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+    .profile-user-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+        margin-top: 5px;
+    }
+    .profile-hero-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 8px !important;
+        width: 100%;
+    }
+    .profile-action-pill {
+        padding: 9px 10px;
+        font-size: 12px;
+    }
+    .profile-action-pill.pill-logout {
+        padding: 9px 12px;
     }
     .profile-stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+    .profile-stat-box {
+        padding: 11px 12px;
+        gap: 9px;
+    }
+    .profile-stat-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+        border-radius: 10px;
+    }
+    .profile-stat-info strong {
+        font-size: 14.5px;
+    }
+    .profile-stat-info span {
+        font-size: 11px;
     }
     .profile-card {
-        padding: 18px;
+        padding: 18px 16px;
         border-radius: 18px;
     }
     .form-grid-2 {
@@ -1041,37 +1275,50 @@ include __DIR__ . '/includes/header.php';
                         </div>
 
                         <!-- User Name & Badges -->
-                        <div>
+                        <div class="profile-user-identity">
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <h1 style="font-size: 22px; font-weight: 800; color: #18243a; margin: 0;">
+                                <h1 style="font-size: 21px; font-weight: 800; color: #18243a; margin: 0; line-height: 1.2;">
                                     <?php echo account_e($user['name'] ?? 'Member'); ?>
                                 </h1>
-                                <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;">
-                                    <i class="bi bi-award-fill"></i> <?php echo account_e($user['member_tier'] ?? 'Member Prioritas'); ?>
+                                <span style="background: #e11d64; color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                    <i class="bi bi-award-fill"></i> <?php echo account_e($user['member_tier'] ?? 'Member Baru'); ?>
                                 </span>
                             </div>
 
-                            <div class="d-flex align-items-center gap-3 mt-1 flex-wrap" style="font-size: 12.5px; color: #7d727b;">
-                                <span><i class="bi bi-person-circle text-rosa"></i> @<?php echo account_e(!empty($user['username']) ? $user['username'] : ($user['phone'] ?? 'member')); ?></span>
-                                <span>•</span>
-                                <span><i class="bi bi-whatsapp text-success"></i> <?php echo account_e($user['phone'] ?? ''); ?></span>
+                            <div class="profile-user-meta">
+                                <span class="profile-user-meta-item">
+                                    <i class="bi bi-person-circle text-rosa"></i>
+                                    <span>@<?php echo account_e(!empty($user['username']) ? $user['username'] : ($user['phone'] ?? 'member')); ?></span>
+                                </span>
+                                <?php if (!empty($user['phone'])): ?>
+                                    <span class="profile-user-meta-item">
+                                        <i class="bi bi-whatsapp text-success"></i>
+                                        <span><?php echo account_e($user['phone']); ?></span>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if (!empty($user['email'])): ?>
+                                    <span class="profile-user-meta-item">
+                                        <i class="bi bi-envelope text-secondary"></i>
+                                        <span><?php echo account_e($user['email']); ?></span>
+                                    </span>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
 
                     <!-- Right Action / Reward Badges -->
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <a href="<?php echo page_url('akun.php?tab=poin'); ?>" style="background: #fff9df; border: 1px solid #fae69e; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #9c6c00; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                    <div class="profile-hero-actions">
+                        <a href="<?php echo page_url('akun.php?tab=poin'); ?>" class="profile-action-pill pill-points">
                             <i class="bi bi-star-fill text-warning"></i>
-                            <span><?php echo (int)($user['points'] ?? 150); ?> Poin Member</span>
+                            <span><?php echo (int)($user['points'] ?? 100); ?> Poin Member</span>
                         </a>
 
-                        <a href="<?php echo page_url('akun.php?tab=poin'); ?>" style="background: #fff0f6; border: 1px solid #f2c9de; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #e11d64; font-weight: 800; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;">
+                        <a href="<?php echo page_url('akun.php?tab=poin'); ?>" class="profile-action-pill pill-vouchers">
                             <i class="bi bi-ticket-perforated-fill"></i>
                             <span><?php echo count($vouchers); ?> Voucher</span>
                         </a>
 
-                        <a href="<?php echo page_url('logout.php'); ?>" style="background: #ffffff; border: 1px solid #f0dce6; border-radius: 12px; padding: 9px 14px; text-decoration: none; color: #a43a4e; font-weight: 700; font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px;" title="Keluar Akun">
+                        <a href="<?php echo page_url('logout.php'); ?>" class="profile-action-pill pill-logout" title="Keluar Akun">
                             <i class="bi bi-box-arrow-right"></i>
                             <span class="d-none d-sm-inline">Keluar</span>
                         </a>
@@ -1128,6 +1375,13 @@ include __DIR__ . '/includes/header.php';
                     <a href="<?php echo page_url('akun.php?tab=poin'); ?>" class="marketplace-tab-btn <?php echo ($tab === 'poin') ? 'active' : ''; ?>">
                         <i class="bi bi-stars"></i>
                         <span>Poin &amp; Voucher</span>
+                    </a>
+                    <a href="<?php echo page_url('akun.php?tab=notifikasi'); ?>" class="marketplace-tab-btn <?php echo ($tab === 'notifikasi') ? 'active' : ''; ?>">
+                        <i class="bi bi-bell"></i>
+                        <span>Notifikasi</span>
+                        <?php if ($unreadNotifCount > 0): ?>
+                            <span class="badge-pill"><?php echo $unreadNotifCount; ?></span>
+                        <?php endif; ?>
                     </a>
                     <a href="<?php echo page_url('akun.php?tab=alamat'); ?>" class="marketplace-tab-btn <?php echo ($tab === 'alamat') ? 'active' : ''; ?>">
                         <i class="bi bi-geo-alt"></i>
@@ -1461,14 +1715,53 @@ include __DIR__ . '/includes/header.php';
                                 <i class="bi bi-stars" style="font-size: 22px;"></i> Saldo Poin Saya
                             </h2>
                             <div style="font-size: 38px; font-weight: 800; color: #d67a00; font-variant-numeric: tabular-nums;">
-                                <?php echo (int)($user['points'] ?? 150); ?> <span style="font-size: 16px; font-weight: 700; color: #8f6500;">Poin</span>
+                                <?php echo (int)($user['points'] ?? 100); ?> <span style="font-size: 16px; font-weight: 700; color: #8f6500;">Poin</span>
                             </div>
                             <p style="font-size: 12.5px; color: #7f6629; margin: 10px 0 16px; line-height: 1.6;">
-                                Kumpulkan poin setiap pemesanan cetak di Rosa Indah Printing. Setiap kelipatan belanja Rp10.000 otomatis mendapatkan 1 Poin reward.
+                                Kumpulkan poin setiap pemesanan cetak di Rosa Indah Printing. Setiap kelipatan belanja <b><?php echo format_rupiah($loyaltyRule['points_per_amount'] ?? 10000); ?></b> pada pesanan yang berstatus <b>Selesai</b> otomatis mendapatkan <b>1 Poin</b> reward.
                             </p>
                             <a href="<?php echo page_url('produk.php'); ?>" class="btn-save-profile" style="padding: 10px 20px; font-size: 13px;">
                                 <i class="bi bi-cart-plus"></i> Belanja Tambah Poin
                             </a>
+                        </div>
+
+                        <!-- Tukar Poin Jadi Voucher Reward -->
+                        <div class="profile-card">
+                            <div class="profile-card-header">
+                                <div>
+                                    <h2><i class="bi bi-gift-fill text-rosa"></i> Tukar Poin Reward</h2>
+                                    <p>Tukarkan poin Anda menjadi kode voucher potongan belanja.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; gap: 12px;">
+                                <?php foreach ($loyaltyRewards as $rw):
+                                    $rwCost = (int)($rw['points_cost'] ?? 100);
+                                    $canRedeem = ((int)($user['points'] ?? 100) >= $rwCost);
+                                    $rwDiscLabel = (($rw['discount_type'] ?? 'fixed') === 'percent')
+                                        ? ((int)$rw['discount_value'] . '%')
+                                        : format_rupiah($rw['discount_value'] ?? 0);
+                                ?>
+                                    <div style="border: 1px solid #f2dce7; background: #fffbfd; border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                        <div>
+                                            <span style="display: inline-block; background: #fff9df; color: #9c6c00; border: 1px solid #fae69e; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; margin-bottom: 4px;">
+                                                <i class="bi bi-star-fill text-warning"></i> <?php echo $rwCost; ?> Poin
+                                            </span>
+                                            <strong style="display: block; color: #18243a; font-size: 13.5px;"><?php echo account_e($rw['name'] ?? 'Reward Member'); ?></strong>
+                                            <small style="color: #796c76; font-size: 11.5px;">
+                                                Diskon <?php echo $rwDiscLabel; ?> • Min. <?php echo format_rupiah($rw['min_order'] ?? 0); ?>
+                                            </small>
+                                        </div>
+                                        <form method="POST" action="<?php echo page_url('akun.php?tab=poin'); ?>" style="margin: 0;">
+                                            <input type="hidden" name="action" value="redeem_reward">
+                                            <input type="hidden" name="reward_id" value="<?php echo (int)($rw['id'] ?? 0); ?>">
+                                            <button type="submit" <?php echo $canRedeem ? '' : 'disabled'; ?> style="border: 0; background: <?php echo $canRedeem ? 'linear-gradient(90deg, #e11d64, #f43f7e)' : '#e9dde3'; ?>; color: <?php echo $canRedeem ? '#fff' : '#9c8e98'; ?>; padding: 7px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: <?php echo $canRedeem ? 'pointer' : 'not-allowed'; ?>;">
+                                                <?php echo $canRedeem ? 'Tukar Poin' : 'Poin Belum Cukup'; ?>
+                                            </button>
+                                        </form>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     </div>
 
@@ -1477,30 +1770,152 @@ include __DIR__ . '/includes/header.php';
                             <div class="profile-card-header">
                                 <div>
                                     <h2><i class="bi bi-ticket-perforated text-rosa"></i> Kupon &amp; Voucher Siap Pakai</h2>
-                                    <p>Gunakan kode voucher saat checkout untuk mendapatkan potongan harga langsung.</p>
+                                    <p>Salin dan masukkan kode voucher saat Checkout untuk potongan harga langsung.</p>
                                 </div>
                             </div>
 
                             <div style="display: grid; gap: 12px;">
-                                <?php foreach ($vouchers as $v): ?>
-                                    <div style="border: 1.5px dashed #f2bad0; background: #fffafc; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                <?php foreach ($vouchers as $v):
+                                    $isPersonalReward = !empty($v['customer_id']);
+                                ?>
+                                    <div style="border: 1.5px dashed <?php echo $isPersonalReward ? '#eab308' : '#f2bad0'; ?>; background: <?php echo $isPersonalReward ? '#fffdf5' : '#fffafc'; ?>; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                                         <div>
-                                            <div style="display: inline-block; background: #e11d64; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; margin-bottom: 5px;">
-                                                <?php echo account_e($v['code']); ?>
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span style="display: inline-block; background: #e11d64; color: #fff; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">
+                                                    <?php echo account_e($v['code']); ?>
+                                                </span>
+                                                <?php if ($isPersonalReward): ?>
+                                                    <span style="background: #fef08a; color: #854d0e; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px;">Hasil Tukar Poin</span>
+                                                <?php endif; ?>
                                             </div>
                                             <strong style="display: block; color: #18243a; font-size: 14px;"><?php echo account_e($v['name']); ?></strong>
                                             <small style="color: #796c76; font-size: 11.5px;">
-                                                Min. Order <?php echo format_rupiah($v['min_order']); ?> • Diskon <?php echo ($v['discount_type'] === 'percent') ? $v['discount_value'] . '%' : format_rupiah($v['discount_value']); ?>
+                                                Min. Order <?php echo format_rupiah($v['min_order'] ?? 0); ?> • Diskon <?php echo (($v['discount_type'] ?? 'percent') === 'percent') ? (float)$v['discount_value'] . '%' : format_rupiah($v['discount_value'] ?? 0); ?>
                                             </small>
                                         </div>
-                                        <button type="button" onclick="navigator.clipboard.writeText('<?php echo account_e($v['code']); ?>'); this.innerText='Tersalin!'; setTimeout(() => this.innerText='Salin Kode', 2000);" style="border: 1px solid #e11d64; background: #fff; color: #e11d64; padding: 7px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
-                                            Salin Kode
-                                        </button>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button type="button" onclick="navigator.clipboard.writeText('<?php echo account_e($v['code']); ?>'); this.innerText='Tersalin!'; setTimeout(() => this.innerText='Salin Kode', 2000);" style="border: 1px solid #e11d64; background: #fff; color: #e11d64; padding: 7px 14px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                                                Salin Kode
+                                            </button>
+                                        </div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
                         </div>
+
+                        <?php if (!empty($loyaltyTransactions)): ?>
+                            <div class="profile-card">
+                                <div class="profile-card-header">
+                                    <div>
+                                        <h2><i class="bi bi-clock-history text-rosa"></i> Riwayat Poin Member</h2>
+                                        <p>Catatan perolehan poin belanja, bonus seller, dan penukaran reward.</p>
+                                    </div>
+                                </div>
+                                <div style="display: grid; gap: 10px;">
+                                    <?php foreach ($loyaltyTransactions as $lt):
+                                        $pts = (int)($lt['points'] ?? 0);
+                                        $isPlus = ($pts >= 0);
+                                    ?>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid #f4e6ee; border-radius: 12px; background: #fff;">
+                                            <div>
+                                                <strong style="font-size: 13px; color: #18243a; display: block;"><?php echo account_e($lt['description'] ?? 'Transaksi Poin'); ?></strong>
+                                                <small style="font-size: 11px; color: #8c7e87;"><?php echo account_e($lt['created_at'] ?? ''); ?></small>
+                                            </div>
+                                            <span style="font-size: 13.5px; font-weight: 800; color: <?php echo $isPlus ? '#1e7e46' : '#dc3545'; ?>;">
+                                                <?php echo ($isPlus ? '+' : '') . $pts; ?> Poin
+                                            </span>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- =========================================================
+                 5B. TAB CONTENT: PUSAT NOTIFIKASI MEMBER
+                 ========================================================= -->
+            <?php if ($tab === 'notifikasi'): ?>
+                <div class="profile-card">
+                    <div class="profile-card-header flex-wrap gap-2">
+                        <div>
+                            <h2><i class="bi bi-bell-fill text-rosa"></i> Pusat Notifikasi Member</h2>
+                            <p>Semua informasi promo/pengumuman dari Seller serta update otomatis status pesanan &amp; pembayaran Anda.</p>
+                        </div>
+                        <?php if (!empty($memberNotifications)): ?>
+                            <form method="POST" action="<?php echo page_url('akun.php?tab=notifikasi'); ?>" style="margin: 0;">
+                                <input type="hidden" name="action" value="mark_notif_read">
+                                <button type="submit" style="border: 1px solid #f2c9de; background: #fff0f6; color: #e11d64; padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                                    <i class="bi bi-check2-all"></i> Tandai Semua Dibaca
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if (empty($memberNotifications)): ?>
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <i class="bi bi-bell-slash" style="font-size: 42px; color: #d0c0c9;"></i>
+                            <h4 style="margin: 12px 0 6px; font-size: 16px; font-weight: 800; color: #18243a;">Belum Ada Notifikasi</h4>
+                            <p style="color: #8c7e87; font-size: 13px; max-width: 420px; margin: 0 auto;">Notifikasi update pesanan, verifikasi pembayaran, poin reward, dan info promo dari Seller akan tampil di sini.</p>
+                        </div>
+                    <?php else: ?>
+                        <div style="display: grid; gap: 12px;">
+                            <?php foreach ($memberNotifications as $n):
+                                $nType = (string)($n['type'] ?? 'general');
+                                $badgeLabel = 'Info Seller';
+                                $badgeBg = '#fff0f6';
+                                $badgeColor = '#e11d64';
+                                $iconClass = 'bi-megaphone-fill';
+                                if (in_array($nType, ['order', 'status'], true)) {
+                                    $badgeLabel = 'Status Pesanan';
+                                    $badgeBg = '#e8f4fd';
+                                    $badgeColor = '#0d6efd';
+                                    $iconClass = 'bi-box-seam-fill';
+                                } elseif ($nType === 'payment') {
+                                    $badgeLabel = 'Info Pembayaran';
+                                    $badgeBg = '#e8f8ef';
+                                    $badgeColor = '#1e7e46';
+                                    $iconClass = 'bi-credit-card-2-front-fill';
+                                } elseif (in_array($nType, ['points', 'bonus', 'reward'], true)) {
+                                    $badgeLabel = 'Poin & Reward';
+                                    $badgeBg = '#fff9df';
+                                    $badgeColor = '#b27b00';
+                                    $iconClass = 'bi-star-fill';
+                                } elseif (in_array($nType, ['promo', 'voucher'], true)) {
+                                    $badgeLabel = 'Promo & Voucher';
+                                    $badgeBg = '#fff0f6';
+                                    $badgeColor = '#e11d64';
+                                    $iconClass = 'bi-ticket-perforated-fill';
+                                }
+                            ?>
+                                <div style="border: 1px solid #f0dce6; background: <?php echo empty($n['is_read']) ? '#fff9fc' : '#ffffff'; ?>; border-radius: 16px; padding: 15px 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap;">
+                                    <div style="display: flex; gap: 12px; align-items: flex-start; flex: 1; min-width: 220px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 12px; background: <?php echo $badgeBg; ?>; color: <?php echo $badgeColor; ?>; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                            <i class="bi <?php echo $iconClass; ?>"></i>
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                                <span style="background: <?php echo $badgeBg; ?>; color: <?php echo $badgeColor; ?>; font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
+                                                    <?php echo account_e($badgeLabel); ?>
+                                                </span>
+                                                <small style="color: #8c7e87; font-size: 11.5px;">
+                                                    <i class="bi bi-clock"></i> <?php echo account_e($n['created_at'] ?? ''); ?>
+                                                </small>
+                                            </div>
+                                            <strong style="display: block; color: #18243a; font-size: 14px; margin-bottom: 3px;"><?php echo account_e($n['title'] ?? ''); ?></strong>
+                                            <p style="margin: 0; font-size: 13px; color: #5b5058; line-height: 1.5;"><?php echo account_e($n['message'] ?? ''); ?></p>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($n['link'])): ?>
+                                        <a href="<?php echo account_e($n['link']); ?>" style="border: 1px solid #f2c9de; background: #fff; color: #e11d64; padding: 7px 13px; border-radius: 9px; font-size: 12px; font-weight: 800; text-decoration: none; white-space: nowrap;">
+                                            Buka Detail &rarr;
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
