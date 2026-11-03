@@ -768,6 +768,9 @@ const handleAkunPostMiddleware = (req, res, next) => {
   }
   uploadAvatar.single('avatar')(req, res, function(err) {
     if (err) {
+      if (req.body && req.body.ajax_avatar === '1') {
+        return res.json({ ok: false, error: err.message || 'Gagal mengunggah foto profil.' });
+      }
       return res.redirect('/akun.php?tab=profil&error=' + encodeURIComponent(err.message || 'Gagal mengunggah foto profil.'));
     }
     next();
@@ -776,10 +779,25 @@ const handleAkunPostMiddleware = (req, res, next) => {
 
 const handleAkunPost = (req, res) => {
   if (!req.session.customer) {
+    if (req.body && req.body.ajax_avatar === '1') {
+      return res.json({ ok: false, error: 'Sesi login berakhir.' });
+    }
     return res.redirect('/login.php');
   }
   const current = req.session.customer;
-  const { name, username, phone, email, gender, birth_date, city, address, address_note, remove_avatar } = req.body;
+  const { name, username, phone, email, gender, birth_date, city, address, address_note, remove_avatar, ajax_avatar } = req.body;
+
+  if (ajax_avatar === '1') {
+    const newAvatar = req.file ? ('uploads/avatars/' + req.file.filename) : (remove_avatar === '1' ? '' : (current.avatar || ''));
+    const updated = store.updateCustomer(current.id || current.phone, { avatar: newAvatar });
+    req.session.customer = updated || { ...current, avatar: newAvatar };
+    return res.json({
+      ok: true,
+      avatar: newAvatar,
+      avatar_url: newAvatar ? '/' + newAvatar.replace(/^\/+/, '') : '',
+      message: remove_avatar === '1' ? 'Foto profil berhasil dihapus.' : 'Foto profil berhasil dipasang & tersimpan otomatis!'
+    });
+  }
 
   if (!name || name.trim().length < 2) {
     return res.redirect('/akun.php?tab=profil&error=' + encodeURIComponent('Nama lengkap minimal 2 karakter.'));

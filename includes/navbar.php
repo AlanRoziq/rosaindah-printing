@@ -376,17 +376,14 @@ if ($customerPdo) {
                 }
                 $cUser = customer_user();
                 $cFirstName = explode(' ', trim((string)($cUser['name'] ?? 'Member')))[0];
+                $cAvatarUrl = function_exists('customer_avatar_url') ? customer_avatar_url($cUser['avatar'] ?? '') : (!empty($cUser['avatar']) ? page_url(ltrim((string)$cUser['avatar'], '/')) : '');
                 ?>
                 <a href="<?php echo page_url('akun.php?tab=pesanan'); ?>" class="notification-nav-btn" aria-label="Notifikasi & Status Pesanan" title="Notifikasi & Status Pesanan">
                     <i class="bi bi-bell"></i><?php if ($navNotifCount > 0): ?><span class="notification-nav-count"><?php echo min(99, $navNotifCount); ?></span><?php endif; ?>
                 </a>
                 <a href="<?php echo page_url('akun.php'); ?>" class="login-btn" title="Akun Saya">
-                    <?php if (!empty($cUser['avatar'])): ?>
-                        <img src="<?php echo asset_url(ltrim((string)$cUser['avatar'], '/')); ?>" alt="<?php echo htmlspecialchars($cFirstName, ENT_QUOTES, 'UTF-8'); ?>" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
-                        <i class="bi bi-person-circle" style="display: none;"></i>
-                    <?php else: ?>
-                        <i class="bi bi-person-circle"></i>
-                    <?php endif; ?>
+                    <img id="navAvatarImg" src="<?php echo htmlspecialchars($cAvatarUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($cFirstName, ENT_QUOTES, 'UTF-8'); ?>" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff; <?php echo $cAvatarUrl !== '' ? 'display: inline-block;' : 'display: none;'; ?>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">
+                    <i id="navAvatarIcon" class="bi bi-person-circle" style="<?php echo $cAvatarUrl !== '' ? 'display: none;' : 'display: inline-block;'; ?>"></i>
                     <span><?php echo htmlspecialchars($cFirstName, ENT_QUOTES, 'UTF-8'); ?></span>
                 </a>
             <?php else: ?>

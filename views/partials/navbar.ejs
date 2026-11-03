@@ -70,13 +70,10 @@
                 <% } %>
             </a>
             <% if (currentUser) { %>
+                <% const navAvatarSrc = currentUser.avatar ? (currentUser.avatar.startsWith('data:image/') || currentUser.avatar.startsWith('http') ? currentUser.avatar : '/' + currentUser.avatar.replace(/^\/+/, '')) : ''; %>
                 <a href="<%= page_url('akun') %>" class="login-btn" title="Akun Saya">
-                    <% if (currentUser.avatar) { %>
-                        <img src="/<%= currentUser.avatar.replace(/^\/+/, '') %>" alt="<%= currentUser.name %>" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #e11d64;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
-                        <i class="bi bi-person-circle" style="display: none;"></i>
-                    <% } else { %>
-                        <i class="bi bi-person-circle"></i>
-                    <% } %>
+                    <img id="navAvatarImg" src="<%= navAvatarSrc %>" alt="<%= currentUser.name %>" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1.5px solid #ffffff; <%= navAvatarSrc ? 'display: inline-block;' : 'display: none;' %>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">
+                    <i id="navAvatarIcon" class="bi bi-person-circle" style="<%= navAvatarSrc ? 'display: none;' : 'display: inline-block;' %>"></i>
                     <span><%= currentUser.name.split(' ')[0] %></span>
                 </a>
             <% } else { %>

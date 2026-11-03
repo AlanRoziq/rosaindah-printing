@@ -670,24 +670,24 @@
                 </div>
             </section>
         <% } else { %>
+        <%
+            const userAvatarUrl = user.avatar
+                ? (user.avatar.startsWith('data:image/') || user.avatar.startsWith('http') ? user.avatar : '/' + user.avatar.replace(/^\/+/, ''))
+                : '';
+            const hasUserAvatar = !!userAvatarUrl;
+        %>
         <!-- =========================================================
              1. HEADER PROFILE CARD (MARKETPLACE USER HERO)
              ========================================================= -->
         <section class="profile-hero-card">
             <div class="profile-hero-flex d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <!-- User Avatar Photo or Initial -->
-                    <div class="profile-avatar-wrap">
-                        <% if (user.avatar) { %>
-                            <img src="/<%= user.avatar.replace(/^\/+/, '') %>" alt="<%= user.name %>" class="profile-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                            <div class="profile-avatar" style="display: none;">
-                                <%= (user.name || 'M').charAt(0) %>
-                            </div>
-                        <% } else { %>
-                            <div class="profile-avatar">
-                                <%= (user.name || 'M').charAt(0) %>
-                            </div>
-                        <% } %>
+                    <!-- User Avatar Photo or Initial (Clickable to trigger upload) -->
+                    <div class="profile-avatar-wrap" style="cursor: pointer;" title="Klik untuk mengganti foto profil" onclick="var inp = document.getElementById('avatarInput'); if (inp) { inp.click(); } else { window.location.href='<%= page_url('akun?tab=profil') %>'; }">
+                        <img id="heroAvatarImg" src="<%= userAvatarUrl %>" alt="<%= user.name %>" class="profile-avatar-img" style="<%= hasUserAvatar ? 'display: block;' : 'display: none;' %>" onerror="this.style.display='none'; var initEl = document.getElementById('heroAvatarInitial'); if(initEl) initEl.style.display='flex';">
+                        <div id="heroAvatarInitial" class="profile-avatar" style="<%= hasUserAvatar ? 'display: none;' : 'display: flex;' %>">
+                            <%= (user.name || 'M').charAt(0) %>
+                        </div>
                         <div class="profile-avatar-badge" title="Akun Terverifikasi">
                             <i class="bi bi-check-lg"></i>
                         </div>
@@ -814,10 +814,10 @@
                                     <i class="bi bi-camera-fill text-rosa me-1"></i> Foto Profil Member
                                 </label>
                                 <div class="d-flex align-items-center gap-3 flex-wrap">
-                                    <div class="avatar-preview-wrap">
-                                        <img id="avatarPreviewImg" src="<%= user.avatar ? '/' + user.avatar.replace(/^\/+/, '') : '' %>" alt="Preview Foto" 
-                                             class="avatar-preview-circle" style="<%= user.avatar ? '' : 'display: none;' %>">
-                                        <div id="avatarPlaceholder" class="avatar-preview-placeholder" style="<%= user.avatar ? 'display: none;' : '' %>">
+                                    <div class="avatar-preview-wrap" style="cursor: pointer;" title="Klik untuk pilih foto" onclick="var inp = document.getElementById('avatarInput'); if (inp) inp.click();">
+                                        <img id="avatarPreviewImg" src="<%= userAvatarUrl %>" alt="Preview Foto" 
+                                             class="avatar-preview-circle" style="<%= hasUserAvatar ? 'display: block;' : 'display: none;' %>" onerror="this.style.display='none'; var ph = document.getElementById('avatarPlaceholder'); if(ph) ph.style.display='flex';">
+                                        <div id="avatarPlaceholder" class="avatar-preview-placeholder" style="<%= hasUserAvatar ? 'display: none;' : 'display: flex;' %>">
                                             <%= (user.name || 'M').charAt(0) %>
                                         </div>
                                     </div>
@@ -825,20 +825,20 @@
                                         <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                                             <label for="avatarInput" class="btn-upload-avatar">
                                                 <i class="bi bi-cloud-arrow-up-fill"></i>
-                                                <span id="btnUploadLabel"><%= user.avatar ? 'Ganti Foto Profil' : 'Unggah Foto Baru' %></span>
+                                                <span id="btnUploadLabel"><%= hasUserAvatar ? 'Ganti Foto Profil' : 'Unggah Foto Baru' %></span>
                                             </label>
                                             <input type="file" name="avatar" id="avatarInput" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;">
 
-                                            <button type="button" id="btnRemoveAvatar" class="btn-remove-avatar" style="<%= user.avatar ? '' : 'display: none;' %>" title="Hapus Foto Profil">
+                                            <button type="button" id="btnRemoveAvatar" class="btn-remove-avatar" style="<%= hasUserAvatar ? 'display: inline-flex;' : 'display: none;' %>" title="Hapus Foto Profil">
                                                 <i class="bi bi-trash3"></i> Hapus Foto
                                             </button>
                                             <input type="hidden" name="remove_avatar" id="removeAvatarInput" value="0">
                                         </div>
                                         <small class="text-muted d-block" style="font-size: 11.5px; line-height: 1.45;">
-                                            Format: JPG, JPEG, PNG, WEBP (Maksimal 4 MB). Klik <b>Simpan Perubahan Profil</b> di bawah untuk mengaktifkan foto profil baru Anda.
+                                            Format: JPG, JPEG, PNG, WEBP (Maksimal 4 MB). Foto yang Anda pilih akan <b>otomatis langsung tampil dan tersimpan</b> di profil Anda.
                                         </small>
                                         <div id="avatarSelectedInfo" class="mt-1" style="display: none; font-size: 11.5px;">
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                            <span id="avatarStatusBadge" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
                                                 <i class="bi bi-check2-circle me-1"></i> <span id="avatarFileName">Foto siap disimpan</span>
                                             </span>
                                         </div>
@@ -1221,11 +1221,63 @@
         const avatarInput = document.getElementById('avatarInput');
         const avatarPreviewImg = document.getElementById('avatarPreviewImg');
         const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        const heroAvatarImg = document.getElementById('heroAvatarImg');
+        const heroAvatarInitial = document.getElementById('heroAvatarInitial');
+        const navAvatarImg = document.getElementById('navAvatarImg');
+        const navAvatarIcon = document.getElementById('navAvatarIcon');
         const avatarSelectedInfo = document.getElementById('avatarSelectedInfo');
         const avatarFileName = document.getElementById('avatarFileName');
         const btnUploadLabel = document.getElementById('btnUploadLabel');
         const btnRemoveAvatar = document.getElementById('btnRemoveAvatar');
         const removeAvatarInput = document.getElementById('removeAvatarInput');
+
+        function applyAvatarToAllIcons(srcUrl) {
+            if (srcUrl) {
+                if (avatarPreviewImg) {
+                    avatarPreviewImg.src = srcUrl;
+                    avatarPreviewImg.style.display = 'block';
+                }
+                if (avatarPlaceholder) {
+                    avatarPlaceholder.style.display = 'none';
+                }
+                if (heroAvatarImg) {
+                    heroAvatarImg.src = srcUrl;
+                    heroAvatarImg.style.display = 'block';
+                }
+                if (heroAvatarInitial) {
+                    heroAvatarInitial.style.display = 'none';
+                }
+                if (navAvatarImg) {
+                    navAvatarImg.src = srcUrl;
+                    navAvatarImg.style.display = 'inline-block';
+                }
+                if (navAvatarIcon) {
+                    navAvatarIcon.style.display = 'none';
+                }
+            } else {
+                if (avatarPreviewImg) {
+                    avatarPreviewImg.src = '';
+                    avatarPreviewImg.style.display = 'none';
+                }
+                if (avatarPlaceholder) {
+                    avatarPlaceholder.style.display = 'flex';
+                }
+                if (heroAvatarImg) {
+                    heroAvatarImg.src = '';
+                    heroAvatarImg.style.display = 'none';
+                }
+                if (heroAvatarInitial) {
+                    heroAvatarInitial.style.display = 'flex';
+                }
+                if (navAvatarImg) {
+                    navAvatarImg.src = '';
+                    navAvatarImg.style.display = 'none';
+                }
+                if (navAvatarIcon) {
+                    navAvatarIcon.style.display = 'inline-block';
+                }
+            }
+        }
 
         if (avatarInput) {
             avatarInput.addEventListener('change', function() {
@@ -1243,17 +1295,12 @@
                         return;
                     }
 
+                    // 1. Tampilkan preview langsung di SEMUA icon foto profil (Hero atas, Form, dan Navbar)
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        if (avatarPreviewImg) {
-                            avatarPreviewImg.src = e.target.result;
-                            avatarPreviewImg.style.display = 'block';
-                        }
-                        if (avatarPlaceholder) {
-                            avatarPlaceholder.style.display = 'none';
-                        }
+                        applyAvatarToAllIcons(e.target.result);
                         if (avatarFileName) {
-                            avatarFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB) siap disimpan';
+                            avatarFileName.textContent = 'Menyimpan foto profil otomatis...';
                         }
                         if (avatarSelectedInfo) {
                             avatarSelectedInfo.style.display = 'block';
@@ -1269,6 +1316,42 @@
                         }
                     };
                     reader.readAsDataURL(file);
+
+                    // 2. Upload & simpan foto secara otomatis ke server tanpa harus klik tombol Simpan di bawah
+                    const formData = new FormData();
+                    formData.append('ajax_avatar', '1');
+                    formData.append('remove_avatar', '0');
+                    formData.append('avatar', file);
+
+                    fetch('<%= page_url('akun') %>', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data && data.ok) {
+                            if (data.avatar_url) {
+                                const bustUrl = data.avatar_url.indexOf('data:') === 0
+                                    ? data.avatar_url
+                                    : data.avatar_url + (data.avatar_url.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now();
+                                applyAvatarToAllIcons(bustUrl);
+                            }
+                            if (avatarFileName) {
+                                avatarFileName.textContent = data.message || 'Foto profil berhasil dipasang & tersimpan otomatis!';
+                            }
+                            avatarInput.value = '';
+                        } else if (data && data.error) {
+                            if (avatarFileName) {
+                                avatarFileName.textContent = data.error;
+                            }
+                        }
+                    })
+                    .catch(function() {
+                        if (avatarFileName) {
+                            avatarFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB) siap disimpan';
+                        }
+                    });
                 }
             });
         }
@@ -1277,17 +1360,37 @@
             btnRemoveAvatar.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (avatarInput) avatarInput.value = '';
-                if (avatarPreviewImg) avatarPreviewImg.style.display = 'none';
-                if (avatarPlaceholder) avatarPlaceholder.style.display = 'flex';
+                applyAvatarToAllIcons('');
                 if (removeAvatarInput) removeAvatarInput.value = '1';
                 if (btnUploadLabel) btnUploadLabel.textContent = 'Unggah Foto Baru';
                 btnRemoveAvatar.style.display = 'none';
                 if (avatarSelectedInfo) {
                     avatarSelectedInfo.style.display = 'block';
                     if (avatarFileName) {
-                        avatarFileName.textContent = 'Foto profil akan dihapus saat Anda klik Simpan';
+                        avatarFileName.textContent = 'Menghapus foto profil...';
                     }
                 }
+
+                const formData = new FormData();
+                formData.append('ajax_avatar', '1');
+                formData.append('remove_avatar', '1');
+
+                fetch('<%= page_url('akun') %>', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data && data.ok && avatarFileName) {
+                        avatarFileName.textContent = data.message || 'Foto profil telah dihapus.';
+                    }
+                })
+                .catch(function() {
+                    if (avatarFileName) {
+                        avatarFileName.textContent = 'Foto profil akan dihapus saat Anda klik Simpan';
+                    }
+                });
             });
         }
     });

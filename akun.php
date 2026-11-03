@@ -37,6 +37,25 @@ if ($pdo) {
 
 $isLoggedIn = customer_logged_in();
 $user = $isLoggedIn ? customer_user() : null;
+if ($isLoggedIn && $user && $pdo && !empty($user['id'])) {
+    try {
+        $stmtFresh = $pdo->prepare('SELECT * FROM customers WHERE id = ? LIMIT 1');
+        $stmtFresh->execute([(int)$user['id']]);
+        $dbCustomer = $stmtFresh->fetch(PDO::FETCH_ASSOC);
+        if ($dbCustomer) {
+            if (empty($dbCustomer['avatar']) && !empty($user['avatar'])) {
+                try {
+                    $pdo->prepare('UPDATE customers SET avatar = ? WHERE id = ?')->execute([$user['avatar'], (int)$user['id']]);
+                    $dbCustomer['avatar'] = $user['avatar'];
+                } catch (Throwable $eSync) {}
+            }
+            $user = array_merge($user, array_filter($dbCustomer, static fn($v) => $v !== null));
+            $_SESSION['customer'] = $user;
+            $_SESSION['customer_avatar'] = (string)($user['avatar'] ?? '');
+        }
+    } catch (Throwable $eFresh) {}
+}
+
 $tab = isset($_GET['tab']) ? trim((string)$_GET['tab']) : 'profil';
 if (!in_array($tab, ['profil', 'pesanan', 'poin', 'alamat'], true)) {
     $tab = 'profil';
@@ -52,26 +71,128 @@ if (isset($_GET['saved'])) {
     $notice = 'Biodata dan profil Anda berhasil diperbarui!';
 }
 
+// Helper untuk menyimpan file avatar secara tangguh (uploads/avatars + copy ke assets/uploads/avatars + fallback base64)
+function account_save_uploaded_avatar(array $fileArr, int $userId, string &$errOut): ?string {
+    $tmpFile = $fileArr['tmp_name'] ?? '';
+    $fileSize = (int)($fileArr['size'] ?? 0);
+    $ext = strtolower(pathinfo((string)($fileArr['name'] ?? ''), PATHINFO_EXTENSION));
+    $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+    if ($fileSize > 4 * 1024 * 1024) {
+        $errOut = 'Ukuran foto terlalu besar. Maksimal ukuran foto adalah 4 MB.';
+        return null;
+    }
+    if (!in_array($ext, $allowedExts, true)) {
+        $errOut = 'Format foto tidak didukung. Gunakan JPG, PNG, atau WEBP.';
+        return null;
+    }
+
+    $uploadDir = __DIR__ . '/uploads/avatars';
+    if (!is_dir($uploadDir)) {
+        @mkdir($uploadDir, 0775, true);
+    }
+    $assetsUploadDir = __DIR__ . '/assets/uploads/avatars';
+    if (!is_dir($assetsUploadDir)) {
+        @mkdir($assetsUploadDir, 0775, true);
+    }
+
+    $newFileName = 'avatar-' . ($userId ?: time()) . '-' . time() . '.' . $ext;
+    $destPath = $uploadDir . '/' . $newFileName;
+
+    $rawBytes = @file_get_contents($tmpFile);
+    if (@move_uploaded_file($tmpFile, $destPath) || ($rawBytes !== false && @file_put_contents($destPath, $rawBytes) !== false)) {
+        @copy($destPath, $assetsUploadDir . '/' . $newFileName);
+        return 'uploads/avatars/' . $newFileName;
+    }
+
+    if ($rawBytes !== false && strlen($rawBytes) > 0) {
+        $mime = ($ext === 'png') ? 'image/png' : (($ext === 'webp') ? 'image/webp' : 'image/jpeg');
+        return 'data:' . $mime . ';base64,' . base64_encode($rawBytes);
+    }
+
+    $errOut = 'Gagal menyimpan file foto profil. Silakan coba lagi.';
+    return null;
+}
+
 // Handle POST update profil hanya jika sudah login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $isAjaxAvatar = (($_POST['ajax_avatar'] ?? '0') === '1');
+
     if (!$isLoggedIn || !$user) {
+        if ($isAjaxAvatar) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'error' => 'Sesi login berakhir. Silakan login kembali.']);
+            exit;
+        }
         header('Location: ' . page_url('login.php'));
         exit;
     }
 
     $id = (int)($user['id'] ?? 0);
-    $name = trim($_POST['name'] ?? '');
-    $username = trim($_POST['username'] ?? '');
-    $phone = customer_normalize_phone(trim($_POST['phone'] ?? ''));
-    $email = trim($_POST['email'] ?? '');
+    $removeAvatar = ($_POST['remove_avatar'] ?? '0') === '1';
+
+    // Mode Auto-Upload / Hapus Foto Profil Instan via AJAX
+    if ($isAjaxAvatar) {
+        header('Content-Type: application/json; charset=UTF-8');
+        $ajaxError = '';
+        $newAvatarPath = $user['avatar'] ?? '';
+
+        if ($removeAvatar) {
+            $newAvatarPath = '';
+        } elseif (!empty($_FILES['avatar']['name']) && ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+            $savedPath = account_save_uploaded_avatar($_FILES['avatar'], $id, $ajaxError);
+            if ($savedPath !== null) {
+                $newAvatarPath = $savedPath;
+            }
+        } else {
+            $ajaxError = 'File foto tidak ditemukan atau gagal diunggah.';
+        }
+
+        if ($ajaxError !== '') {
+            echo json_encode(['ok' => false, 'error' => $ajaxError]);
+            exit;
+        }
+
+        if ($pdo && $id > 0) {
+            try {
+                $pdo->exec("ALTER TABLE customers MODIFY avatar MEDIUMTEXT NULL");
+            } catch (Throwable $eAlter) {}
+            try {
+                $updAv = $pdo->prepare('UPDATE customers SET avatar = ? WHERE id = ?');
+                $updAv->execute([$newAvatarPath !== '' ? $newAvatarPath : null, $id]);
+            } catch (Throwable $eUpd) {}
+        }
+
+        $updatedUser = array_merge($user, ['avatar' => $newAvatarPath]);
+        $_SESSION['customer'] = $updatedUser;
+        $_SESSION['customer_avatar'] = $newAvatarPath;
+        if (function_exists('customer_login')) {
+            customer_login($updatedUser);
+        }
+        $resolvedUrl = function_exists('customer_avatar_url')
+            ? customer_avatar_url($newAvatarPath)
+            : ($newAvatarPath !== '' ? page_url(ltrim($newAvatarPath, '/')) : '');
+
+        echo json_encode([
+            'ok' => true,
+            'avatar' => $newAvatarPath,
+            'avatar_url' => $resolvedUrl,
+            'message' => $removeAvatar ? 'Foto profil berhasil dihapus.' : 'Foto profil berhasil dipasang & tersimpan otomatis!'
+        ]);
+        exit;
+    }
+
+    $name = trim($_POST['name'] ?? ($user['name'] ?? ''));
+    $username = trim($_POST['username'] ?? ($user['username'] ?? ''));
+    $phone = customer_normalize_phone(trim($_POST['phone'] ?? ($user['phone'] ?? '')));
+    $email = trim($_POST['email'] ?? ($user['email'] ?? ''));
     $gender = in_array($_POST['gender'] ?? 'L', ['L', 'P'], true) ? $_POST['gender'] : 'L';
     $birthDate = trim($_POST['birth_date'] ?? '');
     $city = trim($_POST['city'] ?? 'Pasuruan');
     $addressNote = trim($_POST['address_note'] ?? '');
     $address = trim($_POST['address'] ?? '');
-    $removeAvatar = ($_POST['remove_avatar'] ?? '0') === '1';
 
-    if (mb_strlen($name) < 3 || $phone === '') {
+    if (mb_strlen($name) < 2 || $phone === '') {
         $error = 'Nama lengkap dan nomor WhatsApp aktif wajib diisi.';
     } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Format alamat email tidak valid.';
@@ -83,24 +204,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Proses upload foto profil jika ada
         if (!empty($_FILES['avatar']['name']) && ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-            $tmpFile = $_FILES['avatar']['tmp_name'];
-            $fileSize = (int)$_FILES['avatar']['size'];
-            $ext = strtolower(pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION));
-            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if ($fileSize > 4 * 1024 * 1024) {
-                $error = 'Ukuran foto terlalu besar. Maksimal ukuran foto adalah 4 MB.';
-            } elseif (!in_array($ext, $allowedExts, true)) {
-                $error = 'Format foto tidak didukung. Gunakan JPG, PNG, atau WEBP.';
-            } else {
-                $uploadDir = __DIR__ . '/uploads/avatars';
-                if (!is_dir($uploadDir)) {
-                    @mkdir($uploadDir, 0775, true);
-                }
-                $newFileName = 'avatar-' . ($id ?: time()) . '-' . time() . '.' . $ext;
-                if (@move_uploaded_file($tmpFile, $uploadDir . '/' . $newFileName)) {
-                    $avatarPath = 'uploads/avatars/' . $newFileName;
-                }
+            $savedPath = account_save_uploaded_avatar($_FILES['avatar'], $id, $error);
+            if ($savedPath !== null) {
+                $avatarPath = $savedPath;
             }
         }
 
@@ -134,6 +240,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         } catch (Throwable $innerEx) {
                             $upd = $pdo->prepare('UPDATE customers SET name = ?, phone = ?, email = ?, address = ? WHERE id = ?');
                             $upd->execute([$name, $phoneNorm ?: $phone, $email !== '' ? $email : null, $address, $id]);
+                            try {
+                                $pdo->prepare('UPDATE customers SET avatar = ? WHERE id = ?')->execute([$avatarPath !== '' ? $avatarPath : null, $id]);
+                            } catch (Throwable $avEx) {}
                         }
                     }
                 } catch (Throwable $e) {
@@ -155,11 +264,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'avatar'       => $avatarPath,
                 ]);
                 $_SESSION['customer'] = $updatedUser;
+                $_SESSION['customer_avatar'] = $avatarPath;
                 if (function_exists('customer_login')) {
                     customer_login($updatedUser);
                 }
                 $user = $updatedUser;
-                $notice = 'Biodata dan profil Anda berhasil diperbarui!';
+                $notice = 'Foto profil dan biodata diri Anda berhasil diperbarui!';
             }
         }
     }
@@ -907,24 +1017,24 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </section>
         <?php else: ?>
+            <?php
+            $userAvatarUrl = function_exists('customer_avatar_url')
+                ? customer_avatar_url($user['avatar'] ?? '')
+                : (!empty($user['avatar']) ? page_url(ltrim((string)$user['avatar'], '/')) : '');
+            $hasUserAvatar = ($userAvatarUrl !== '');
+            ?>
             <!-- =========================================================
                  1. HEADER PROFILE CARD (MARKETPLACE USER HERO)
                  ========================================================= -->
             <section class="profile-hero-card">
                 <div class="profile-hero-flex d-flex align-items-center justify-content-between flex-wrap gap-3">
                     <div class="d-flex align-items-center gap-3">
-                        <!-- User Avatar Photo or Initial -->
-                        <div class="profile-avatar-wrap">
-                            <?php if (!empty($user['avatar'])): ?>
-                                <img src="<?php echo asset_url(ltrim((string)$user['avatar'], '/')); ?>" alt="<?php echo account_e($user['name'] ?? 'Member'); ?>" class="profile-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                                <div class="profile-avatar" style="display: none;">
-                                    <?php echo account_e(mb_substr($user['name'] ?? 'M', 0, 1)); ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="profile-avatar">
-                                    <?php echo account_e(mb_substr($user['name'] ?? 'M', 0, 1)); ?>
-                                </div>
-                            <?php endif; ?>
+                        <!-- User Avatar Photo or Initial (Clickable to trigger upload) -->
+                        <div class="profile-avatar-wrap" style="cursor: pointer;" title="Klik untuk mengganti foto profil" onclick="var inp = document.getElementById('avatarInput'); if (inp) { inp.click(); } else { window.location.href='<?php echo page_url('akun.php?tab=profil'); ?>'; }">
+                            <img id="heroAvatarImg" src="<?php echo account_e($userAvatarUrl); ?>" alt="<?php echo account_e($user['name'] ?? 'Member'); ?>" class="profile-avatar-img" style="<?php echo $hasUserAvatar ? 'display: block;' : 'display: none;'; ?>" onerror="this.style.display='none'; var initEl = document.getElementById('heroAvatarInitial'); if(initEl) initEl.style.display='flex';">
+                            <div id="heroAvatarInitial" class="profile-avatar" style="<?php echo $hasUserAvatar ? 'display: none;' : 'display: flex;'; ?>">
+                                <?php echo account_e(mb_substr($user['name'] ?? 'M', 0, 1)); ?>
+                            </div>
                             <div class="profile-avatar-badge" title="Akun Terverifikasi">
                                 <i class="bi bi-check-lg"></i>
                             </div>
@@ -1049,10 +1159,10 @@ include __DIR__ . '/includes/header.php';
                                         <i class="bi bi-camera-fill text-rosa me-1"></i> Foto Profil Member
                                     </label>
                                     <div class="d-flex align-items-center gap-3 flex-wrap">
-                                        <div class="avatar-preview-wrap">
-                                            <img id="avatarPreviewImg" src="<?php echo !empty($user['avatar']) ? asset_url(ltrim((string)$user['avatar'], '/')) : ''; ?>" alt="Preview Foto"
-                                                 class="avatar-preview-circle" style="<?php echo !empty($user['avatar']) ? '' : 'display: none;'; ?>">
-                                            <div id="avatarPlaceholder" class="avatar-preview-placeholder" style="<?php echo !empty($user['avatar']) ? 'display: none;' : ''; ?>">
+                                        <div class="avatar-preview-wrap" style="cursor: pointer;" title="Klik untuk pilih foto" onclick="var inp = document.getElementById('avatarInput'); if (inp) inp.click();">
+                                            <img id="avatarPreviewImg" src="<?php echo account_e($userAvatarUrl); ?>" alt="Preview Foto"
+                                                 class="avatar-preview-circle" style="<?php echo $hasUserAvatar ? 'display: block;' : 'display: none;'; ?>" onerror="this.style.display='none'; var ph = document.getElementById('avatarPlaceholder'); if(ph) ph.style.display='flex';">
+                                            <div id="avatarPlaceholder" class="avatar-preview-placeholder" style="<?php echo $hasUserAvatar ? 'display: none;' : 'display: flex;'; ?>">
                                                 <?php echo account_e(mb_substr($user['name'] ?? 'M', 0, 1)); ?>
                                             </div>
                                         </div>
@@ -1060,20 +1170,20 @@ include __DIR__ . '/includes/header.php';
                                             <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                                                 <label for="avatarInput" class="btn-upload-avatar">
                                                     <i class="bi bi-cloud-arrow-up-fill"></i>
-                                                    <span id="btnUploadLabel"><?php echo !empty($user['avatar']) ? 'Ganti Foto Profil' : 'Unggah Foto Baru'; ?></span>
+                                                    <span id="btnUploadLabel"><?php echo $hasUserAvatar ? 'Ganti Foto Profil' : 'Unggah Foto Baru'; ?></span>
                                                 </label>
                                                 <input type="file" name="avatar" id="avatarInput" accept="image/jpeg,image/png,image/jpg,image/webp" style="display: none;">
 
-                                                <button type="button" id="btnRemoveAvatar" class="btn-remove-avatar" style="<?php echo !empty($user['avatar']) ? '' : 'display: none;'; ?>" title="Hapus Foto Profil">
+                                                <button type="button" id="btnRemoveAvatar" class="btn-remove-avatar" style="<?php echo $hasUserAvatar ? 'display: inline-flex;' : 'display: none;'; ?>" title="Hapus Foto Profil">
                                                     <i class="bi bi-trash3"></i> Hapus Foto
                                                 </button>
                                                 <input type="hidden" name="remove_avatar" id="removeAvatarInput" value="0">
                                             </div>
                                             <small class="text-muted d-block" style="font-size: 11.5px; line-height: 1.45;">
-                                                Format: JPG, JPEG, PNG, WEBP (Maksimal 4 MB). Klik <b>Simpan Perubahan Profil</b> di bawah untuk mengaktifkan foto profil baru Anda.
+                                                Format: JPG, JPEG, PNG, WEBP (Maksimal 4 MB). Foto yang Anda pilih akan <b>otomatis langsung tampil dan tersimpan</b> di profil Anda.
                                             </small>
                                             <div id="avatarSelectedInfo" class="mt-1" style="display: none; font-size: 11.5px;">
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                <span id="avatarStatusBadge" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
                                                     <i class="bi bi-check2-circle me-1"></i> <span id="avatarFileName">Foto siap disimpan</span>
                                                 </span>
                                             </div>
@@ -1443,11 +1553,63 @@ include __DIR__ . '/includes/header.php';
         const avatarInput = document.getElementById('avatarInput');
         const avatarPreviewImg = document.getElementById('avatarPreviewImg');
         const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        const heroAvatarImg = document.getElementById('heroAvatarImg');
+        const heroAvatarInitial = document.getElementById('heroAvatarInitial');
+        const navAvatarImg = document.getElementById('navAvatarImg');
+        const navAvatarIcon = document.getElementById('navAvatarIcon');
         const avatarSelectedInfo = document.getElementById('avatarSelectedInfo');
         const avatarFileName = document.getElementById('avatarFileName');
         const btnUploadLabel = document.getElementById('btnUploadLabel');
         const btnRemoveAvatar = document.getElementById('btnRemoveAvatar');
         const removeAvatarInput = document.getElementById('removeAvatarInput');
+
+        function applyAvatarToAllIcons(srcUrl) {
+            if (srcUrl) {
+                if (avatarPreviewImg) {
+                    avatarPreviewImg.src = srcUrl;
+                    avatarPreviewImg.style.display = 'block';
+                }
+                if (avatarPlaceholder) {
+                    avatarPlaceholder.style.display = 'none';
+                }
+                if (heroAvatarImg) {
+                    heroAvatarImg.src = srcUrl;
+                    heroAvatarImg.style.display = 'block';
+                }
+                if (heroAvatarInitial) {
+                    heroAvatarInitial.style.display = 'none';
+                }
+                if (navAvatarImg) {
+                    navAvatarImg.src = srcUrl;
+                    navAvatarImg.style.display = 'inline-block';
+                }
+                if (navAvatarIcon) {
+                    navAvatarIcon.style.display = 'none';
+                }
+            } else {
+                if (avatarPreviewImg) {
+                    avatarPreviewImg.src = '';
+                    avatarPreviewImg.style.display = 'none';
+                }
+                if (avatarPlaceholder) {
+                    avatarPlaceholder.style.display = 'flex';
+                }
+                if (heroAvatarImg) {
+                    heroAvatarImg.src = '';
+                    heroAvatarImg.style.display = 'none';
+                }
+                if (heroAvatarInitial) {
+                    heroAvatarInitial.style.display = 'flex';
+                }
+                if (navAvatarImg) {
+                    navAvatarImg.src = '';
+                    navAvatarImg.style.display = 'none';
+                }
+                if (navAvatarIcon) {
+                    navAvatarIcon.style.display = 'inline-block';
+                }
+            }
+        }
 
         if (avatarInput) {
             avatarInput.addEventListener('change', function() {
@@ -1465,17 +1627,12 @@ include __DIR__ . '/includes/header.php';
                         return;
                     }
 
+                    // 1. Tampilkan preview langsung di SEMUA icon foto profil (Hero atas, Form, dan Navbar)
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        if (avatarPreviewImg) {
-                            avatarPreviewImg.src = e.target.result;
-                            avatarPreviewImg.style.display = 'block';
-                        }
-                        if (avatarPlaceholder) {
-                            avatarPlaceholder.style.display = 'none';
-                        }
+                        applyAvatarToAllIcons(e.target.result);
                         if (avatarFileName) {
-                            avatarFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB) siap disimpan';
+                            avatarFileName.textContent = 'Menyimpan foto profil otomatis...';
                         }
                         if (avatarSelectedInfo) {
                             avatarSelectedInfo.style.display = 'block';
@@ -1491,6 +1648,42 @@ include __DIR__ . '/includes/header.php';
                         }
                     };
                     reader.readAsDataURL(file);
+
+                    // 2. Upload & simpan foto secara otomatis ke server tanpa harus klik tombol Simpan di bawah
+                    const formData = new FormData();
+                    formData.append('ajax_avatar', '1');
+                    formData.append('remove_avatar', '0');
+                    formData.append('avatar', file);
+
+                    fetch('<?php echo page_url('akun.php'); ?>', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data && data.ok) {
+                            if (data.avatar_url) {
+                                const bustUrl = data.avatar_url.indexOf('data:') === 0
+                                    ? data.avatar_url
+                                    : data.avatar_url + (data.avatar_url.indexOf('?') > -1 ? '&' : '?') + 't=' + Date.now();
+                                applyAvatarToAllIcons(bustUrl);
+                            }
+                            if (avatarFileName) {
+                                avatarFileName.textContent = data.message || 'Foto profil berhasil dipasang & tersimpan otomatis!';
+                            }
+                            avatarInput.value = '';
+                        } else if (data && data.error) {
+                            if (avatarFileName) {
+                                avatarFileName.textContent = data.error;
+                            }
+                        }
+                    })
+                    .catch(function() {
+                        if (avatarFileName) {
+                            avatarFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB) siap disimpan';
+                        }
+                    });
                 }
             });
         }
@@ -1499,17 +1692,37 @@ include __DIR__ . '/includes/header.php';
             btnRemoveAvatar.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (avatarInput) avatarInput.value = '';
-                if (avatarPreviewImg) avatarPreviewImg.style.display = 'none';
-                if (avatarPlaceholder) avatarPlaceholder.style.display = 'flex';
+                applyAvatarToAllIcons('');
                 if (removeAvatarInput) removeAvatarInput.value = '1';
                 if (btnUploadLabel) btnUploadLabel.textContent = 'Unggah Foto Baru';
                 btnRemoveAvatar.style.display = 'none';
                 if (avatarSelectedInfo) {
                     avatarSelectedInfo.style.display = 'block';
                     if (avatarFileName) {
-                        avatarFileName.textContent = 'Foto profil akan dihapus saat Anda klik Simpan';
+                        avatarFileName.textContent = 'Menghapus foto profil...';
                     }
                 }
+
+                const formData = new FormData();
+                formData.append('ajax_avatar', '1');
+                formData.append('remove_avatar', '1');
+
+                fetch('<?php echo page_url('akun.php'); ?>', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data && data.ok && avatarFileName) {
+                        avatarFileName.textContent = data.message || 'Foto profil telah dihapus.';
+                    }
+                })
+                .catch(function() {
+                    if (avatarFileName) {
+                        avatarFileName.textContent = 'Foto profil akan dihapus saat Anda klik Simpan';
+                    }
+                });
             });
         }
     });

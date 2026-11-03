@@ -37,7 +37,7 @@ function customer_auth_init(PDO $pdo): void {
         city VARCHAR(100) NULL DEFAULT 'Pasuruan',
         address TEXT NULL,
         address_note VARCHAR(255) NULL,
-        avatar VARCHAR(255) NULL,
+        avatar MEDIUMTEXT NULL,
         points INT NOT NULL DEFAULT 100,
         member_tier VARCHAR(60) NOT NULL DEFAULT 'Member Prioritas',
         is_verified TINYINT(1) NOT NULL DEFAULT 1,
@@ -58,7 +58,7 @@ function customer_auth_init(PDO $pdo): void {
         'birth_date' => "ALTER TABLE customers ADD birth_date DATE NULL AFTER gender",
         'city' => "ALTER TABLE customers ADD city VARCHAR(100) NULL DEFAULT 'Pasuruan' AFTER birth_date",
         'address_note' => "ALTER TABLE customers ADD address_note VARCHAR(255) NULL AFTER address",
-        'avatar' => "ALTER TABLE customers ADD avatar VARCHAR(255) NULL AFTER address_note",
+        'avatar' => "ALTER TABLE customers ADD avatar MEDIUMTEXT NULL AFTER address_note",
         'points' => "ALTER TABLE customers ADD points INT NOT NULL DEFAULT 100 AFTER avatar",
         'member_tier' => "ALTER TABLE customers ADD member_tier VARCHAR(60) NOT NULL DEFAULT 'Member Prioritas' AFTER points",
         'is_verified' => "ALTER TABLE customers ADD is_verified TINYINT(1) NOT NULL DEFAULT 1 AFTER member_tier",
@@ -72,6 +72,9 @@ function customer_auth_init(PDO $pdo): void {
             try { $pdo->exec($sql); } catch (Throwable $e) {}
         }
     }
+    try {
+        $pdo->exec("ALTER TABLE customers MODIFY avatar MEDIUMTEXT NULL");
+    } catch (Throwable $e) {}
 
     // Email bersifat opsional dan TIDAK menjadi identitas unik Member.
     try {
@@ -92,6 +95,18 @@ function customer_auth_init(PDO $pdo): void {
             try { $pdo->exec("ALTER TABLE orders ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL"); } catch (Throwable $e) {}
         }
     } catch (Throwable $e) {}
+}
+
+function customer_avatar_url(?string $avatar): string {
+    $val = trim((string)$avatar);
+    if ($val === '') {
+        return '';
+    }
+    if (str_starts_with($val, 'data:image/') || str_starts_with($val, 'http://') || str_starts_with($val, 'https://')) {
+        return $val;
+    }
+    $clean = ltrim($val, '/');
+    return page_url($clean);
 }
 
 function customer_logged_in(): bool {
